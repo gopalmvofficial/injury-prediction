@@ -1,0 +1,13 @@
+fastapi>=0.110,<0.116
+uvicorn[standard]>=0.29,<0.35
+python-multipart>=0.0.9
+pydantic>=2.6,<3
+email-validator>=2.0
+opencv-python>=4.9,<5
+mediapipe>=0.10.9,<0.11
+numpy>=1.26,<2.0
+pandas>=2.1,<2.3
+reportlab>=4.1
+SQLAlchemy>=2.0,<2.1
+# For a production deployment using PostgreSQL instead of SQLite, uncomment:
+# psycopg2-binary>=2.9
