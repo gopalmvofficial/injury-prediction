@@ -1,5 +1,12 @@
 .venv
 __pycache__
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
 uploads/*
-data/*.db
+results/*
+database/*.db
+.git
+.gitignore

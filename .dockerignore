@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+.gemini
+backend/.venv
+backend/__pycache__
+backend/uploads/*
+backend/results/*
+backend/database/*.db
+frontend/node_modules
+frontend/dist

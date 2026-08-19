@@ -1,0 +1,44 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sports-injury-backend-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:80,http://127.0.0.1:5173,http://127.0.0.1:3000,http://127.0.0.1:80
+      - DATABASE_URL=sqlite:///app/database/app.db
+      - UPLOAD_DIR=/app/uploads
+      - RESULTS_DIR=/app/results
+      - REPORTS_DIR=/app/results/reports
+    volumes:
+      - ./backend/app:/app/app
+      - backend_data_dev:/app/database
+      - backend_uploads_dev:/app/uploads
+      - backend_results_dev:/app/results
+    command: ["sh", "-c", "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"]
+    restart: unless-stopped
+
+  frontend:
+    image: node:20-alpine
+    container_name: sports-injury-frontend-dev
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    command: ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend_data_dev:
+  backend_uploads_dev:
+  backend_results_dev:
