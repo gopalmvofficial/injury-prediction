@@ -3,7 +3,13 @@
 
 ---
 
-## 1. End-to-End System Architecture Diagram
+## 1. Visual System Flowchart
+
+![Sports Injury Risk Detection System Flowchart](file:///c:/Users/OmniBook%20x/Documents/vsc%20code%20project/spriongboard/sports-injury-risk-detection/docs/system_flowchart.jpg)
+
+---
+
+## 2. End-to-End System Architecture Diagram
 
 ```mermaid
 graph TD
