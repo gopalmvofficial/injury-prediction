@@ -1,0 +1,10 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      ALLOWED_ORIGINS: http://localhost:5173
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/uploads:/app/uploads

@@ -1,13 +1,69 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import App from './App.jsx'
-import './index.css'
+import React, {useEffect, useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import './styles.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>,
-)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'
+    : 'https://injury-prediction-backend.onrender.com'
+);
+const api = async (url, opts={}) => {
+  const target = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  const r = await fetch(target, opts);
+  const data = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(data.detail || data.message || 'Request failed');
+  return data;
+};
+
+function App(){
+ const [authenticated,setAuthenticated]=useState(()=>localStorage.getItem('sir_auth')==='1');
+ const [page,setPage]=useState('Dashboard'); const [athletes,setAthletes]=useState([]); const [analyses,setAnalyses]=useState([]); const [health,setHealth]=useState(null); const [selected,setSelected]=useState(null); const [toast,setToast]=useState('');
+ const load=async()=>{try{
+  const [a,r,h]=await Promise.all([api('/api/athletes'),api('/api/analyses'),api('/api/health')]);
+  setAthletes(Array.isArray(a)?a:[]);
+  setAnalyses(Array.isArray(r)?r:[]);
+  setHealth(h||null);
+ }catch(e){setToast(e.message)}};
+ useEffect(()=>{if(authenticated)load()},[authenticated]);
+ useEffect(()=>{if(toast){const t=setTimeout(()=>setToast(''),3500);return()=>clearTimeout(t)}},[toast]);
+ const logout=()=>{localStorage.removeItem('sir_auth');setAuthenticated(false);setPage('Dashboard')};
+ if(!authenticated) return <AuthScreen onSuccess={()=>setAuthenticated(true)}/>;
+ const nav=(p)=>setPage(p);
+ return <div className="app"><aside><div className="brand"><div className="brandIcon">⚕</div><div><b>SPORTS INJURY</b><span>Risk Detection</span></div></div><div className="milestone">MILESTONE 2 OF 3<br/><strong>Pose & Biomechanics</strong></div>{['Dashboard','Athletes','Video Analysis','Results','Reports'].map(x=><button className={page===x?'nav active':'nav'} onClick={()=>nav(x)} key={x}>{x==='Dashboard'?'▦':x==='Athletes'?'♙':x==='Video Analysis'?'◉':x==='Results'?'▤':'▣'}<span>{x}</span></button>)}<div className="sidefoot">FastAPI + React<br/>Render backend • PostgreSQL/SQLite</div></aside><main><header><div><h1>{page}</h1><p>Sports Injury Risk Detection and Prevention System</p></div><div className="headerActions"><div className="online"><i></i> Backend Online</div><button className="logout" onClick={logout}>Sign out</button></div></header>{page==='Dashboard'&&<Dashboard health={health} athletes={athletes} analyses={analyses} onNav={nav}/>} {page==='Athletes'&&<Athletes athletes={athletes} onRefresh={load} onSelect={a=>{setSelected(a);setPage('Athlete Details')}}/>} {page==='Video Analysis'&&<VideoAnalysis athletes={athletes} onDone={load}/>} {page==='Results'&&<Results analyses={analyses}/>} {page==='Reports'&&<Reports analyses={analyses}/>} {page==='Athlete Details'&&selected&&<AthleteDetails athlete={selected}/>}</main>{toast&&<div className="toast">{toast}</div>}</div>
+}
+
+function AuthScreen({onSuccess}){
+ const [mode,setMode]=useState('login');
+ const [form,setForm]=useState({name:'',email:'',password:''});
+ const [busy,setBusy]=useState(false);
+ const [error,setError]=useState('');
+ const submit=e=>{e.preventDefault();setError('');setBusy(true);
+   setTimeout(()=>{
+     const key=`sir_user_${form.email.toLowerCase()}`;
+     if(mode==='register'){
+       if(form.password.length<6){setError('Password must contain at least 6 characters.');setBusy(false);return}
+       localStorage.setItem(key,JSON.stringify({name:form.name,email:form.email,password:form.password}));
+     }else{
+       const saved=localStorage.getItem(key);
+       if(!saved){setError('No account found. Please register first.');setBusy(false);return}
+       const user=JSON.parse(saved);
+       if(user.password!==form.password){setError('Incorrect email or password.');setBusy(false);return}
+     }
+     localStorage.setItem('sir_auth','1'); onSuccess(); setBusy(false);
+   },350);
+ };
+ const social=name=>setError(`${name} sign-in UI is ready. Connect your OAuth client ID/provider to enable live ${name} authentication.`);
+ return <div className="authShell"><div className="authVisual"><div className="authLogo">⚕</div><div className="eyebrow">SPORTS INJURY INTELLIGENCE</div><h1>Movement data.<br/><em>Smarter prevention.</em></h1><p>Analyze athlete biomechanics, identify risk patterns and turn movement data into practical injury-prevention insights.</p><div className="authPoints"><span>✓ Pose & biomechanics workflow</span><span>✓ Athlete records & risk history</span><span>✓ Secure cloud-ready architecture</span></div></div><div className="authCard"><div className="authBrand">SIR <span>SPORTS INJURY RISK</span></div><h2>{mode==='login'?'Welcome back':'Create your account'}</h2><p className="authSub">{mode==='login'?'Sign in to continue to your injury intelligence dashboard.':'Register to manage athletes and movement analysis.'}</p><div className="socials"><button onClick={()=>social('Google')}>G <span>Continue with Google</span></button><button onClick={()=>social('Microsoft')}>▦ <span>Continue with Microsoft</span></button><button onClick={()=>social('Apple')}>● <span>Continue with Apple</span></button></div><div className="divider"><span>or continue with email</span></div>{error&&<div className="authError">{error}</div>}<form onSubmit={submit} className="authForm">{mode==='register'&&<label>Full name<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Your full name"/></label>}<label>Email address<input required type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="you@example.com"/></label><label>Password<input required type="password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} placeholder="••••••••"/></label><button className="primary authSubmit" disabled={busy}>{busy?'Please wait…':mode==='login'?'Sign in':'Create account'}</button></form><p className="switchAuth">{mode==='login'?'New to the platform?':'Already have an account?'} <button onClick={()=>{setMode(mode==='login'?'register':'login');setError('')}}>{mode==='login'?'Create an account':'Sign in'}</button></p><small className="authNote">Social buttons are provider-ready UI. Live OAuth requires your Google/Microsoft/Apple credentials.</small></div></div>
+}
+
+function Dashboard({health,athletes,analyses,onNav}){const high=analyses.filter(x=>x.risk_level==='High').length;return <><section className="hero"><div><div className="eyebrow">MILESTONE 2 • POSE ESTIMATION & BIOMECHANICS</div><h2>Turn athlete movement into<br/><em>actionable risk insights.</em></h2><p>Register athletes, upload sports videos, extract movement features and store analysis results in one application.</p><button onClick={()=>onNav('Athletes')} className="primary">+ Add Athlete</button></div><div className="heroGraphic">🧠<div>POSE<br/>ANALYSIS</div></div></section><div className="cards"><Card title="Registered Athletes" value={health?.athletes??athletes.length} icon="♙"/><Card title="Videos Analysed" value={analyses.length} icon="◉"/><Card title="High Risk Cases" value={high} icon="⚠"/><Card title="System Status" value="ONLINE" icon="✓"/></div><div className="grid2"><section className="panel"><div className="panelHead"><h3>Recent Analysis</h3><button onClick={()=>onNav('Results')}>View all →</button></div><AnalysisTable rows={analyses.slice(0,5)}/></section><section className="panel workflow"><div className="panelHead"><h3>Milestone Workflow</h3></div>{[['1','Athlete Profile','Store athlete information'],['2','Upload Video','Capture movement'],['3','Pose Extraction','MediaPipe landmarks'],['4','Biomechanics','Joint angles & quality'],['5','Risk Result','Store & display result']].map(([n,t,s])=><div className="step" key={n}><b>{n}</b><div><strong>{t}</strong><small>{s}</small></div></div>)}</section></div></>}
+function Card({title,value,icon}){return <div className="card"><div className="cardIcon">{icon}</div><div><span>{title}</span><strong>{value}</strong></div></div>}
+function Athletes({athletes,onRefresh,onSelect}){const [form,setForm]=useState({name:'',age:'',weight:'',height:'',sport:'',injury_history:''}); const submit=async e=>{e.preventDefault();try{await api('/api/athletes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...form,age:Number(form.age),weight:Number(form.weight),height:form.height?Number(form.height):null})});setForm({name:'',age:'',weight:'',height:'',sport:'',injury_history:''});onRefresh()}catch(e){alert(e.message)}};return <div className="grid2"><section className="panel"><div className="panelHead"><h3>Create Athlete Profile</h3></div><form onSubmit={submit} className="form">{[['name','Full name','text'],['age','Age','number'],['weight','Weight (kg)','number'],['height','Height (cm)','number'],['sport','Sport','text']].map(([k,l,t])=><label key={k}>{l}<input required={k!=='height'} type={t} value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})}/></label>)}<label>Injury history<textarea value={form.injury_history} onChange={e=>setForm({...form,injury_history:e.target.value})} placeholder="Previous injuries or None"/></label><button className="primary">Save Athlete</button></form></section><section className="panel"><div className="panelHead"><h3>Stored Athlete Data</h3><span className="count">{athletes.length} records</span></div><table><thead><tr><th>ID</th><th>Athlete</th><th>Sport</th><th>Age</th><th>Weight</th></tr></thead><tbody>{athletes.map(a=><tr key={a.id} onClick={()=>onSelect(a)} className="click"><td>#{a.id}</td><td><b>{a.name}</b></td><td>{a.sport}</td><td>{a.age}</td><td>{a.weight} kg</td></tr>)}</tbody></table>{!athletes.length&&<Empty text="No athletes yet. Create the first profile."/>}</section></div>}
+function AthleteDetails({athlete}){return <section className="panel detail"><div className="profile"><div className="avatar">{athlete.name?.[0]}</div><div><h2>{athlete.name}</h2><p>{athlete.sport} • Athlete #{athlete.id}</p></div></div><div className="cards"><Card title="Age" value={athlete.age}/><Card title="Weight" value={`${athlete.weight} kg`}/><Card title="Height" value={athlete.height?`${athlete.height} cm`:'—'}/></div><h3>Injury History</h3><p className="note">{athlete.injury_history||'None recorded.'}</p></section>}
+function VideoAnalysis({athletes,onDone}){const [athlete,setAthlete]=useState('');const [file,setFile]=useState(null);const [busy,setBusy]=useState(false);const [result,setResult]=useState(null);const submit=async()=>{if(!athlete||!file)return alert('Select an athlete and video.');setBusy(true);setResult(null);try{const fd=new FormData();fd.append('video',file);const cloudName=import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;const uploadPreset=import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;if(!cloudName||!uploadPreset)throw new Error('Cloud video upload is not configured. Add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in Vercel.');const cloudForm=new FormData();cloudForm.append('file',file);cloudForm.append('upload_preset',uploadPreset);cloudForm.append('resource_type','video');const cloudResp=await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,{method:'POST',body:cloudForm});const cloud=await cloudResp.json();if(!cloudResp.ok)throw new Error(cloud.error?.message||'Cloud video upload failed');const up=await api(`/api/videos/register-cloud?athlete_id=${athlete}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:cloud.secure_url,filename:file.name})});const r=await api(`/api/videos/${up.id}/analyze`,{method:'POST'});setResult(r);onDone()}catch(e){alert(e.message)}finally{setBusy(false)}};return <div className="grid2"><section className="panel"><div className="panelHead"><h3>Upload Sports Video</h3></div><label className="field">Athlete<select value={athlete} onChange={e=>setAthlete(e.target.value)}><option value="">Select athlete</option>{athletes.map(a=><option value={a.id} key={a.id}>{a.name} — {a.sport}</option>)}</select></label><div className="drop"><div>◉</div><strong>{file?file.name:'Choose a sports/action video'}</strong><small>MP4, MOV, AVI, MKV or WebM • uploaded securely to cloud storage</small><input type="file" accept="video/*" onChange={e=>setFile(e.target.files[0])}/></div><button className="primary full" disabled={busy} onClick={submit}>{busy?'Processing video…':'Upload & Analyze'}</button></section><section className="panel"><div className="panelHead"><h3>Biomechanics Pipeline</h3></div>{['Video upload','OpenCV frame sampling','MediaPipe pose landmarks','Joint-angle calculation','Movement-quality score','Risk-level generation','SQLite result storage'].map((x,i)=><div className="pipeline" key={x}><span>{i+1}</span><div><b>{x}</b><small>{result&&i<6?'Completed':'Ready'}</small></div></div>)}{result&&<div className={`result ${result.risk_level.toLowerCase()}`}><span>Risk level</span><strong>{result.risk_level}</strong><b>{result.risk_score}%</b><small>Movement quality: {result.movement_quality}% • {result.pose_engine}</small></div>}</section></div>}
+function Results({analyses}){return <section className="panel"><div className="panelHead"><h3>Stored Analysis Results</h3><span className="count">{analyses.length} analyses</span></div><AnalysisTable rows={analyses} detailed/></section>}
+function AnalysisTable({rows,detailed}){return <table><thead><tr><th>ID</th><th>Athlete</th><th>Movement</th><th>Risk</th><th>Level</th>{detailed&&<th>Biomechanics</th>}<th>Date</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td>#{r.id}</td><td><b>{r.athlete_name}</b></td><td>{r.movement_score}%</td><td>{r.risk_score}%</td><td><span className={`badge ${r.risk_level.toLowerCase()}`}>{r.risk_level}</span></td>{detailed&&<td>{r.biomechanics?.knee_angle?`Knee ${r.biomechanics.knee_angle}°`:'—'}</td>}<td>{new Date(r.created_at).toLocaleDateString()}</td></tr>)}</tbody></table>}
+function Reports({analyses}){const latest=analyses[0];return <section className="panel"><div className="panelHead"><h3>Injury Analysis Report</h3><button onClick={()=>window.print()}>Print / Save PDF</button></div>{latest?<div className="report"><h2>{latest.athlete_name} — Movement Risk Report</h2><p>Generated from Milestone 2 pose and biomechanics analysis.</p><div className="reportScore"><strong>{latest.risk_score}%</strong><span className={`badge ${latest.risk_level.toLowerCase()}`}>{latest.risk_level} Risk</span></div><h3>Biomechanics</h3><p>Knee angle: {latest.biomechanics?.knee_angle??'N/A'}° • Hip angle: {latest.biomechanics?.hip_angle??'N/A'}° • Ankle angle: {latest.biomechanics?.ankle_angle??'N/A'}°</p><h3>Preventive recommendation</h3><p>{latest.recommendation}</p><small>This is a project demonstration score and is not a clinically validated medical diagnosis.</small></div>:<Empty text="Run an analysis to generate a report."/>}</section>}
+function Empty({text}){return <div className="empty">{text}</div>}
+
+createRoot(document.getElementById('root')).render(<App/>);
