@@ -1,10 +1,50 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sports-injury-backend
     ports:
       - "8000:8000"
     environment:
-      ALLOWED_ORIGINS: http://localhost:5173
+      - PORT=8000
+      - HOST=0.0.0.0
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:80,http://127.0.0.1:5173,http://127.0.0.1:3000,http://127.0.0.1:80
+      - DATABASE_URL=sqlite:///app/database/app.db
+      - UPLOAD_DIR=/app/uploads
+      - RESULTS_DIR=/app/results
+      - REPORTS_DIR=/app/results/reports
     volumes:
-      - ./backend/data:/app/data
-      - ./backend/uploads:/app/uploads
+      - backend_data:/app/database
+      - backend_uploads:/app/uploads
+      - backend_results:/app/results
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://localhost:8000
+    container_name: sports-injury-frontend
+    ports:
+      - "5173:80"
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  backend_data:
+    name: sports_injury_backend_data
+  backend_uploads:
+    name: sports_injury_backend_uploads
+  backend_results:
+    name: sports_injury_backend_results

@@ -46,11 +46,52 @@ python -m uvicorn app.main:app --reload --port 8000
 
 ## Docker
 
+### Quick Start (Production Mode)
+
+Ensure Docker Desktop is running, then run:
+
 ```powershell
 docker compose up --build
 ```
 
-The backend will be available at `http://localhost:8000`.
+- **Frontend:** `http://localhost:5173` (or `http://localhost:3000`)
+- **Backend API:** `http://localhost:8000`
+- **Interactive API Docs:** `http://localhost:8000/docs`
+
+To run in the background (detached):
+```powershell
+docker compose up -d
+```
+
+To view logs:
+```powershell
+docker compose logs -f
+```
+
+To stop containers:
+```powershell
+docker compose down
+```
+
+### Hot-Reload Development in Docker
+
+If you want to develop with hot reloading inside containers:
+
+```powershell
+docker compose -f docker-compose.dev.yml up --build
+```
+
+### Persistent Data Volumes
+
+Docker Compose automatically creates named volumes to preserve data across restarts:
+- `sports_injury_backend_data`: Stored SQLite database
+- `sports_injury_backend_uploads`: Uploaded video files
+- `sports_injury_backend_results`: Processed videos and generated reports
+
+To reset all data:
+```powershell
+docker compose down -v
+```
 
 ## Authentication UI
 
