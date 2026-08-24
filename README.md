@@ -2,6 +2,11 @@
 
 Milestone 2 — Pose Estimation & Biomechanics.
 
+## 🌐 Live Cloud Deployment
+- **Live Frontend (Vercel):** [https://injury-prediction-three.vercel.app/](https://injury-prediction-three.vercel.app/)
+- **Live Backend API (Render):** [https://injury-prediction-backend.onrender.com](https://injury-prediction-backend.onrender.com)
+- **Interactive API Health:** [https://injury-prediction-backend.onrender.com/api/health](https://injury-prediction-backend.onrender.com/api/health)
+
 ## Architecture
 
 - **Frontend:** React + Vite, deployed on Vercel.
