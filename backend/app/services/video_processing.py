@@ -4,13 +4,9 @@ video_processing.py
 Owns the OpenCV side of the pipeline:
 - opens the uploaded video
 - validates it can actually be read
-- iterates frames, running MediaPipe pose estimation on each
+- iterates frames, running pose estimation on each
 - draws the skeleton overlay onto a new output video
-- collects every frame's landmarks into a pandas DataFrame for the
-  biomechanics module to consume
-
-Real processing only. If a video can't be opened or no person is ever
-detected, that is reported explicitly rather than papered over.
+- collects every frame's landmarks into a pandas DataFrame for biomechanics
 """
 from __future__ import annotations
 
@@ -20,13 +16,27 @@ from dataclasses import dataclass
 from typing import Optional
 
 import cv2
-import mediapipe as mp
 import pandas as pd
 
 from app.services.pose_estimation import PoseEstimator
 
 SUPPORTED_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 MAX_FILE_SIZE_BYTES = 300 * 1024 * 1024  # 300 MB
+
+SKELETON_PAIRS = [
+    ("left_shoulder", "right_shoulder"),
+    ("left_shoulder", "left_elbow"),
+    ("left_elbow", "left_wrist"),
+    ("right_shoulder", "right_elbow"),
+    ("right_elbow", "right_wrist"),
+    ("left_shoulder", "left_hip"),
+    ("right_shoulder", "right_hip"),
+    ("left_hip", "right_hip"),
+    ("left_hip", "left_knee"),
+    ("left_knee", "left_ankle"),
+    ("right_hip", "right_knee"),
+    ("right_knee", "right_ankle"),
+]
 
 
 class VideoValidationError(Exception):
@@ -75,16 +85,50 @@ def safe_stored_filename(original_filename: str) -> str:
     return f"{uuid.uuid4().hex}{ext}"
 
 
+def _draw_skeleton_on_frame(frame, frame_landmarks, mp_results, width: int, height: int):
+    """Draws skeletal lines and joint landmarks using MediaPipe or native OpenCV."""
+    drawn_with_mp = False
+    if mp_results and hasattr(mp_results, "pose_landmarks") and mp_results.pose_landmarks:
+        try:
+            import mediapipe as mp
+            if hasattr(mp, "solutions") and hasattr(mp.solutions, "drawing_utils"):
+                mp_drawing = mp.solutions.drawing_utils
+                mp_pose_connections = mp.solutions.pose.POSE_CONNECTIONS
+                mp_drawing.draw_landmarks(
+                    frame,
+                    mp_results.pose_landmarks,
+                    mp_pose_connections,
+                    landmark_drawing_spec=mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=3),
+                    connection_drawing_spec=mp_drawing.DrawingSpec(color=(255, 140, 0), thickness=2),
+                )
+                drawn_with_mp = True
+        except Exception:
+            drawn_with_mp = False
+
+    if not drawn_with_mp and frame_landmarks and frame_landmarks.landmarks:
+        # Native OpenCV skeletal rendering
+        lms = frame_landmarks.landmarks
+        for j1, j2 in SKELETON_PAIRS:
+            p1 = lms.get(j1)
+            p2 = lms.get(j2)
+            if p1 and p2 and p1.x is not None and p2.x is not None:
+                pt1 = (int(p1.x * width), int(p1.y * height))
+                pt2 = (int(p2.x * width), int(p2.y * height))
+                cv2.line(frame, pt1, pt2, (255, 140, 0), 2)
+
+        for name, pt in lms.items():
+            if pt and pt.x is not None and pt.y is not None:
+                coord = (int(pt.x * width), int(pt.y * height))
+                cv2.circle(frame, coord, 4, (0, 255, 0), -1)
+
+
 def process_video(
     input_path: str,
     output_dir: str,
     max_frames: Optional[int] = None,
 ) -> ProcessingResult:
     """
-    Runs the full OpenCV + MediaPipe pipeline over a video file on disk.
-
-    Raises VideoProcessingError if the file cannot be opened by OpenCV or
-    contains zero readable frames.
+    Runs the full OpenCV + Pose Estimation pipeline over a video file on disk.
     """
     if not os.path.exists(input_path):
         raise VideoProcessingError(f"Video file not found on disk: {input_path}")
@@ -108,7 +152,6 @@ def process_video(
     output_filename = f"processed_{uuid.uuid4().hex}.mp4"
     output_path = os.path.join(output_dir, output_filename)
 
-    # mp4v is broadly available cross-platform (Windows/Linux) without extra codec installs.
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     writer = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
@@ -117,13 +160,7 @@ def process_video(
     frames_with_pose = 0
 
     try:
-        try:
-            pose_estimator_cm = PoseEstimator()
-        except RuntimeError as e:
-            raise VideoProcessingError(str(e))
-        with pose_estimator_cm as estimator:
-            mp_drawing = mp.solutions.drawing_utils
-            mp_pose_connections = mp.solutions.pose.POSE_CONNECTIONS
+        with PoseEstimator() as estimator:
             while True:
                 ret, frame = cap.read()
                 if not ret:
@@ -135,17 +172,7 @@ def process_video(
 
                 if frame_landmarks.pose_detected:
                     frames_with_pose += 1
-                    mp_drawing.draw_landmarks(
-                        frame,
-                        mp_results.pose_landmarks,
-                        mp_pose_connections,
-                        landmark_drawing_spec=mp_drawing.DrawingSpec(
-                            color=(0, 255, 0), thickness=2, circle_radius=3
-                        ),
-                        connection_drawing_spec=mp_drawing.DrawingSpec(
-                            color=(255, 140, 0), thickness=2
-                        ),
-                    )
+                    _draw_skeleton_on_frame(frame, frame_landmarks, mp_results, width, height)
                 else:
                     cv2.putText(
                         frame, "No pose detected", (20, 40),
