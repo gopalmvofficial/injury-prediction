@@ -566,6 +566,12 @@ function VideoAnalysis({ athletes, onDone }) {
     }
   };
 
+  useEffect(() => {
+    if (athletes && athletes.length > 0 && !athlete) {
+      setAthlete(athletes[0].athlete_id || athletes[0].id);
+    }
+  }, [athletes]);
+
   return (
     <div className="grid2">
       <section className="panel">
@@ -575,7 +581,7 @@ function VideoAnalysis({ athletes, onDone }) {
         <label className="field">
           Athlete
           <select value={athlete} onChange={(e) => setAthlete(e.target.value)}>
-            <option value="">Select athlete</option>
+            <option value="">{athletes.length === 0 ? '-- No athletes yet (Create in Athletes tab) --' : 'Select athlete'}</option>
             {athletes.map((a) => (
               <option value={a.athlete_id || a.id} key={a.athlete_id || a.id}>
                 {a.name} — {a.sport}
@@ -583,6 +589,11 @@ function VideoAnalysis({ athletes, onDone }) {
             ))}
           </select>
         </label>
+        {athletes.length === 0 && (
+          <p style={{ color: '#0f766e', fontSize: '13px', margin: '4px 0 12px 0' }}>
+            💡 <b>Note:</b> Please click the <b>Athletes</b> tab on the left to create an athlete profile first!
+          </p>
+        )}
 
         <label className="field" style={{ marginTop: '12px', display: 'block' }}>
           Activity / Exercise
@@ -595,12 +606,12 @@ function VideoAnalysis({ athletes, onDone }) {
 
         <div className="drop">
           <div>◉</div>
-          <strong>{file ? file.name : 'Choose a sports/action video'}</strong>
+          <strong>{file ? file.name : 'Click to select sports/action video file'}</strong>
           <small>MP4, MOV, AVI, MKV or WebM • processed via MediaPipe & OpenCV</small>
           <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files[0])} />
         </div>
 
-        <button className="primary full" disabled={busy} onClick={submit}>
+        <button className="primary full" disabled={busy || !file || !athlete} onClick={submit}>
           {busy ? 'Processing video & extracting pose…' : 'Upload & Analyze'}
         </button>
       </section>
