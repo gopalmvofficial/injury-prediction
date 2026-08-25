@@ -4,9 +4,9 @@ python-multipart>=0.0.9
 pydantic>=2.6,<3
 email-validator>=2.0
 opencv-python>=4.9,<5
-mediapipe==0.10.14
-numpy>=1.26,<2.1
-pandas>=2.1,<2.3
+mediapipe>=0.10.30
+numpy>=1.26
+pandas>=2.1
 reportlab>=4.1
 SQLAlchemy>=2.0,<2.1
 # For a production deployment using PostgreSQL instead of SQLite, uncomment:
