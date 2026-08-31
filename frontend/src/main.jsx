@@ -62,6 +62,13 @@ function App() {
   const [toast, setToast] = useState('');
   const [selectedAthlete, setSelectedAthlete] = useState(null);
 
+  // Edit User Profile Modal State
+  const [profileModal, setProfileModal] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: '', role: 'coach' });
+
+  // Edit Athlete Modal State
+  const [editingAthlete, setEditingAthlete] = useState(null);
+
   const loadData = async () => {
     try {
       const [sum, aths, h] = await Promise.all([
@@ -99,6 +106,23 @@ function App() {
     setAuthenticated(false);
     setCurrentUser(null);
     setPage('Dashboard');
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    try {
+      const updated = await api('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileForm),
+      });
+      localStorage.setItem('sir_user', JSON.stringify(updated));
+      setCurrentUser(updated);
+      setProfileModal(false);
+      setToast('User profile updated successfully.');
+    } catch (err) {
+      setToast(`Profile error: ${err.message}`);
+    }
   };
 
   if (!authenticated) {
@@ -164,7 +188,24 @@ function App() {
           </div>
           <div className="headerActions">
             {currentUser && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileForm({ name: currentUser.name || '', role: currentUser.role || 'coach' });
+                  setProfileModal(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#fff',
+                  border: '1px solid #e2e8f0',
+                  padding: '5px 12px',
+                  borderRadius: '9999px',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                }}
+              >
                 <span style={{ fontSize: '13px', color: '#0f172a', fontWeight: 700 }}>👤 {currentUser.name}</span>
                 <span style={{
                   fontSize: '10px',
@@ -177,9 +218,9 @@ function App() {
                   padding: '2px 8px',
                   borderRadius: '9999px',
                 }}>
-                  {currentUser.role || 'COACH'}
+                  {currentUser.role || 'COACH'} ✏️
                 </span>
-              </div>
+              </button>
             )}
             <div className="online">
               <i></i> Engine Online
@@ -201,10 +242,15 @@ function App() {
               setSelectedAthlete(a);
               setPage('Athlete Details');
             }}
+            onEditAthlete={(a) => setEditingAthlete(a)}
           />
         )}
         {page === 'Athlete Details' && selectedAthlete && (
-          <AthleteDetails athlete={selectedAthlete} />
+          <AthleteDetails
+            athlete={selectedAthlete}
+            onEdit={() => setEditingAthlete(selectedAthlete)}
+            onBack={() => setPage('Athletes')}
+          />
         )}
         {page === 'Video Analysis' && (
           <VideoAnalysis athletes={athletes} onDone={loadData} />
@@ -213,7 +259,204 @@ function App() {
         {page === 'Reports' && <Reports summary={summary} />}
 
         {toast && <div className="toast">{toast}</div>}
+
+        {/* Edit User Profile Modal */}
+        {profileModal && (
+          <div className="oauthModalOverlay" onClick={() => setProfileModal(false)}>
+            <div className="oauthModalCard" onClick={(e) => e.stopPropagation()}>
+              <h3>Edit User Profile</h3>
+              <p>Update your account details and operational role</p>
+              <form onSubmit={handleUpdateProfile} style={{ textAlign: 'left' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+                  Full Name
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 12px', fontSize: '13.5px', marginBottom: '14px', boxSizing: 'border-box' }}
+                />
+
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+                  Account Role
+                </label>
+                <select
+                  value={profileForm.role}
+                  onChange={(e) => setProfileForm({ ...profileForm, role: e.target.value })}
+                  style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 10px', fontSize: '13px', marginBottom: '22px', background: '#fff', boxSizing: 'border-box' }}
+                >
+                  <option value="coach">👨‍🏫 Coach (Team Roster & Squad Risk)</option>
+                  <option value="athlete">🏃 Athlete (Personal Movement Screening)</option>
+                  <option value="physiotherapist">🩺 Physiotherapist (Rehabilitation)</option>
+                  <option value="sports_scientist">🔬 Sports Scientist (Kinematic Modeling)</option>
+                  <option value="admin">🛡️ Administrator (System Access)</option>
+                </select>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => setProfileModal(false)}
+                    style={{ border: 'none', background: 'transparent', color: '#64748b', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Athlete Modal */}
+        {editingAthlete && (
+          <EditAthleteModal
+            athlete={editingAthlete}
+            onClose={() => setEditingAthlete(null)}
+            onSaved={(updated) => {
+              setEditingAthlete(null);
+              setSelectedAthlete(updated);
+              loadData();
+              setToast(`Athlete #${updated.name} updated.`);
+            }}
+          />
+        )}
       </main>
+    </div>
+  );
+}
+
+function EditAthleteModal({ athlete, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    name: athlete.name || '',
+    sport: athlete.sport || '',
+    position: athlete.position || '',
+    age: athlete.age || 20,
+    height_cm: athlete.height_cm || '',
+    weight_kg: athlete.weight_kg || '',
+    training_load: athlete.training_load || 'Moderate',
+    injury_history: athlete.injury_history || '',
+  });
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const res = await api(`/api/athletes/${athlete.athlete_id || athlete.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          sport: form.sport,
+          position: form.position || null,
+          age: Number(form.age),
+          height_cm: form.height_cm ? Number(form.height_cm) : null,
+          weight_kg: form.weight_kg ? Number(form.weight_kg) : null,
+          training_load: form.training_load,
+          injury_history: form.injury_history || null,
+        }),
+      });
+      onSaved(res);
+    } catch (err) {
+      alert(`Update Error: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="oauthModalOverlay" onClick={onClose}>
+      <div className="oauthModalCard" style={{ width: 'min(520px, 95vw)', textAlign: 'left' }} onClick={(e) => e.stopPropagation()}>
+        <h3 style={{ margin: '0 0 4px', textAlign: 'center' }}>Edit Athlete Profile</h3>
+        <p style={{ margin: '0 0 18px', textAlign: 'center' }}>Update athlete metrics, sport position, and injury history</p>
+
+        <form onSubmit={submit} className="form" style={{ marginTop: '10px' }}>
+          <label>
+            Full Name
+            <input
+              required
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          </label>
+          <label>
+            Sport Type
+            <input
+              required
+              type="text"
+              value={form.sport}
+              onChange={(e) => setForm({ ...form, sport: e.target.value })}
+            />
+          </label>
+          <label>
+            Sport Position
+            <input
+              type="text"
+              value={form.position}
+              onChange={(e) => setForm({ ...form, position: e.target.value })}
+            />
+          </label>
+          <label>
+            Age (years)
+            <input
+              required
+              type="number"
+              min="5"
+              max="80"
+              value={form.age}
+              onChange={(e) => setForm({ ...form, age: e.target.value })}
+            />
+          </label>
+          <label>
+            Height (cm)
+            <input
+              type="number"
+              value={form.height_cm}
+              onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
+            />
+          </label>
+          <label>
+            Weight (kg)
+            <input
+              type="number"
+              value={form.weight_kg}
+              onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
+            />
+          </label>
+          <label>
+            Training Load
+            <select
+              value={form.training_load}
+              onChange={(e) => setForm({ ...form, training_load: e.target.value })}
+            >
+              <option value="Low">Low (1–3 sessions/week)</option>
+              <option value="Moderate">Moderate (4–5 sessions/week)</option>
+              <option value="High">High (6–8 sessions/week)</option>
+              <option value="Extreme">Extreme (Two-a-day Pro Training)</option>
+            </select>
+          </label>
+          <label>
+            Injury History & Prior Conditions
+            <textarea
+              value={form.injury_history}
+              onChange={(e) => setForm({ ...form, injury_history: e.target.value })}
+            />
+          </label>
+
+          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+            <button type="button" onClick={onClose} style={{ border: 'none', background: 'transparent', color: '#64748b', fontWeight: 700 }}>
+              Cancel
+            </button>
+            <button type="submit" className="primary" disabled={busy}>
+              {busy ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -497,7 +740,6 @@ function AuthScreen({ onSuccess }) {
             <h3>Choose a Google Account</h3>
             <p>to continue to Sports Injury Intelligence</p>
 
-            {/* Dynamically Show User's Recently Signed-In Google Account */}
             {recentGoogleUser && !useCustomInput ? (
               <div>
                 <button
@@ -676,7 +918,9 @@ function Card({ title, value, icon }) {
   );
 }
 
-function Athletes({ athletes, onRefresh, onSelect }) {
+function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
+  const [search, setSearch] = useState('');
+  const [sportFilter, setSportFilter] = useState('ALL');
   const [form, setForm] = useState({
     name: '',
     sport: '',
@@ -687,6 +931,38 @@ function Athletes({ athletes, onRefresh, onSelect }) {
     injury_history: '',
     training_load: 'Moderate',
   });
+
+  const filteredAthletes = athletes.filter((a) => {
+    const matchesSearch = (a.name || '').toLowerCase().includes(search.toLowerCase()) ||
+                          (a.sport || '').toLowerCase().includes(search.toLowerCase()) ||
+                          (a.position || '').toLowerCase().includes(search.toLowerCase());
+    const matchesSport = sportFilter === 'ALL' || (a.sport || '').toLowerCase() === sportFilter.toLowerCase();
+    return matchesSearch && matchesSport;
+  });
+
+  const exportCSV = () => {
+    if (!athletes.length) return alert('No athletes to export.');
+    const headers = ['Athlete ID', 'Name', 'Sport', 'Position', 'Age', 'Height (cm)', 'Weight (kg)', 'Training Load', 'Injury History'];
+    const rows = athletes.map(a => [
+      a.athlete_id || a.id,
+      `"${a.name}"`,
+      `"${a.sport}"`,
+      `"${a.position || ''}"`,
+      a.age,
+      a.height_cm || '',
+      a.weight_kg || '',
+      `"${a.training_load || 'Moderate'}"`,
+      `"${(a.injury_history || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Athlete_Roster_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -813,40 +1089,78 @@ function Athletes({ athletes, onRefresh, onSelect }) {
 
       <section className="panel">
         <div className="panelHead">
-          <h3>Registered Athlete Roster</h3>
-          <span className="count">{athletes.length} athletes</span>
+          <div>
+            <h3>Registered Athlete Roster</h3>
+            <span className="count" style={{ marginLeft: '6px' }}>{filteredAthletes.length} athletes</span>
+          </div>
+          <button type="button" onClick={exportCSV} style={{ color: '#059669', fontWeight: 700 }}>
+            📥 Export CSV
+          </button>
         </div>
+
+        {/* Search and Sport Filter Controls */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+          <input
+            type="text"
+            placeholder="🔍 Search athlete by name or sport…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12.5px' }}
+          />
+        </div>
+
         <table>
           <thead>
             <tr>
-              <th>Athlete ID</th>
               <th>Athlete</th>
               <th>Sport / Pos</th>
               <th>Age</th>
               <th>Load</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {athletes.map((a) => (
+            {filteredAthletes.map((a) => (
               <tr key={a.athlete_id || a.id} onClick={() => onSelect(a)} className="click">
-                <td>#{(a.athlete_id || a.id).slice(0, 8)}</td>
                 <td><b>{a.name}</b></td>
                 <td>{a.sport} {a.position ? `(${a.position})` : ''}</td>
                 <td>{a.age} yrs</td>
                 <td><span className="badge low">{a.training_load || 'Moderate'}</span></td>
+                <td>
+                  <button
+                    type="button"
+                    className="primary small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditAthlete(a);
+                    }}
+                    style={{ padding: '4px 10px', fontSize: '11px' }}
+                  >
+                    ✏️ Edit
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {!athletes.length && <Empty text="No athletes registered yet. Create your first profile." />}
+        {!filteredAthletes.length && <Empty text="No athletes match your search or filter." />}
       </section>
     </div>
   );
 }
 
-function AthleteDetails({ athlete }) {
+function AthleteDetails({ athlete, onEdit, onBack }) {
   return (
     <section className="panel detail">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <button onClick={onBack} style={{ border: 'none', background: 'transparent', color: '#059669', fontWeight: 700, cursor: 'pointer' }}>
+          ← Back to Athlete Roster
+        </button>
+        <button onClick={onEdit} className="primary small">
+          ✏️ Edit Athlete Profile
+        </button>
+      </div>
+
       <div className="profile">
         <div className="avatar">{athlete.name?.[0]}</div>
         <div>
@@ -998,10 +1312,10 @@ function VideoAnalysis({ athletes, onDone }) {
               </small>
             </div>
 
-            {/* Machine Learning Multi-Category Predictions */}
+            {/* Plain-English Multi-Category Diagnostics */}
             <div style={{ marginTop: '14px', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <b style={{ fontSize: '13px', color: '#0f2942' }}>🤖 Specific Injury Category Diagnostics</b>
+                <b style={{ fontSize: '13px', color: '#0f2942' }}>🤖 Specific Injury Vulnerability Breakdown</b>
                 <span style={{ fontSize: '11px', background: '#10b981', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>Trained ML Model</span>
               </div>
               
@@ -1014,7 +1328,7 @@ function VideoAnalysis({ athletes, onDone }) {
 
               {(risk?.recommendations || result.recommendations) && (risk?.recommendations?.length > 0 || result.recommendations?.length > 0) && (
                 <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #cbd5e1', fontSize: '12px', color: '#059669' }}>
-                  <b>📋 AI Prescribed Program:</b> {(risk?.recommendations || result.recommendations)[0]}
+                  <b>📋 Prescribed Corrective Exercise:</b> {(risk?.recommendations || result.recommendations)[0]}
                 </div>
               )}
             </div>
@@ -1129,29 +1443,33 @@ function Results({ summary }) {
                     <td colSpan="8" style={{ background: '#f8fafc', padding: '16px', borderLeft: '4px solid #10b981' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
                         <div>
-                          <b style={{ color: '#0f2942', fontSize: '13px' }}>🤖 Specific Injury Category Diagnostics:</b>
+                          <b style={{ color: '#0f2942', fontSize: '13px' }}>🤖 Plain-English Injury Risk Assessment:</b>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px', fontSize: '12px' }}>
                             <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                               🦵 <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round(riskScore * 1.1)))}%
+                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Knee valgus collapse & rotation</small>
                             </div>
                             <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                               🏃 <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round(riskScore * 0.9)))}%
+                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Terminal swing hip overstretch</small>
                             </div>
                             <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                               🦶 <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round(riskScore * 1.05)))}%
+                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Lateral ground contact instability</small>
                             </div>
                             <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                               🧘 <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round(riskScore * 0.85)))}%
+                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Spinal trunk tilt compensation</small>
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <b style={{ color: '#0f2942', fontSize: '13px' }}>📋 AI-Prescribed Corrective Rehabilitation:</b>
+                          <b style={{ color: '#0f2942', fontSize: '13px' }}>📋 Recommended 4-Week Action Plan:</b>
                           <div style={{ marginTop: '10px', fontSize: '12px', color: '#059669', background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                             • <b>Program:</b> {r.recommendations?.[0] || 'Targeted Physiotherapy & Bilateral Symmetry Drills'}
                             <br />
-                            • <b>Expected Recovery:</b> 4–6 weeks supervised physical conditioning.
+                            • <b>Estimated Recovery:</b> 4–6 weeks supervised conditioning.
                           </div>
                         </div>
                       </div>
@@ -1230,10 +1548,10 @@ function Reports({ summary }) {
 
   return (
     <section className="panel report">
-      <h2>Clinical & Coaching Reports</h2>
+      <h2>Clinical & Coaching Reports (Human Understandable)</h2>
       <p>
-        Generates formatted medical and coaching PDF assessments containing athlete joint kinematics, 
-        bilateral limb symmetry indices, predictive injury classification, and tailored corrective exercise prescriptions.
+        Generates comprehensive, clear sports medicine and coaching PDF assessments containing athlete joint kinematics, 
+        bilateral symmetry indices, plain-English injury likelihoods, and actionable 4-week exercise prescriptions.
       </p>
 
       {latest ? (
@@ -1243,7 +1561,7 @@ function Reports({ summary }) {
             Pose Detection: <b>{latest.pose_detection_rate_pct}%</b> • Date: {new Date(latest.created_at).toLocaleString()}
           </p>
           <button className="primary" onClick={() => downloadPdf(latest.analysis_id)}>
-            📥 Download Assessment Report (PDF)
+            📥 Download Complete Assessment Report (PDF)
           </button>
         </div>
       ) : (
