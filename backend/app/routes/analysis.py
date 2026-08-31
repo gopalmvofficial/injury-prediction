@@ -136,9 +136,21 @@ def analyze_video(payload: AnalyzeRequest, db: Session = Depends(get_db),
     db.commit()
     db.refresh(analysis)
 
-    # Rule-based risk prediction + recommendations (placeholder, not a trained ML model)
-    risk = risk_prediction.compute_risk(bio, quality, athlete.injury_history)
+    # Milestone 3 Trained Machine Learning Risk Prediction + Multi-Category Scoring
+    athlete_info = {
+        "age": athlete.age,
+        "height_cm": athlete.height_cm,
+        "weight_kg": athlete.weight_kg,
+        "sport": athlete.sport,
+    }
+    risk = risk_prediction.compute_risk(
+        bio, quality, athlete.injury_history, activity=payload.activity, athlete_data=athlete_info
+    )
     recs = recommendations_module.generate_recommendations(bio, risk)
+
+    # Append ML-prescribed rehabilitation program if available
+    if risk.get("recommended_rehabilitation") and risk["recommended_rehabilitation"] not in recs:
+        recs.insert(0, f"AI-Prescribed Rehabilitation: {risk['recommended_rehabilitation']} (Est. Recovery: {risk.get('estimated_recovery_weeks', 4)} weeks)")
 
     risk_record = RiskResultModel(
         athlete_id=athlete.id,
@@ -147,7 +159,7 @@ def analyze_video(payload: AnalyzeRequest, db: Session = Depends(get_db),
         risk_level=risk["risk_level"],
         contributing_factors_json=json.dumps(risk["contributing_factors"]),
         recommendations_json=json.dumps(recs),
-        is_placeholder_model="true",
+        is_placeholder_model="false" if risk.get("is_machine_learning_predicted") else "true",
     )
     db.add(risk_record)
     db.commit()
