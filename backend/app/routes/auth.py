@@ -90,14 +90,15 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
 
 @router.post("/oauth-login", response_model=AuthResponse)
 def oauth_login(payload: OAuthLoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == payload.email).first()
+    clean_email = str(payload.email).strip().lower()
+    user = db.query(User).filter(User.email == clean_email).first()
     if not user:
         # Auto-create user from Google / Social OAuth profile
-        display_name = payload.name.strip() if payload.name and payload.name.strip() else payload.email.split("@")[0].title()
-        password_hash, salt = hash_password(f"oauth_{payload.provider}_{payload.email}_key")
+        display_name = payload.name.strip() if payload.name and payload.name.strip() else clean_email.split("@")[0].replace(".", " ").title()
+        password_hash, salt = hash_password(f"oauth_{payload.provider}_{clean_email}_key")
         user = User(
             name=display_name,
-            email=payload.email,
+            email=clean_email,
             role=payload.role or "coach",
             password_hash=password_hash,
             password_salt=salt,
