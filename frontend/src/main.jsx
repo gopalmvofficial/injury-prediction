@@ -154,7 +154,7 @@ function AuthScreen({ onAuthenticated }) {
         <div className="auth-visual-inner">
           <div className="auth-brand">
             <div className="brand-mark"><Icon name="activityPulse" size={21} /></div>
-            <div><strong>Injury<span>Sense</span></strong><small>Sports risk intelligence</small></div>
+            <div><strong>Motion<span>IQ</span></strong><small>Sports risk intelligence</small></div>
           </div>
           <div className="auth-hero-copy">
             <span className="hero-badge"><Icon name="activityPulse" size={13} /> BIOMECHANICS INTELLIGENCE</span>
@@ -174,7 +174,7 @@ function AuthScreen({ onAuthenticated }) {
         <div className="auth-card">
           <div className="auth-mobile-brand">
             <div className="brand-mark"><Icon name="activityPulse" size={19} /></div>
-            <strong>Injury<span>Sense</span></strong>
+            <strong>Motion<span>IQ</span></strong>
           </div>
           <div className="auth-heading">
             <span className="section-kicker">{mode === 'login' ? 'WELCOME BACK' : 'GET STARTED'}</span>
@@ -345,7 +345,7 @@ function App() {
       <aside className={sidebarOpen ? 'sidebar open' : 'sidebar'}>
         <div className="brand">
           <div className="brand-mark"><Icon name="activityPulse" size={21} /></div>
-          <div><strong>Injury<span>Sense</span></strong><small>Sports risk intelligence</small></div>
+          <div><strong>Motion<span>IQ</span></strong><small>Sports risk intelligence</small></div>
         </div>
         <div className="milestone-card">
           <div className="milestone-top"><span>PROJECT</span><b>02 / 03</b></div>
