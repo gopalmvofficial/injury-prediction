@@ -55,6 +55,46 @@ function speakBriefing(text, setSpeaking) {
   window.speechSynthesis.speak(utterance);
 }
 
+function triggerConfetti() {
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.inset = '0';
+  container.style.pointerEvents = 'none';
+  container.style.zIndex = '99999';
+  document.body.appendChild(container);
+
+  const colors = ['#7c3aed', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899'];
+  for (let i = 0; i < 45; i++) {
+    const p = document.createElement('div');
+    p.style.position = 'absolute';
+    p.style.left = `${Math.random() * 100}vw`;
+    p.style.top = '-20px';
+    p.style.width = `${Math.random() * 10 + 6}px`;
+    p.style.height = `${Math.random() * 10 + 6}px`;
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.borderRadius = '50%';
+    p.style.transition = 'all 2.5s cubic-bezier(0.25, 1, 0.5, 1)';
+    container.appendChild(p);
+
+    setTimeout(() => {
+      p.style.transform = `translate(${Math.random() * 200 - 100}px, ${window.innerHeight + 50}px) rotate(${Math.random() * 720}deg)`;
+      p.style.opacity = '0';
+    }, 20);
+  }
+
+  setTimeout(() => container.remove(), 2600);
+}
+
+function getAiRoast(kneeAngle = 128, valgus = 14, risk = 82) {
+  const roasts = [
+    `🤖 AI Roast: Knee valgus at ${valgus}°? Your knees are bowing inward like a folding lawn chair on a windy beach! 🪑💨`,
+    `🤖 AI Roast: Knee flexion at ${kneeAngle}°? Bro is squatting like he dropped his phone under the sofa and is trying not to look! 📱`,
+    `🤖 AI Roast: ${risk}% Risk Score? Your joints are making more noise than a bag of potato chips in a quiet movie theater! 🍿`,
+    `🤖 AI Roast: 0% asymmetry? Your balance is so ridiculously steady even a flamingo is taking notes 🦩`,
+  ];
+  return roasts[Math.floor(Math.random() * roasts.length)];
+}
+
 const ICON_SETS = {
   emoji: {
     Dashboard: '📊',
@@ -1697,6 +1737,20 @@ function KinematicsLab() {
   const [injuryHistory, setInjuryHistory] = useState('None');
   const [valgusAngle, setValgusAngle] = useState(8);
   const [selectedJoint, setSelectedJoint] = useState('knee');
+  const [roastMsg, setRoastMsg] = useState('');
+
+  const handleRoast = () => {
+    const roast = getAiRoast(kneeAngle, valgusAngle, sandboxScore);
+    setRoastMsg(roast);
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(roast.replace('🤖 AI Roast: ', ''));
+      window.speechSynthesis.speak(u);
+    }
+    if (sandboxLevel === 'LOW') {
+      triggerConfetti();
+    }
+  };
 
   let sandboxScore = 20;
   if (trainingLoad === 'High') sandboxScore += 18;
@@ -1832,14 +1886,31 @@ function KinematicsLab() {
             <h3>🩻 3D Skeletal Motion Canvas (Live Wireframe Simulator)</h3>
             <small style={{ color: '#059669', fontWeight: 600 }}>Interactive dot-product joint angle telemetry</small>
           </div>
-          <button
-            type="button"
-            className="btnSecondary"
-            onClick={() => setAnimating(!animating)}
-          >
-            {animating ? '⏹ Pause Cycle' : '▶ Play Movement Cycle'}
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              className="btnSecondary"
+              style={{ background: '#fff1f2', color: '#e11d48', border: '1px solid #fda4af' }}
+              onClick={handleRoast}
+            >
+              🔥 Roast My Pose (AI Voice)
+            </button>
+            <button
+              type="button"
+              className="btnSecondary"
+              onClick={() => setAnimating(!animating)}
+            >
+              {animating ? '⏹ Pause Cycle' : '▶ Play Movement Cycle'}
+            </button>
+          </div>
         </div>
+
+        {roastMsg && (
+          <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '12px', padding: '14px', marginTop: '16px', color: '#881337', fontWeight: 700, fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{roastMsg}</span>
+            <button onClick={() => triggerConfetti()} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }} title="Celebrate!">🎉</button>
+          </div>
+        )}
 
         <div className="canvasBox">
           <canvas ref={canvasRef} width={460} height={250} />
@@ -3585,7 +3656,7 @@ function Settings({
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '14px', borderBottom: '1px solid var(--border-purple)' }}>
             <div>
               <strong style={{ fontSize: '14px', color: 'var(--text-dark)' }}>Live Data Auto-Refresh</strong>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Automatically reload athlete analyses and backend health every 30s</div>
@@ -3596,6 +3667,19 @@ function Settings({
               onChange={(e) => setAutoRefresh(e.target.checked)}
               style={{ width: '20px', height: '20px', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
             />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <strong style={{ fontSize: '14px', color: 'var(--text-dark)' }}>🦩 Celebration & Victory Effects</strong>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Enables funny biomechanical roasts, sound briefings, and confetti bursts</div>
+            </div>
+            <button
+              onClick={() => triggerConfetti()}
+              style={{ background: 'var(--accent-primary-light)', color: 'var(--accent-primary)', border: '1px solid var(--border-purple)', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+            >
+              🎉 Trigger Confetti
+            </button>
           </div>
         </div>
       </section>
