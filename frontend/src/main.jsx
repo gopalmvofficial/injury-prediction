@@ -247,6 +247,7 @@ function App() {
           { name: 'Kinematics Lab', icon: '🦴' },
           { name: 'Results', icon: '📈' },
           { name: 'Reports', icon: '📄' },
+          { name: 'Settings', icon: '⚙️' },
         ].map(({ name, icon }) => (
           <button
             className={page === name ? 'nav active' : 'nav'}
@@ -280,6 +281,18 @@ function App() {
           </div>
           <div className="headerActions">
             <div className="online"><i></i> Engine Online</div>
+            {/* Notification Bell */}
+            <button
+              title="Notifications"
+              style={{ background: 'none', border: '1px solid #ddd6fe', borderRadius: '9999px', width: '36px', height: '36px', display: 'grid', placeItems: 'center', fontSize: '16px', position: 'relative', cursor: 'pointer' }}
+            >
+              🔔
+              {(summary?.high_risk_athletes ?? 0) > 0 && (
+                <span style={{ position: 'absolute', top: '-3px', right: '-3px', width: '16px', height: '16px', background: '#dc2626', borderRadius: '50%', fontSize: '8px', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 800 }}>
+                  {summary.high_risk_athletes}
+                </span>
+              )}
+            </button>
             {currentUser && (
               <button
                 type="button"
@@ -351,6 +364,21 @@ function App() {
           />
         )}
         {page === 'Reports' && <Reports summary={summary} />}
+        {page === 'Settings' && (
+          <Settings
+            currentUser={currentUser}
+            onOpenProfile={() => {
+              setProfileForm({ name: currentUser?.name || '', role: currentUser?.role || 'coach' });
+              setProfileModal(true);
+            }}
+            onLogout={handleLogout}
+          />
+        )}
+
+        <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #ede9fe', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '11.5px', flexWrap: 'wrap', gap: '10px' }}>
+          <span>MotionIQ Sports Risk Intelligence • MediaPipe + XGBoost</span>
+          <span>© 2025 MotionIQ Inc. • Secure Encrypted Workspace</span>
+        </footer>
 
         {toast && <div className="toast">{toast}</div>}
 
@@ -381,9 +409,14 @@ function App() {
         {/* Edit User Profile Modal */}
         {profileModal && (
           <div className="oauthModalOverlay" onClick={() => setProfileModal(false)}>
-            <div className="oauthModalCard" onClick={(e) => e.stopPropagation()}>
-              <h3>Edit User Profile</h3>
-              <p>Update your account details and operational role</p>
+            <div className="oauthModalCard" onClick={(e) => e.stopPropagation()} style={{ border: '1px solid #ddd6fe', borderRadius: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '22px', fontWeight: 800, marginBottom: '10px' }}>
+                  {(currentUser?.name || 'U').charAt(0).toUpperCase()}
+                </div>
+                <h3 style={{ margin: 0, fontSize: '18px', color: '#1e1b4b' }}>Edit Profile</h3>
+                <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '12.5px' }}>Update your account details and operational role</p>
+              </div>
               <form onSubmit={handleUpdateProfile} style={{ textAlign: 'left' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
                   Full Name
@@ -393,7 +426,7 @@ function App() {
                   type="text"
                   value={profileForm.name}
                   onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                  style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 12px', fontSize: '13.5px', marginBottom: '14px', boxSizing: 'border-box' }}
+                  style={{ width: '100%', height: '44px', border: '1px solid #ddd6fe', borderRadius: '10px', padding: '0 14px', fontSize: '13.5px', marginBottom: '16px', boxSizing: 'border-box', outline: 'none' }}
                 />
 
                 <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
@@ -402,7 +435,7 @@ function App() {
                 <select
                   value={profileForm.role}
                   onChange={(e) => setProfileForm({ ...profileForm, role: e.target.value })}
-                  style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 10px', fontSize: '13px', marginBottom: '22px', background: '#fff', boxSizing: 'border-box' }}
+                  style={{ width: '100%', height: '44px', border: '1px solid #ddd6fe', borderRadius: '10px', padding: '0 12px', fontSize: '13px', marginBottom: '24px', background: '#fff', boxSizing: 'border-box', outline: 'none' }}
                 >
                   <option value="coach">👨‍🏫 Coach (Team Roster & Squad Risk)</option>
                   <option value="athlete">🏃 Athlete (Personal Movement Screening)</option>
@@ -419,7 +452,7 @@ function App() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="primary">
+                  <button type="submit" className="primary" style={{ borderRadius: '10px', padding: '10px 22px' }}>
                     Save Changes
                   </button>
                 </div>
@@ -1013,6 +1046,22 @@ function Dashboard({ summary, athletes, onNav, userRole }) {
             <span className="kpiBadge" style={{ background: badgeColor.bg, color: badgeColor.color }}>{badge}</span>
           </div>
         ))}
+      </div>
+
+      {/* Quick Actions Bar */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '22px', flexWrap: 'wrap' }}>
+        <button className="primary" onClick={() => onNav('Athletes')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
+          ➕ Add Athlete
+        </button>
+        <button className="btnSecondary" onClick={() => onNav('Video Analysis')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '10px', color: '#4c1d95', fontWeight: 600, cursor: 'pointer' }}>
+          🎥 New Video Analysis
+        </button>
+        <button className="btnSecondary" onClick={() => onNav('Reports')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '10px', color: '#4c1d95', fontWeight: 600, cursor: 'pointer' }}>
+          📄 Clinical Reports
+        </button>
+        <button className="btnSecondary" onClick={() => onNav('Kinematics Lab')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '10px', color: '#4c1d95', fontWeight: 600, cursor: 'pointer' }}>
+          🦴 3D Kinematics Lab
+        </button>
       </div>
 
       {/* Athlete Risk Roster */}
@@ -2481,6 +2530,120 @@ function Reports({ summary }) {
         <Empty text="No video analyses recorded yet. Run a video analysis to generate reports." />
       )}
     </section>
+  );
+}
+
+function Settings({ currentUser, onOpenProfile, onLogout }) {
+  const [emailNotifs, setEmailNotifs] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+
+  return (
+    <div style={{ maxWidth: '800px' }}>
+      {/* Account Settings */}
+      <section className="panel" style={{ marginBottom: '22px' }}>
+        <div className="panelHead">
+          <h3>Account & Profile</h3>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '10px 0' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '26px', fontWeight: 800 }}>
+            {(currentUser?.name || 'U').charAt(0).toUpperCase()}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: '#1e1b4b' }}>{currentUser?.name || 'User'}</div>
+            <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>Role: <span style={{ textTransform: 'capitalize', fontWeight: 700, color: '#7c3aed' }}>{currentUser?.role || 'Coach'}</span></div>
+            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>Account ID: #{currentUser?.id || 'usr_1001'}</div>
+          </div>
+          <button className="primary" onClick={onOpenProfile} style={{ borderRadius: '10px', padding: '10px 20px', fontSize: '13px' }}>
+            ✏️ Edit Profile
+          </button>
+        </div>
+      </section>
+
+      {/* System Preferences */}
+      <section className="panel" style={{ marginBottom: '22px' }}>
+        <div className="panelHead">
+          <h3>System Preferences</h3>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '10px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '14px', borderBottom: '1px solid #ede9fe' }}>
+            <div>
+              <strong style={{ fontSize: '14px', color: '#1e1b4b' }}>Email Alerts & High-Risk Notifications</strong>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>Receive automatic alerts when an athlete's risk score exceeds 75%</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={emailNotifs}
+              onChange={(e) => setEmailNotifs(e.target.checked)}
+              style={{ width: '20px', height: '20px', accentColor: '#7c3aed', cursor: 'pointer' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '14px', borderBottom: '1px solid #ede9fe' }}>
+            <div>
+              <strong style={{ fontSize: '14px', color: '#1e1b4b' }}>Live Data Auto-Refresh</strong>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>Automatically reload athlete analyses and backend health every 30s</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              style={{ width: '20px', height: '20px', accentColor: '#7c3aed', cursor: 'pointer' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <strong style={{ fontSize: '14px', color: '#1e1b4b' }}>Theme Preference</strong>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>Vibrant Gradient (Active Template)</div>
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#7c3aed', background: '#f5f3ff', padding: '4px 12px', borderRadius: '9999px', border: '1px solid #ddd6fe' }}>
+              Template 3 Active
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* System Status & Specifications */}
+      <section className="panel" style={{ marginBottom: '22px' }}>
+        <div className="panelHead">
+          <h3>Platform & Engine Information</h3>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', padding: '10px 0' }}>
+          <div style={{ background: '#faf9ff', padding: '14px', borderRadius: '10px', border: '1px solid #ddd6fe' }}>
+            <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>AI Biomechanics Engine</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e1b4b', marginTop: '4px' }}>Google MediaPipe (33 Landmarks)</div>
+          </div>
+          <div style={{ background: '#faf9ff', padding: '14px', borderRadius: '10px', border: '1px solid #ddd6fe' }}>
+            <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Risk Classification Model</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e1b4b', marginTop: '4px' }}>Supervised XGBoost Classifier</div>
+          </div>
+          <div style={{ background: '#faf9ff', padding: '14px', borderRadius: '10px', border: '1px solid #ddd6fe' }}>
+            <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Client Sync Cache</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#059669', marginTop: '4px' }}>Active (Dual-Sync Resilient)</div>
+          </div>
+          <div style={{ background: '#faf9ff', padding: '14px', borderRadius: '10px', border: '1px solid #ddd6fe' }}>
+            <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Application Version</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e1b4b', marginTop: '4px' }}>MotionIQ v2.0 (Milestone 2)</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Account Session / Danger Zone */}
+      <section className="panel" style={{ border: '1px solid #fecaca', background: '#fef2f2' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <strong style={{ fontSize: '14px', color: '#dc2626' }}>Sign Out of Session</strong>
+            <div style={{ fontSize: '12px', color: '#991b1b', marginTop: '2px' }}>Clears local authentication session tokens and returns to login screen</div>
+          </div>
+          <button
+            onClick={onLogout}
+            style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Sign Out
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 
