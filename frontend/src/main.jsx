@@ -75,6 +75,14 @@ function App() {
   const [toast, setToast] = useState('');
   const [selectedAthlete, setSelectedAthlete] = useState(null);
 
+  // Dynamic Website Theme / Template State
+  const [theme, setTheme] = useState(() => localStorage.getItem('motioniq_theme') || 'vibrant');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('motioniq_theme', theme);
+  }, [theme]);
+
   // Edit User Profile Modal State
   const [profileModal, setProfileModal] = useState(false);
   const [profileForm, setProfileForm] = useState({ name: '', role: 'coach' });
@@ -281,6 +289,32 @@ function App() {
           </div>
           <div className="headerActions">
             <div className="online"><i></i> Engine Online</div>
+
+            {/* Dynamic Theme Switcher Dropdown */}
+            <select
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              title="Switch Website Template / Theme"
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-purple)',
+                color: 'var(--text-dark)',
+                padding: '6px 12px',
+                borderRadius: '9999px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="vibrant">🎨 Vibrant Purple</option>
+              <option value="dark-elite">🌙 Dark Elite</option>
+              <option value="clinical-white">🏥 Clinical White</option>
+              <option value="slate-pro">💼 Slate Pro</option>
+              <option value="emerald-sport">🌿 Emerald Sport</option>
+              <option value="rose-gold">🌹 Rose Gold</option>
+            </select>
+
             {/* Notification Bell */}
             <button
               title="Notifications"
@@ -367,6 +401,8 @@ function App() {
         {page === 'Settings' && (
           <Settings
             currentUser={currentUser}
+            theme={theme}
+            onSelectTheme={setTheme}
             onOpenProfile={() => {
               setProfileForm({ name: currentUser?.name || '', role: currentUser?.role || 'coach' });
               setProfileModal(true);
@@ -2533,12 +2569,21 @@ function Reports({ summary }) {
   );
 }
 
-function Settings({ currentUser, onOpenProfile, onLogout }) {
+function Settings({ currentUser, theme, onSelectTheme, onOpenProfile, onLogout }) {
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
+  const themesList = [
+    { id: 'vibrant', name: 'Template 3: Vibrant Purple', desc: 'Vivid purple gradient sidebar with soft lavender workspace', previewBg: 'linear-gradient(135deg, #3b0764, #7c3aed)', accent: '#7c3aed' },
+    { id: 'dark-elite', name: 'Template 1: Dark Elite', desc: 'OLED dark slate background with neon emerald accents', previewBg: 'linear-gradient(135deg, #090d16, #10b981)', accent: '#10b981' },
+    { id: 'clinical-white', name: 'Template 2: Clinical White', desc: 'Healthcare ultra-clean white design with sapphire blue accents', previewBg: 'linear-gradient(135deg, #1e3a8a, #2563eb)', accent: '#2563eb' },
+    { id: 'slate-pro', name: 'Template 4: Slate Pro', desc: 'Sober corporate slate sidebar with steel blue highlights', previewBg: 'linear-gradient(135deg, #1e293b, #0284c7)', accent: '#0284c7' },
+    { id: 'emerald-sport', name: 'Template 7: Emerald Sport', desc: 'High-performance forest emerald green with gold details', previewBg: 'linear-gradient(135deg, #064e3b, #059669)', accent: '#059669' },
+    { id: 'rose-gold', name: 'Template 8: Crimson Rose', desc: 'Deep burgundy sidebar with rich rose-gold accents', previewBg: 'linear-gradient(135deg, #881337, #e11d48)', accent: '#e11d48' },
+  ];
+
   return (
-    <div style={{ maxWidth: '800px' }}>
+    <div style={{ maxWidth: '850px' }}>
       {/* Account Settings */}
       <section className="panel" style={{ marginBottom: '22px' }}>
         <div className="panelHead">
@@ -2549,13 +2594,57 @@ function Settings({ currentUser, onOpenProfile, onLogout }) {
             {(currentUser?.name || 'U').charAt(0).toUpperCase()}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#1e1b4b' }}>{currentUser?.name || 'User'}</div>
-            <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>Role: <span style={{ textTransform: 'capitalize', fontWeight: 700, color: '#7c3aed' }}>{currentUser?.role || 'Coach'}</span></div>
-            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>Account ID: #{currentUser?.id || 'usr_1001'}</div>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)' }}>{currentUser?.name || 'User'}</div>
+            <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>Role: <span style={{ textTransform: 'capitalize', fontWeight: 700, color: 'var(--accent-primary)' }}>{currentUser?.role || 'Coach'}</span></div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', opacity: 0.8, marginTop: '2px' }}>Account ID: #{currentUser?.id || 'usr_1001'}</div>
           </div>
           <button className="primary" onClick={onOpenProfile} style={{ borderRadius: '10px', padding: '10px 20px', fontSize: '13px' }}>
             ✏️ Edit Profile
           </button>
+        </div>
+      </section>
+
+      {/* Website Template & Theme Switcher */}
+      <section className="panel" style={{ marginBottom: '22px' }}>
+        <div className="panelHead">
+          <h3>Website Theme & Visual Template</h3>
+          <span className="count">{theme.toUpperCase()} ACTIVE</span>
+        </div>
+        <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--text-muted)' }}>
+          Choose your preferred UI theme. Selecting a theme immediately updates the colors, sidebar gradients, card borders, and layout accents across the entire website.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px' }}>
+          {themesList.map((t) => {
+            const isSelected = theme === t.id;
+            return (
+              <div
+                key={t.id}
+                onClick={() => onSelectTheme(t.id)}
+                style={{
+                  border: isSelected ? `2px solid ${t.accent}` : '1px solid var(--border-purple)',
+                  background: isSelected ? 'var(--bg-card-subtle)' : 'var(--bg-card)',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: isSelected ? `0 4px 16px ${t.accent}22` : 'none',
+                  position: 'relative'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: t.previewBg, flexShrink: 0, border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }} />
+                  <strong style={{ fontSize: '14px', color: 'var(--text-dark)', fontWeight: 800 }}>{t.name}</strong>
+                  {isSelected && (
+                    <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 800, background: t.accent, color: '#fff', padding: '2px 8px', borderRadius: '9999px' }}>
+                      ACTIVE ✓
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>{t.desc}</div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -2565,40 +2654,30 @@ function Settings({ currentUser, onOpenProfile, onLogout }) {
           <h3>System Preferences</h3>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '10px 0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '14px', borderBottom: '1px solid #ede9fe' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '14px', borderBottom: '1px solid var(--border-purple)' }}>
             <div>
-              <strong style={{ fontSize: '14px', color: '#1e1b4b' }}>Email Alerts & High-Risk Notifications</strong>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>Receive automatic alerts when an athlete's risk score exceeds 75%</div>
+              <strong style={{ fontSize: '14px', color: 'var(--text-dark)' }}>Email Alerts & High-Risk Notifications</strong>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Receive automatic alerts when an athlete's risk score exceeds 75%</div>
             </div>
             <input
               type="checkbox"
               checked={emailNotifs}
               onChange={(e) => setEmailNotifs(e.target.checked)}
-              style={{ width: '20px', height: '20px', accentColor: '#7c3aed', cursor: 'pointer' }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '14px', borderBottom: '1px solid #ede9fe' }}>
-            <div>
-              <strong style={{ fontSize: '14px', color: '#1e1b4b' }}>Live Data Auto-Refresh</strong>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>Automatically reload athlete analyses and backend health every 30s</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={autoRefresh}
-              onChange={(e) => setAutoRefresh(e.target.checked)}
-              style={{ width: '20px', height: '20px', accentColor: '#7c3aed', cursor: 'pointer' }}
+              style={{ width: '20px', height: '20px', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
             />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <strong style={{ fontSize: '14px', color: '#1e1b4b' }}>Theme Preference</strong>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>Vibrant Gradient (Active Template)</div>
+              <strong style={{ fontSize: '14px', color: 'var(--text-dark)' }}>Live Data Auto-Refresh</strong>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Automatically reload athlete analyses and backend health every 30s</div>
             </div>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#7c3aed', background: '#f5f3ff', padding: '4px 12px', borderRadius: '9999px', border: '1px solid #ddd6fe' }}>
-              Template 3 Active
-            </span>
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              style={{ width: '20px', height: '20px', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
+            />
           </div>
         </div>
       </section>

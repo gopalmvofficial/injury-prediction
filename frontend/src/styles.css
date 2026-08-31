@@ -424,3 +424,122 @@ header p { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
   .kpiGrid { grid-template-columns: 1fr; }
   .athleteRosterGrid { grid-template-columns: 1fr; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   THEME DEFINITIONS FOR DYNAMIC THEME SWITCHER
+   ───────────────────────────────────────────────────────────── */
+
+/* 1. Vibrant Gradient (Default) */
+[data-theme="vibrant"], :root {
+  --sidebar-bg: linear-gradient(180deg, #3b0764 0%, #4c1d95 35%, #312e81 100%);
+  --bg-app: #f5f3ff;
+  --bg-workspace: #ede9fe;
+  --bg-card: #ffffff;
+  --bg-card-subtle: #faf9ff;
+  --accent-primary: #7c3aed;
+  --accent-primary-dark: #6d28d9;
+  --accent-primary-light: #ede9fe;
+  --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+  --accent-gradient-vivid: linear-gradient(135deg, #9333ea 0%, #6366f1 50%, #3b82f6 100%);
+  --text-dark: #1e1b4b;
+  --text-mid: #374151;
+  --text-muted: #6b7280;
+  --border-purple: #ddd6fe;
+  --border-light: #e5e7eb;
+}
+
+/* 2. Dark Elite (Dark Slate & Emerald) */
+[data-theme="dark-elite"] {
+  --sidebar-bg: linear-gradient(180deg, #090d16 0%, #0f172a 100%);
+  --bg-app: #090d16;
+  --bg-workspace: #0f172a;
+  --bg-card: #0f172a;
+  --bg-card-subtle: #1e293b;
+  --accent-primary: #10b981;
+  --accent-primary-dark: #059669;
+  --accent-primary-light: rgba(16, 185, 129, 0.12);
+  --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --accent-gradient-vivid: linear-gradient(135deg, #059669 0%, #0d9488 50%, #0284c7 100%);
+  --text-dark: #f8fafc;
+  --text-mid: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-purple: #334155;
+  --border-light: #1e293b;
+}
+
+/* 3. Clinical White (Ultra-Clean & Sapphire Blue) */
+[data-theme="clinical-white"] {
+  --sidebar-bg: linear-gradient(180deg, #1e3a8a 0%, #1d4ed8 100%);
+  --bg-app: #f8fafc;
+  --bg-workspace: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-subtle: #f8fafc;
+  --accent-primary: #2563eb;
+  --accent-primary-dark: #1d4ed8;
+  --accent-primary-light: #dbeafe;
+  --accent-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --accent-gradient-vivid: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #0284c7 100%);
+  --text-dark: #0f172a;
+  --text-mid: #334155;
+  --text-muted: #64748b;
+  --border-purple: #bfdbfe;
+  --border-light: #e2e8f0;
+}
+
+/* 4. Slate Pro (Sober Steel Blue & Slate) */
+[data-theme="slate-pro"] {
+  --sidebar-bg: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+  --bg-app: #f1f5f9;
+  --bg-workspace: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-card-subtle: #f8fafc;
+  --accent-primary: #0284c7;
+  --accent-primary-dark: #0369a1;
+  --accent-primary-light: #e0f2fe;
+  --accent-gradient: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  --accent-gradient-vivid: linear-gradient(135deg, #0f172a 0%, #334155 50%, #0284c7 100%);
+  --text-dark: #0f172a;
+  --text-mid: #334155;
+  --text-muted: #64748b;
+  --border-purple: #bae6fd;
+  --border-light: #cbd5e1;
+}
+
+/* 5. Emerald Sport (Forest Green & Gold Accent) */
+[data-theme="emerald-sport"] {
+  --sidebar-bg: linear-gradient(180deg, #064e3b 0%, #047857 100%);
+  --bg-app: #f0fdf4;
+  --bg-workspace: #dcfce7;
+  --bg-card: #ffffff;
+  --bg-card-subtle: #f0fdf4;
+  --accent-primary: #059669;
+  --accent-primary-dark: #047857;
+  --accent-primary-light: #dcfce7;
+  --accent-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
+  --accent-gradient-vivid: linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%);
+  --text-dark: #064e3b;
+  --text-mid: #166534;
+  --text-muted: #4b5563;
+  --border-purple: #a7f3d0;
+  --border-light: #bbf7d0;
+}
+
+/* 6. Crimson Rose (Rose Gold & Burgundy) */
+[data-theme="rose-gold"] {
+  --sidebar-bg: linear-gradient(180deg, #881337 0%, #be123c 100%);
+  --bg-app: #fff1f2;
+  --bg-workspace: #ffe4e6;
+  --bg-card: #ffffff;
+  --bg-card-subtle: #fff1f2;
+  --accent-primary: #e11d48;
+  --accent-primary-dark: #be123c;
+  --accent-primary-light: #ffe4e6;
+  --accent-gradient: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  --accent-gradient-vivid: linear-gradient(135deg, #881337 0%, #e11d48 50%, #f43f5e 100%);
+  --text-dark: #4c0519;
+  --text-mid: #881337;
+  --text-muted: #71717a;
+  --border-purple: #fecdd3;
+  --border-light: #fda4af;
+}
+
