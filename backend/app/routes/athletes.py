@@ -49,52 +49,6 @@ def list_athletes(db: Session = Depends(get_db), current_user: User = Depends(ge
         .order_by(AthleteModel.created_at.desc())
         .all()
     )
-    if not athletes:
-        # Initialize default squad profiles for this user so roster data is immediately active
-        defaults = [
-            AthleteModel(
-                user_id=current_user.id,
-                name="Jordan Miller",
-                sport="Basketball",
-                position="Point Guard",
-                age=22,
-                height_cm=188.0,
-                weight_kg=84.0,
-                injury_history="Previous right ankle sprain (Grade 1, resolved)",
-                training_load="High",
-            ),
-            AthleteModel(
-                user_id=current_user.id,
-                name="Alex Rivera",
-                sport="Football",
-                position="Striker",
-                age=24,
-                height_cm=182.0,
-                weight_kg=77.0,
-                injury_history="Mild hamstring tightness during sprint acceleration",
-                training_load="Moderate",
-            ),
-            AthleteModel(
-                user_id=current_user.id,
-                name="Marcus Vance",
-                sport="Athletics",
-                position="Sprinter",
-                age=21,
-                height_cm=179.0,
-                weight_kg=73.0,
-                injury_history="None documented",
-                training_load="Extreme",
-            ),
-        ]
-        for d in defaults:
-            db.add(d)
-        db.commit()
-        athletes = (
-            db.query(AthleteModel)
-            .filter(AthleteModel.user_id == current_user.id)
-            .order_by(AthleteModel.created_at.desc())
-            .all()
-        )
     return [_to_schema(a) for a in athletes]
 
 
