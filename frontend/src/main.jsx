@@ -107,8 +107,8 @@ function App() {
           </div>
         </div>
         <div className="milestone">
-          MILESTONE 2 OF 3<br />
-          <strong>Pose & Biomechanics</strong>
+          MILESTONE 3 OF 4<br />
+          <strong>Machine Learning & Prediction</strong>
         </div>
         {['Dashboard', 'Athletes', 'Video Analysis', 'Results', 'Reports'].map((x) => (
           <button
