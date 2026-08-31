@@ -230,14 +230,14 @@ function App() {
         <div className="brand">
           <div className="brandIcon">⚡</div>
           <div>
-            <b>SPORTS INJURY RISK</b>
-            <span>Kinetic Vision Intelligence</span>
+            <b>Motion<span style={{color:'#c4b5fd'}}>IQ</span></b>
+            <span>Sports Risk Intelligence</span>
           </div>
         </div>
 
         <div className="engineBadge">
           AI PREDICTIVE ENGINE
-          <strong>3D Vision + Machine Learning</strong>
+          <strong>MediaPipe · XGBoost · CV</strong>
         </div>
 
         {[
@@ -259,18 +259,27 @@ function App() {
         ))}
 
         <div className="sidefoot">
-          Computer Vision Engine<br />
-          OpenCV • MediaPipe • Supervised ML
+          MotionIQ v2.0 · Milestone 2<br />
+          OpenCV · MediaPipe · Supervised ML
         </div>
       </aside>
 
       <main>
         <header>
           <div>
-            <h1>{page}</h1>
-            <p>Sports Injury Risk Detection and Prevention System</p>
+            <h1 style={{fontSize:'22px', fontWeight:900, margin:0, color:'#1e1b4b', letterSpacing:'-0.4px'}}>
+              {page === 'Dashboard'
+                ? `Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, ${currentUser?.name?.split(' ')[0] || 'Coach'}! 👋`
+                : page}
+            </h1>
+            <p style={{margin:'3px 0 0', color:'#6b7280', fontSize:'13px'}}>
+              {page === 'Dashboard'
+                ? "Here is today's injury risk overview."
+                : 'Sports Injury Risk Detection and Prevention System'}
+            </p>
           </div>
           <div className="headerActions">
+            <div className="online"><i></i> Engine Online</div>
             {currentUser && (
               <button
                 type="button"
@@ -279,39 +288,27 @@ function App() {
                   setProfileModal(true);
                 }}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: '#fff',
-                  border: '1px solid #e2e8f0',
-                  padding: '5px 12px',
-                  borderRadius: '9999px',
-                  cursor: 'pointer',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  background: '#fff', border: '1px solid #ddd6fe',
+                  padding: '6px 14px 6px 8px', borderRadius: '9999px',
+                  cursor: 'pointer', boxShadow: '0 1px 4px rgba(124,58,237,0.1)'
                 }}
               >
-                <span style={{ fontSize: '13px', color: '#0f172a', fontWeight: 700 }}>👤 {currentUser.name}</span>
-                <span style={{
-                  fontSize: '10px',
-                  textTransform: 'uppercase',
-                  fontWeight: 800,
-                  letterSpacing: '0.5px',
-                  background: currentUser.role === 'admin' ? '#fef2f2' : currentUser.role === 'athlete' ? '#ecfdf5' : currentUser.role === 'physiotherapist' ? '#fdf4ff' : currentUser.role === 'sports_scientist' ? '#eff6ff' : '#f0fdf4',
-                  color: currentUser.role === 'admin' ? '#dc2626' : currentUser.role === 'athlete' ? '#059669' : currentUser.role === 'physiotherapist' ? '#a855f7' : currentUser.role === 'sports_scientist' ? '#2563eb' : '#166534',
-                  border: '1px solid currentColor',
-                  padding: '2px 8px',
-                  borderRadius: '9999px',
+                <div style={{
+                  width: '30px', height: '30px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                  color: '#fff', display: 'grid', placeItems: 'center',
+                  fontSize: '13px', fontWeight: 800
                 }}>
-                  {currentUser.role || 'COACH'} ✏️
-                </span>
+                  {(currentUser.name || 'U').charAt(0).toUpperCase()}
+                </div>
+                <div style={{textAlign:'left'}}>
+                  <div style={{fontSize:'12px', fontWeight:700, color:'#1e1b4b', lineHeight:1.2}}>{currentUser.name}</div>
+                  <div style={{fontSize:'10px', color:'#7c3aed', fontWeight:600, textTransform:'capitalize'}}>{currentUser.role || 'coach'} ✏️</div>
+                </div>
               </button>
             )}
-            <div className="online">
-              <i></i> Engine Online
-            </div>
-            <button className="logout" onClick={handleLogout}>
-              Sign out
-            </button>
+            <button className="logout" onClick={handleLogout}>Sign out</button>
           </div>
         </header>
 
@@ -957,33 +954,123 @@ function Dashboard({ summary, athletes, onNav, userRole }) {
   const highRisk = summary?.high_risk_athletes ?? 0;
   const recentAnalyses = summary?.recent_analyses ?? [];
   const readinessScore = highRisk > 0 ? Math.max(50, 88 - highRisk * 12) : 92;
+  const pendingCount = recentAnalyses.filter(a => !a.risk_level || a.risk_level === 'Unknown').length || Math.max(0, totalVideos - recentAnalyses.length);
+
+  // Build athlete risk cards from athletes + recent analyses
+  const athleteCards = athletes.map(a => {
+    const analysis = recentAnalyses.find(r => r.athlete_id === a.id || r.athlete_name === a.name);
+    const risk = analysis?.risk_level || 'Unknown';
+    const riskScore = analysis?.risk_score ?? null;
+    const concern = analysis?.primary_concern || analysis?.injury_type || '—';
+    const lastScan = analysis?.created_at
+      ? new Date(analysis.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+      : 'No scan yet';
+    return { ...a, risk, riskScore, concern, lastScan };
+  });
+
+  const getRiskClass = (r) => {
+    if (!r || r === 'Unknown') return 'unknown';
+    const l = r.toLowerCase();
+    if (l.includes('high') || l.includes('critical')) return 'high';
+    if (l.includes('mod')) return 'moderate';
+    return 'low';
+  };
+
+  const getRiskColor = (r) => {
+    const c = getRiskClass(r);
+    if (c === 'high') return { bg:'#fef2f2', color:'#dc2626', border:'#fecaca' };
+    if (c === 'moderate') return { bg:'#fffbeb', color:'#d97706', border:'#fde68a' };
+    if (c === 'low') return { bg:'#ecfdf5', color:'#059669', border:'#a7f3d0' };
+    return { bg:'#f1f5f9', color:'#64748b', border:'#e2e8f0' };
+  };
+
+  const getAvatarGradient = (r) => {
+    const c = getRiskClass(r);
+    if (c === 'high') return 'linear-gradient(135deg,#dc2626,#991b1b)';
+    if (c === 'moderate') return 'linear-gradient(135deg,#d97706,#b45309)';
+    if (c === 'low') return 'linear-gradient(135deg,#059669,#047857)';
+    return 'linear-gradient(135deg,#7c3aed,#4f46e5)';
+  };
+
+  const kpiCards = [
+    { label:'Total Athletes Monitored', value: totalAthletes, badge:'Active', badgeColor:{bg:'#ecfdf5',color:'#059669'}, icon:'🏃' },
+    { label:'Athletes at High Risk',    value: highRisk,       badge: highRisk > 0 ? 'Critical' : 'Clear', badgeColor: highRisk > 0 ? {bg:'#fef2f2',color:'#dc2626'} : {bg:'#ecfdf5',color:'#059669'}, icon:'⚠️' },
+    { label:'New Assessments Today',    value: totalVideos,    badge:'Pending Review', badgeColor:{bg:'#fffbeb',color:'#d97706'}, icon:'🎥' },
+    { label:'Average Team Readiness',   value:`${readinessScore}%`, badge: readinessScore >= 80 ? 'Optimal' : readinessScore >= 60 ? 'Good' : 'At Risk', badgeColor: readinessScore >= 80 ? {bg:'#ecfdf5',color:'#059669'} : readinessScore >= 60 ? {bg:'#fffbeb',color:'#d97706'} : {bg:'#fef2f2',color:'#dc2626'}, icon:'⚡' },
+  ];
 
   return (
     <>
-      <section className="hero">
-        <div>
-          <span className="eyebrow">PREDICTIVE SPORTS INTELLIGENCE</span>
-          <h2>
-            AI Biomechanics &<br />
-            <em>Injury Risk Intelligence</em>
-          </h2>
-          <p>
-            Transforms standard optical video into 3D skeletal kinematics. Quantifies joint flexion angles, bilateral symmetry balance, and spinal posture with automated Machine Learning injury risk prediction.
-          </p>
-        </div>
-        <div className="heroGraphic">
-          3D
-          <div>POSE AI</div>
-        </div>
-      </section>
-
-      <div className="cards">
-        <Card title="Registered Athletes" value={totalAthletes} icon="🏃" />
-        <Card title="Videos Analyzed" value={totalVideos} icon="🎥" />
-        <Card title="Squad Readiness Index" value={`${readinessScore}%`} icon="⚡" />
-        <Card title="AI Engine Status" value="ONLINE" icon="✅" />
+      {/* KPI Cards */}
+      <div className="kpiGrid">
+        {kpiCards.map(({ label, value, badge, badgeColor, icon }) => (
+          <div className="kpiCard" key={label}>
+            <div className="kpiTop">
+              <span className="kpiLabel">{label}</span>
+              <span className="kpiIcon">{icon}</span>
+            </div>
+            <div className="kpiValue">{value}</div>
+            <span className="kpiBadge" style={{ background: badgeColor.bg, color: badgeColor.color }}>{badge}</span>
+          </div>
+        ))}
       </div>
 
+      {/* Athlete Risk Roster */}
+      <div className="panel" style={{marginBottom:'22px'}}>
+        <div className="panelHead">
+          <h3>Athlete Risk Roster</h3>
+          <button onClick={() => onNav('Athletes')}>View all athletes →</button>
+        </div>
+
+        {athleteCards.length === 0 ? (
+          <div className="empty">
+            <div style={{fontSize:'36px', marginBottom:'8px'}}>🏃</div>
+            <div style={{fontWeight:700, color:'#1e1b4b', marginBottom:'4px'}}>No athletes yet</div>
+            <div style={{color:'#6b7280', fontSize:'12px', marginBottom:'16px'}}>Add athletes to see them here</div>
+            <button className="primary small" onClick={() => onNav('Athletes')}>Add first athlete</button>
+          </div>
+        ) : (
+          <div className="athleteRosterGrid">
+            {athleteCards.map((a) => {
+              const rc = getRiskColor(a.risk);
+              return (
+                <div className="athleteCard" key={a.id} onClick={() => onNav('Athletes')}>
+                  <div className="athleteCardTop">
+                    <div className="athleteAvatar" style={{ background: getAvatarGradient(a.risk) }}>
+                      {(a.name || 'A').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="athleteCardInfo">
+                      <div className="athleteCardName">{a.name}</div>
+                      <div className="athleteCardSport">{a.sport || 'Sport'}{a.position ? ` · ${a.position}` : ''}</div>
+                    </div>
+                  </div>
+                  <span className="riskPill" style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}` }}>
+                    {a.risk === 'Unknown' ? 'Not Assessed' : `${a.risk.charAt(0).toUpperCase() + a.risk.slice(1)} Risk`}
+                  </span>
+                  <div className="athleteCardMeta">
+                    {a.riskScore !== null && (
+                      <div className="athleteMetaRow">
+                        <span>Risk Score</span>
+                        <strong style={{color: rc.color}}>{Math.round(a.riskScore * 100)}%</strong>
+                      </div>
+                    )}
+                    <div className="athleteMetaRow">
+                      <span>Primary Concern</span>
+                      <strong>{a.concern}</strong>
+                    </div>
+                    <div className="athleteMetaRow">
+                      <span>Last Scan</span>
+                      <strong>{a.lastScan}</strong>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Recent Screenings + Pipeline */}
       <div className="grid2">
         <section className="panel">
           <div className="panelHead">
