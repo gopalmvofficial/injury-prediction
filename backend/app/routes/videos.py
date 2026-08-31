@@ -3,9 +3,8 @@ routes/videos.py
 
 POST /api/videos/upload
 GET  /api/results/video/{filename}   (serves processed video for playback)
-
-Video records are persisted in SQLite, associated with an athlete owned by
-the logged-in user.
+GET  /api/uploads/{filename}         (serves uploaded original video for playback)
+GET  /api/videos/{video_id}/stream   (streams video by ID)
 """
 from __future__ import annotations
 
@@ -85,8 +84,29 @@ def get_processed_video(filename: str):
     safe_name = os.path.basename(filename)
     path = os.path.join(RESULTS_DIR, safe_name)
     if not os.path.exists(path):
+        # Check upload dir as fallback
+        up_path = os.path.join(UPLOAD_DIR, safe_name)
+        if os.path.exists(up_path):
+            return FileResponse(up_path, media_type="video/mp4", headers={"Accept-Ranges": "bytes"})
         raise HTTPException(status_code=404, detail="Processed video not found.")
-    return FileResponse(path, media_type="video/mp4")
+    return FileResponse(path, media_type="video/mp4", headers={"Accept-Ranges": "bytes"})
+
+
+@router.get("/uploads/{filename}")
+def get_uploaded_video(filename: str):
+    safe_name = os.path.basename(filename)
+    path = os.path.join(UPLOAD_DIR, safe_name)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Uploaded video file not found.")
+    return FileResponse(path, media_type="video/mp4", headers={"Accept-Ranges": "bytes"})
+
+
+@router.get("/videos/{video_id}/stream")
+def stream_video(video_id: str, db: Session = Depends(get_db)):
+    video = db.query(VideoModel).filter(VideoModel.id == video_id).first()
+    if not video or not video.stored_path or not os.path.exists(video.stored_path):
+        raise HTTPException(status_code=404, detail="Video file not found.")
+    return FileResponse(video.stored_path, media_type="video/mp4", headers={"Accept-Ranges": "bytes"})
 
 
 @router.get("/athletes/{athlete_id}/videos")
