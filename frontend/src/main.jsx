@@ -171,8 +171,8 @@ function App() {
                   textTransform: 'uppercase',
                   fontWeight: 800,
                   letterSpacing: '0.5px',
-                  background: currentUser.role === 'admin' ? '#fef2f2' : currentUser.role === 'athlete' ? '#f0fdfa' : currentUser.role === 'physiotherapist' ? '#fdf4ff' : '#eff6ff',
-                  color: currentUser.role === 'admin' ? '#dc2626' : currentUser.role === 'athlete' ? '#0d9488' : currentUser.role === 'physiotherapist' ? '#a855f7' : '#2563eb',
+                  background: currentUser.role === 'admin' ? '#fef2f2' : currentUser.role === 'athlete' ? '#f0fdfa' : currentUser.role === 'physiotherapist' ? '#fdf4ff' : currentUser.role === 'sports_scientist' ? '#eff6ff' : '#f0fdf4',
+                  color: currentUser.role === 'admin' ? '#dc2626' : currentUser.role === 'athlete' ? '#0d9488' : currentUser.role === 'physiotherapist' ? '#a855f7' : currentUser.role === 'sports_scientist' ? '#2563eb' : '#166534',
                   border: '1px solid currentColor',
                   padding: '2px 8px',
                   borderRadius: '9999px',
@@ -219,13 +219,12 @@ function App() {
 }
 
 function AuthScreen({ onSuccess }) {
+  const [authView, setAuthView] = useState('standard'); // 'standard' | 'google' | 'microsoft' | 'apple'
   const [mode, setMode] = useState('login');
   const [role, setRole] = useState('coach');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
-
-  const [oauthModal, setOauthModal] = useState(null);
   const [oauthEmail, setOauthEmail] = useState('');
   const [oauthName, setOauthName] = useState('');
 
@@ -257,7 +256,7 @@ function AuthScreen({ onSuccess }) {
   };
 
   const handleOAuthLogin = async (provider, email, name, userRole = 'coach') => {
-    if (!email) return setError('Please provide a valid email address.');
+    if (!email || !email.includes('@')) return setError('Please enter a valid Google email address.');
     setBusy(true);
     setError('');
     try {
@@ -266,13 +265,12 @@ function AuthScreen({ onSuccess }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           provider: provider.toLowerCase(),
-          email: email,
-          name: name || email.split('@')[0],
+          email: email.trim().toLowerCase(),
+          name: name || email.split('@')[0].replace('.', ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
           role: userRole,
         }),
       });
       if (!res.token) throw new Error('No authentication token received.');
-      setOauthModal(null);
       onSuccess(res.token, res.user);
     } catch (err) {
       setError(err.message || `${provider} authentication failed.`);
@@ -281,12 +279,85 @@ function AuthScreen({ onSuccess }) {
     }
   };
 
-  const openSocial = (provider) => {
-    setOauthModal(provider);
-    setOauthEmail('');
-    setOauthName('');
-    setError('');
-  };
+  // Dedicated Google Sign-In Landing View
+  if (authView === 'google') {
+    return (
+      <div className="authShell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+        <div style={{
+          width: 'min(440px, 92vw)',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '24px',
+          padding: '38px 32px',
+          boxShadow: '0 20px 60px rgba(15, 23, 42, 0.08)',
+          textAlign: 'center',
+          boxSizing: 'border-box'
+        }}>
+          {/* Google SVG Logo */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px' }}>
+            <svg width="44" height="44" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+          </div>
+
+          <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>Sign in with Google</h2>
+          <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 22px' }}>to continue to Sports Injury Intelligence</p>
+
+          {error && <div className="authError" style={{ textAlign: 'left', marginBottom: '14px' }}>{error}</div>}
+
+          <form onSubmit={(e) => { e.preventDefault(); handleOAuthLogin('Google', oauthEmail, oauthName, role); }} style={{ textAlign: 'left' }}>
+            <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+              Email address
+            </label>
+            <input
+              required
+              type="email"
+              value={oauthEmail}
+              onChange={(e) => setOauthEmail(e.target.value)}
+              placeholder="name@gmail.com"
+              style={{ width: '100%', height: '46px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 14px', fontSize: '14px', marginBottom: '16px', outline: 'none', boxSizing: 'border-box' }}
+            />
+
+            <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+              Select Operating Role:
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              style={{ width: '100%', height: '46px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 12px', fontSize: '13px', marginBottom: '24px', background: '#fff', boxSizing: 'border-box' }}
+            >
+              <option value="coach">👨‍🏫 Coach (Team Roster & Squad Risk Oversight)</option>
+              <option value="athlete">🏃 Athlete (Personal Movement Screening)</option>
+              <option value="physiotherapist">🩺 Physiotherapist (Rehabilitation & Kinematics)</option>
+              <option value="sports_scientist">🔬 Sports Scientist (Kinematic Modeling)</option>
+              <option value="admin">🛡️ Administrator (System & Database Access)</option>
+            </select>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => { setAuthView('standard'); setError(''); }}
+                style={{ border: 'none', background: 'transparent', color: '#0d9488', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                ← Back to sign in
+              </button>
+              <button
+                type="submit"
+                className="primary"
+                disabled={busy || !oauthEmail}
+                style={{ padding: '10px 24px', fontSize: '13px', borderRadius: '8px' }}
+              >
+                {busy ? 'Authenticating…' : 'Sign in with Google'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="authShell">
@@ -301,7 +372,7 @@ function AuthScreen({ onSuccess }) {
           Quantify athlete kinematics, detect abnormal joint loading patterns, and leverage predictive machine learning for proactive injury prevention.
         </p>
         <div className="authPoints">
-          <span>✓ Role-based portals for Coaches, Athletes, Physios & Admins</span>
+          <span>✓ Role-based access for Athletes, Coaches, Physios, Scientists & Admins</span>
           <span>✓ 33 3D skeletal landmark tracking with Google MediaPipe</span>
           <span>✓ Real-time joint angle, ROM, and bilateral symmetry math</span>
           <span>✓ Supervised Machine Learning multi-category injury risk predictions</span>
@@ -315,8 +386,8 @@ function AuthScreen({ onSuccess }) {
         <h2>{mode === 'login' ? 'Welcome back' : 'Create an Account'}</h2>
         <p className="authSub">
           {mode === 'login'
-            ? 'Sign in to access your role-specific dashboard.'
-            : 'Register to manage athletes, screenings, and rehabilitation.'}
+            ? 'Sign in to access your role-specific screening dashboard.'
+            : 'Register to manage athlete profiles and movement analyses.'}
         </p>
 
         {/* Role Selector Tabs (Athlete / Coach / Physio / Scientist / Admin) */}
@@ -357,103 +428,16 @@ function AuthScreen({ onSuccess }) {
 
         {/* Social / OAuth Logins */}
         <div className="socials">
-          <button type="button" onClick={() => openSocial('Google')}>
+          <button type="button" onClick={() => { setAuthView('google'); setError(''); setOauthEmail(''); }}>
             <span style={{ fontWeight: 800, color: '#ea4335', fontSize: '15px' }}>G</span> <span>Continue with Google</span>
           </button>
-          <button type="button" onClick={() => openSocial('Microsoft')}>
+          <button type="button" onClick={() => { setAuthView('google'); setError(''); setOauthEmail(''); }}>
             <span style={{ color: '#00a4ef' }}>▦</span> <span>Continue with Microsoft</span>
           </button>
-          <button type="button" onClick={() => openSocial('Apple')}>
+          <button type="button" onClick={() => { setAuthView('google'); setError(''); setOauthEmail(''); }}>
             <span>●</span> <span>Continue with Apple</span>
           </button>
         </div>
-
-        {/* Dedicated Google / Social Sign-In Modal */}
-        {oauthModal && (
-          <div style={{ marginTop: '16px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1.5px solid #0d9488', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <b style={{ fontSize: '13px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ color: oauthModal === 'Google' ? '#ea4335' : oauthModal === 'Microsoft' ? '#00a4ef' : '#000', fontWeight: 800 }}>
-                  {oauthModal === 'Google' ? 'G' : oauthModal === 'Microsoft' ? '▦' : '●'}
-                </span>
-                Sign in with {oauthModal} Account
-              </b>
-              <button 
-                type="button" 
-                onClick={() => setOauthModal(null)} 
-                style={{ border: 'none', background: 'transparent', fontSize: '14px', color: '#94a3b8', cursor: 'pointer' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Quick One-Click Google Profiles */}
-            <div style={{ marginBottom: '12px' }}>
-              <small style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
-                Choose a verified account:
-              </small>
-              <div style={{ display: 'grid', gap: '6px' }}>
-                {[
-                  { name: 'Gopal M V', email: 'gopalmvofficial@gmail.com', r: 'coach', title: 'Lead Coach / Athlete' },
-                  { name: 'Dr. Sarah Chen, PT', email: 'sarah.chen.pt@gmail.com', r: 'physiotherapist', title: 'Physiotherapist' },
-                  { name: 'Jordan Miller', email: 'jordan.athlete@gmail.com', r: 'athlete', title: 'Pro Athlete' },
-                ].map((acc) => (
-                  <button
-                    key={acc.email}
-                    type="button"
-                    onClick={() => handleOAuthLogin(oauthModal, acc.email, acc.name, acc.r)}
-                    disabled={busy}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '8px 10px',
-                      background: '#fff',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '11.5px',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <div>
-                      <b style={{ color: '#0f172a', display: 'block' }}>{acc.name}</b>
-                      <span style={{ color: '#64748b', fontSize: '10.5px' }}>{acc.email}</span>
-                    </div>
-                    <span style={{ fontSize: '10px', color: '#0d9488', fontWeight: 700, background: '#f0fdfa', padding: '2px 6px', borderRadius: '4px' }}>
-                      {acc.title} →
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="divider" style={{ margin: '10px 0' }}>
-              <span>or enter your own {oauthModal} email</span>
-            </div>
-
-            <label style={{ fontSize: '11px', display: 'block', marginBottom: '6px', color: '#334155', fontWeight: 700 }}>
-              Your {oauthModal} Email:
-              <input 
-                type="email" 
-                value={oauthEmail} 
-                onChange={(e) => setOauthEmail(e.target.value)} 
-                placeholder={`yourname@${oauthModal.toLowerCase() === 'google' ? 'gmail.com' : 'outlook.com'}`}
-                style={{ width: '100%', padding: '8px 10px', fontSize: '12.5px', marginTop: '4px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
-              />
-            </label>
-
-            <button 
-              type="button" 
-              className="primary full" 
-              onClick={() => handleOAuthLogin(oauthModal, oauthEmail, oauthName, role)}
-              disabled={busy || !oauthEmail}
-              style={{ marginTop: '8px', padding: '9px', fontSize: '12px' }}
-            >
-              {busy ? 'Authenticating with Google…' : `Continue with ${oauthModal}`}
-            </button>
-          </div>
-        )}
 
         {/* 1-Click Role-Based Quick Access */}
         <div style={{ marginTop: '14px', background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
@@ -463,28 +447,28 @@ function AuthScreen({ onSuccess }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button 
               type="button" 
-              onClick={() => handleOAuthLogin('Google', 'headcoach@sportsinjury.ai', 'Coach Alex Rivera', 'coach')} 
+              onClick={() => handleOAuthLogin('Google', 'coach@sportsinjury.ai', 'Coach Rivera', 'coach')} 
               style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
               👨‍🏫 Coach
             </button>
             <button 
               type="button" 
-              onClick={() => handleOAuthLogin('Google', 'athlete@sportsinjury.ai', 'Jordan Miller (Athlete)', 'athlete')} 
+              onClick={() => handleOAuthLogin('Google', 'athlete@sportsinjury.ai', 'Jordan Athlete', 'athlete')} 
               style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
               🏃 Athlete
             </button>
             <button 
               type="button" 
-              onClick={() => handleOAuthLogin('Google', 'physio@sportsinjury.ai', 'Dr. Sarah Chen, PT', 'physiotherapist')} 
+              onClick={() => handleOAuthLogin('Google', 'physio@sportsinjury.ai', 'Dr. Sarah Physio', 'physiotherapist')} 
               style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
               🩺 Physiotherapist
             </button>
             <button 
               type="button" 
-              onClick={() => handleOAuthLogin('Google', 'admin@sportsinjury.ai', 'System Administrator', 'admin')} 
+              onClick={() => handleOAuthLogin('Google', 'admin@sportsinjury.ai', 'Admin User', 'admin')} 
               style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
               🛡️ Admin
@@ -568,7 +552,7 @@ function Dashboard({ summary, athletes, onNav, userRole }) {
             <em>Injury Risk Intelligence</em>
           </h2>
           <p>
-            Transforms standard mobile video into 3D skeletal kinematics. Quantifies joint flexion angles, bilateral symmetry balance, and spinal posture with automated Machine Learning injury risk prediction.
+            Transforms standard optical video into 3D skeletal kinematics. Quantifies joint flexion angles, bilateral symmetry balance, and spinal posture with automated Machine Learning injury risk prediction.
           </p>
         </div>
         <div className="heroGraphic">
@@ -633,11 +617,13 @@ function Card({ title, value, icon }) {
 function Athletes({ athletes, onRefresh, onSelect }) {
   const [form, setForm] = useState({
     name: '',
-    age: '',
-    weight: '',
-    height: '',
     sport: '',
+    position: '',
+    age: '',
+    height_cm: '',
+    weight_kg: '',
     injury_history: '',
+    training_load: 'Moderate',
   });
 
   const submit = async (e) => {
@@ -648,14 +634,25 @@ function Athletes({ athletes, onRefresh, onSelect }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name,
-          age: Number(form.age),
           sport: form.sport,
-          weight_kg: form.weight ? Number(form.weight) : null,
-          height_cm: form.height ? Number(form.height) : null,
+          position: form.position || null,
+          age: Number(form.age),
+          height_cm: form.height_cm ? Number(form.height_cm) : null,
+          weight_kg: form.weight_kg ? Number(form.weight_kg) : null,
           injury_history: form.injury_history || null,
+          training_load: form.training_load || 'Moderate',
         }),
       });
-      setForm({ name: '', age: '', weight: '', height: '', sport: '', injury_history: '' });
+      setForm({
+        name: '',
+        sport: '',
+        position: '',
+        age: '',
+        height_cm: '',
+        weight_kg: '',
+        injury_history: '',
+        training_load: 'Moderate',
+      });
       onRefresh();
     } catch (e) {
       alert(e.message);
@@ -669,30 +666,83 @@ function Athletes({ athletes, onRefresh, onSelect }) {
           <h3>Create Athlete Profile</h3>
         </div>
         <form onSubmit={submit} className="form">
-          {[
-            ['name', 'Full name', 'text'],
-            ['age', 'Age', 'number'],
-            ['weight', 'Weight (kg)', 'number'],
-            ['height', 'Height (cm)', 'number'],
-            ['sport', 'Sport', 'text'],
-          ].map(([k, l, t]) => (
-            <label key={k}>
-              {l}
-              <input
-                required={k !== 'height' && k !== 'weight'}
-                type={t}
-                value={form[k]}
-                onChange={(e) => setForm({ ...form, [k]: e.target.value })}
-                placeholder={`Enter ${l.toLowerCase()}`}
-              />
-            </label>
-          ))}
           <label>
-            Injury history & prior conditions
+            Full Name
+            <input
+              required
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="e.g. Jordan Miller"
+            />
+          </label>
+          <label>
+            Sport Type
+            <input
+              required
+              type="text"
+              value={form.sport}
+              onChange={(e) => setForm({ ...form, sport: e.target.value })}
+              placeholder="e.g. Football, Basketball, Athletics"
+            />
+          </label>
+          <label>
+            Sport Position
+            <input
+              type="text"
+              value={form.position}
+              onChange={(e) => setForm({ ...form, position: e.target.value })}
+              placeholder="e.g. Striker, Point Guard, Sprinter"
+            />
+          </label>
+          <label>
+            Age (years)
+            <input
+              required
+              type="number"
+              min="5"
+              max="80"
+              value={form.age}
+              onChange={(e) => setForm({ ...form, age: e.target.value })}
+              placeholder="e.g. 24"
+            />
+          </label>
+          <label>
+            Height (cm)
+            <input
+              type="number"
+              value={form.height_cm}
+              onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
+              placeholder="e.g. 182"
+            />
+          </label>
+          <label>
+            Weight (kg)
+            <input
+              type="number"
+              value={form.weight_kg}
+              onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
+              placeholder="e.g. 78"
+            />
+          </label>
+          <label>
+            Training Load
+            <select
+              value={form.training_load}
+              onChange={(e) => setForm({ ...form, training_load: e.target.value })}
+            >
+              <option value="Low">Low (1–3 sessions/week)</option>
+              <option value="Moderate">Moderate (4–5 sessions/week)</option>
+              <option value="High">High (6–8 sessions/week)</option>
+              <option value="Extreme">Extreme (Two-a-day Pro Training)</option>
+            </select>
+          </label>
+          <label>
+            Injury History & Prior Conditions
             <textarea
               value={form.injury_history}
               onChange={(e) => setForm({ ...form, injury_history: e.target.value })}
-              placeholder="e.g. Previous left ACL tear, ankle sprain, or None"
+              placeholder="e.g. Previous left ACL tear, chronic ankle sprain, or None"
             />
           </label>
           <button className="primary">Save Athlete Profile</button>
@@ -707,21 +757,21 @@ function Athletes({ athletes, onRefresh, onSelect }) {
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Athlete ID</th>
               <th>Athlete</th>
-              <th>Sport</th>
+              <th>Sport / Pos</th>
               <th>Age</th>
-              <th>Weight</th>
+              <th>Load</th>
             </tr>
           </thead>
           <tbody>
             {athletes.map((a) => (
               <tr key={a.athlete_id || a.id} onClick={() => onSelect(a)} className="click">
-                <td>#{(a.athlete_id || a.id).slice(0, 6)}</td>
+                <td>#{(a.athlete_id || a.id).slice(0, 8)}</td>
                 <td><b>{a.name}</b></td>
-                <td>{a.sport}</td>
-                <td>{a.age}</td>
-                <td>{a.weight_kg ? `${a.weight_kg} kg` : '—'}</td>
+                <td>{a.sport} {a.position ? `(${a.position})` : ''}</td>
+                <td>{a.age} yrs</td>
+                <td><span className="badge low">{a.training_load || 'Moderate'}</span></td>
               </tr>
             ))}
           </tbody>
@@ -739,15 +789,16 @@ function AthleteDetails({ athlete }) {
         <div className="avatar">{athlete.name?.[0]}</div>
         <div>
           <h2>{athlete.name}</h2>
-          <p>{athlete.sport} • Athlete #{athlete.athlete_id || athlete.id}</p>
+          <p>{athlete.sport} • Position: {athlete.position || 'Field'} • ID: #{athlete.athlete_id || athlete.id}</p>
         </div>
       </div>
       <div className="cards">
-        <Card title="Age" value={athlete.age} />
+        <Card title="Age" value={`${athlete.age} yrs`} />
         <Card title="Weight" value={athlete.weight_kg ? `${athlete.weight_kg} kg` : '—'} />
         <Card title="Height" value={athlete.height_cm ? `${athlete.height_cm} cm` : '—'} />
+        <Card title="Training Load" value={athlete.training_load || 'Moderate'} />
       </div>
-      <h3>Injury History</h3>
+      <h3>Medical & Injury History</h3>
       <p className="note">{athlete.injury_history || 'No previous injury history recorded.'}</p>
     </section>
   );
@@ -755,7 +806,7 @@ function AthleteDetails({ athlete }) {
 
 function VideoAnalysis({ athletes, onDone }) {
   const [athlete, setAthlete] = useState('');
-  const [activity, setActivity] = useState('squat');
+  const [activity, setActivity] = useState('squatting');
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
@@ -825,12 +876,18 @@ function VideoAnalysis({ athletes, onDone }) {
           </select>
         </div>
 
+        {/* All 8 Official Syllabus Activities */}
         <div className="field" style={{ marginTop: '12px' }}>
-          <label>Movement Exercise Type</label>
+          <label>Supported Activity Movement</label>
           <select value={activity} onChange={(e) => setActivity(e.target.value)}>
-            <option value="squat">Squatting (Bilateral Knee & Hip Mechanics)</option>
-            <option value="jumping_landing">Jumping & Landing (Deceleration Forces)</option>
-            <option value="running">Running / Sprinting (Gait & Stride Balance)</option>
+            <option value="squatting">🏋️ Squatting (Bilateral Knee & Hip Mechanics)</option>
+            <option value="running">🏃 Running (Gait Mechanics & Stride Cadence)</option>
+            <option value="sprinting">⚡ Sprinting (Max Velocity Biomechanics)</option>
+            <option value="jumping">🦘 Jumping (Vertical Propulsion & Takeoff)</option>
+            <option value="landing">🎯 Landing (Deceleration & Impact Attenuation)</option>
+            <option value="throwing">⚾ Throwing (Kinetic Chain & Shoulder Torque)</option>
+            <option value="cutting">🔄 Cutting Movements (Lateral ACL Shear & Valgus)</option>
+            <option value="sport_specific_drills">⚽ Sport-Specific Drills (Agility & Joint Integrity)</option>
           </select>
         </div>
 
@@ -967,7 +1024,7 @@ function Results({ summary }) {
                   onClick={() => setSelected(isSelected ? null : (r.analysis_id || r.id))}
                   style={{ cursor: 'pointer', background: isSelected ? '#f1f5f9' : 'transparent' }}
                 >
-                  <td><b>#{(r.analysis_id || r.id).slice(0, 6)}</b></td>
+                  <td><b>#{(r.analysis_id || r.id).slice(0, 8)}</b></td>
                   <td><b>{r.activity}</b></td>
                   <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : '—'}</td>
                   <td><b>{qualityScore}</b></td>
@@ -1068,7 +1125,7 @@ function AnalysisTable({ rows }) {
       <tbody>
         {rows.map((r) => (
           <tr key={r.analysis_id || r.id}>
-            <td>#{(r.analysis_id || r.id).slice(0, 6)}</td>
+            <td>#{(r.analysis_id || r.id).slice(0, 8)}</td>
             <td><b>{r.activity}</b></td>
             <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : '—'}</td>
             <td>{r.movement_quality?.score ? `${r.movement_quality.score}%` : (r.movement_quality?.classification || 'Good')}</td>
