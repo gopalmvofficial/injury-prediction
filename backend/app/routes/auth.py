@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.db_models import User
-from app.schemas.schemas import AuthResponse, UserLogin, UserOut, UserRegister
+from app.schemas.schemas import AuthResponse, UserLogin, UserOut, UserRegister, OAuthLoginRequest
 from app.services.auth import create_session, get_user_id_for_token, hash_password, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
