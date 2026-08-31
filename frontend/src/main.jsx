@@ -1732,13 +1732,26 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
 
         <div className="field">
           <label>Selected Athlete Profile</label>
-          <select value={athlete} onChange={(e) => setAthlete(e.target.value)}>
-            {athletes.map((a) => (
-              <option value={a.athlete_id || a.id} key={a.athlete_id || a.id}>
-                {a.name} ({a.sport})
-              </option>
-            ))}
-          </select>
+          {athletes.length > 0 ? (
+            <select value={athlete} onChange={(e) => setAthlete(e.target.value)}>
+              {athletes.map((a) => (
+                <option value={a.athlete_id || a.id} key={a.athlete_id || a.id}>
+                  {a.name} ({a.sport})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div style={{ padding: '10px 14px', background: '#fff1f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#be123c', fontSize: '12px', marginTop: '6px' }}>
+              ⚠ No athlete profile registered yet.{' '}
+              <button
+                type="button"
+                onClick={() => onNav('Athletes')}
+                style={{ background: 'none', border: 'none', color: '#059669', fontWeight: 800, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+              >
+                Create an Athlete first →
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="field" style={{ marginTop: '12px' }}>
