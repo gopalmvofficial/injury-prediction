@@ -119,6 +119,7 @@ function App() {
   const [iconPack, setIconPack] = useState(() => localStorage.getItem('motioniq_icon_pack') || 'emoji');
   const [cardStyle, setCardStyle] = useState(() => localStorage.getItem('motioniq_card_style') || 'modern');
   const [fontStyle, setFontStyle] = useState(() => localStorage.getItem('motioniq_font_style') || 'modern');
+  const [dashboardLayout, setDashboardLayout] = useState(() => localStorage.getItem('motioniq_dashboard_layout') || 'grid_cards');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -128,7 +129,8 @@ function App() {
     localStorage.setItem('motioniq_icon_pack', iconPack);
     localStorage.setItem('motioniq_card_style', cardStyle);
     localStorage.setItem('motioniq_font_style', fontStyle);
-  }, [theme, iconPack, cardStyle, fontStyle]);
+    localStorage.setItem('motioniq_dashboard_layout', dashboardLayout);
+  }, [theme, iconPack, cardStyle, fontStyle, dashboardLayout]);
 
   // Edit User Profile Modal State
   const [profileModal, setProfileModal] = useState(false);
@@ -410,7 +412,7 @@ function App() {
         </header>
 
         {page === 'Dashboard' && (
-          <Dashboard summary={summary} athletes={athletes} onNav={nav} userRole={currentUser?.role} />
+          <Dashboard summary={summary} athletes={athletes} onNav={nav} userRole={currentUser?.role} layoutMode={dashboardLayout} />
         )}
         {page === 'Athletes' && (
           <Athletes
@@ -459,6 +461,8 @@ function App() {
             onSelectCardStyle={setCardStyle}
             fontStyle={fontStyle}
             onSelectFontStyle={setFontStyle}
+            dashboardLayout={dashboardLayout}
+            onSelectDashboardLayout={setDashboardLayout}
             onOpenProfile={() => {
               setProfileForm({ name: currentUser?.name || '', role: currentUser?.role || 'coach' });
               setProfileModal(true);
@@ -1073,13 +1077,12 @@ function AuthScreen({ onSuccess }) {
   );
 }
 
-function Dashboard({ summary, athletes, onNav, userRole }) {
+function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_cards' }) {
   const totalAthletes = summary?.total_athletes ?? athletes.length;
   const totalVideos = summary?.total_videos ?? 0;
   const highRisk = summary?.high_risk_athletes ?? 0;
   const recentAnalyses = summary?.recent_analyses ?? [];
   const readinessScore = highRisk > 0 ? Math.max(50, 88 - highRisk * 12) : 92;
-  const pendingCount = recentAnalyses.filter(a => !a.risk_level || a.risk_level === 'Unknown').length || Math.max(0, totalVideos - recentAnalyses.length);
 
   // Build athlete risk cards from athletes + recent analyses
   const athleteCards = athletes.map(a => {
@@ -1124,8 +1127,142 @@ function Dashboard({ summary, athletes, onNav, userRole }) {
     { label:'Average Team Readiness',   value:`${readinessScore}%`, badge: readinessScore >= 80 ? 'Optimal' : readinessScore >= 60 ? 'Good' : 'At Risk', badgeColor: readinessScore >= 80 ? {bg:'#ecfdf5',color:'#059669'} : readinessScore >= 60 ? {bg:'#fffbeb',color:'#d97706'} : {bg:'#fef2f2',color:'#dc2626'}, icon:'⚡' },
   ];
 
+  /* ─────────────── LAYOUT MODE 2: CLINICAL MEDICAL TABLE ─────────────── */
+  if (layoutMode === 'clinical_table') {
+    return (
+      <>
+        <div className="panel" style={{ background: 'linear-gradient(135deg, var(--bg-card), var(--bg-card-subtle))', marginBottom: '22px', borderLeft: '4px solid var(--accent-primary)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <span className="eyebrow" style={{ color: 'var(--accent-primary)', letterSpacing: '1px' }}>CLINICAL TRIAGE & SCREENING MODE</span>
+              <h2 style={{ margin: '6px 0 4px', fontSize: '22px', fontWeight: 900, color: 'var(--text-dark)' }}>Medical Screening Roster</h2>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Focuses on clinical patient movement assessments, diagnostic history, and rehabilitation tracking.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <span className="badge critical" style={{ fontSize: '12px', padding: '6px 14px' }}>🔴 {highRisk} High Risk</span>
+              <span className="badge low" style={{ fontSize: '12px', padding: '6px 14px' }}>🟢 {readinessScore}% Readiness</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '22px', flexWrap: 'wrap' }}>
+          <button className="primary" onClick={() => onNav('Video Analysis')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
+            🎥 New Clinical Video Assessment
+          </button>
+          <button className="btnSecondary" onClick={() => onNav('Athletes')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
+            🏃 Patient Directory ({totalAthletes})
+          </button>
+          <button className="btnSecondary" onClick={() => onNav('Reports')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
+            📄 Download Clinical PDF Reports
+          </button>
+        </div>
+
+        {/* Main Clinical Table */}
+        <section className="panel" style={{ marginBottom: '22px' }}>
+          <div className="panelHead">
+            <h3>Recent Clinical Movement Screenings</h3>
+            <button onClick={() => onNav('Results')}>View all assessments →</button>
+          </div>
+          <AnalysisTable rows={recentAnalyses} />
+        </section>
+
+        {/* Diagnostic Pipeline Workflow */}
+        <section className="panel workflow">
+          <div className="panelHead">
+            <h3>Clinical Diagnostic Pipeline</h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+            {[
+              ['1', 'Patient Profile', 'Demographics & medical history'],
+              ['2', 'Optical Capture', 'High-speed video recording'],
+              ['3', '3D Landmark Tracking', 'MediaPipe 33 skeletal points'],
+              ['4', 'Kinematic Biomechanics', 'Joint flexion & ROM balance'],
+              ['5', 'XGBoost ML Risk', 'Automated clinical risk score'],
+            ].map(([n, t, s]) => (
+              <div className="step" key={n} style={{ border: '1px solid var(--border-purple)', borderRadius: '12px', padding: '12px' }}>
+                <b>{n}</b>
+                <div>
+                  <strong>{t}</strong>
+                  <small>{s}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </>
+    );
+  }
+
+  /* ─────────────── LAYOUT MODE 3: KINEMATICS LAB FOCUS ─────────────── */
+  if (layoutMode === 'lab_focus') {
+    return (
+      <>
+        <div style={{ marginBottom: '22px' }}>
+          <div className="panelHead" style={{ marginBottom: '12px' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 900, color: 'var(--text-dark)' }}>3D Kinematics Laboratory Focus</h2>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>Interactive joint biomechanics simulation and real-time ML risk scoring directly on your dashboard.</p>
+            </div>
+            <button className="primary" onClick={() => onNav('Video Analysis')} style={{ borderRadius: '10px' }}>
+              🎥 Analyze Custom Video
+            </button>
+          </div>
+          <KinematicsLab />
+        </div>
+
+        {/* Rapid Roster Strip below lab */}
+        <div className="panel">
+          <div className="panelHead">
+            <h3>Squad Movement Screening Directory</h3>
+            <button onClick={() => onNav('Athletes')}>View full roster →</button>
+          </div>
+          <div className="athleteRosterGrid">
+            {athleteCards.slice(0, 3).map((a) => {
+              const rc = getRiskColor(a.risk);
+              return (
+                <div className="athleteCard" key={a.id} onClick={() => onNav('Athletes')}>
+                  <div className="athleteCardTop">
+                    <div className="athleteAvatar" style={{ background: getAvatarGradient(a.risk) }}>
+                      {(a.name || 'A').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="athleteCardInfo">
+                      <div className="athleteCardName">{a.name}</div>
+                      <div className="athleteCardSport">{a.sport || 'Sport'}</div>
+                    </div>
+                  </div>
+                  <span className="riskPill" style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}` }}>
+                    {a.risk === 'Unknown' ? 'Not Assessed' : `${a.risk.charAt(0).toUpperCase() + a.risk.slice(1)} Risk`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  /* ─────────────── LAYOUT MODE 1: DEFAULT EXECUTIVE GRID ─────────────── */
   return (
     <>
+      <section className="hero">
+        <div>
+          <span className="eyebrow">PREDICTIVE SPORTS INTELLIGENCE</span>
+          <h2>
+            AI Biomechanics &<br />
+            <em>Injury Risk Intelligence</em>
+          </h2>
+          <p>
+            Transforms standard optical video into 3D skeletal kinematics. Quantifies joint flexion angles, bilateral symmetry balance, and spinal posture with automated Machine Learning injury risk prediction.
+          </p>
+        </div>
+        <div className="heroGraphic">
+          3D
+          <div>POSE AI</div>
+        </div>
+      </section>
+
       {/* KPI Cards */}
       <div className="kpiGrid">
         {kpiCards.map(({ label, value, badge, badgeColor, icon }) => (
@@ -2635,11 +2772,19 @@ function Settings({
   onSelectCardStyle,
   fontStyle,
   onSelectFontStyle,
+  dashboardLayout,
+  onSelectDashboardLayout,
   onOpenProfile,
   onLogout
 }) {
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
+
+  const layoutModes = [
+    { id: 'grid_cards', name: '📊 Executive Roster (Grid Mode)', desc: 'Hero banner, 4 KPI cards, 3-column athlete profile cards, and diagnostic pipeline.' },
+    { id: 'clinical_table', name: '🩺 Clinical Medical (Table Mode)', desc: 'Medical triage overview, full clinical patient roster table, and diagnostic workflow.' },
+    { id: 'lab_focus', name: '🦴 3D Kinematics (Lab Focus Mode)', desc: 'Interactive 3D skeletal canvas, live joint range sliders, and real-time biomechanics directly on dashboard.' },
+  ];
 
   const themesList = [
     { id: 'vibrant', name: 'Template 3: Vibrant Purple', desc: 'Vivid purple gradient sidebar with soft lavender workspace', previewBg: 'linear-gradient(135deg, #3b0764, #7c3aed)', accent: '#7c3aed' },
@@ -2688,6 +2833,43 @@ function Settings({
           <button className="primary" onClick={onOpenProfile} style={{ borderRadius: '10px', padding: '10px 20px', fontSize: '13px' }}>
             ✏️ Edit Profile
           </button>
+        </div>
+      </section>
+
+      {/* Dashboard Layout Mode & Structure */}
+      <section className="panel" style={{ marginBottom: '22px' }}>
+        <div className="panelHead">
+          <h3>Dashboard Layout Mode & Structure</h3>
+          <span className="count">{dashboardLayout.toUpperCase()}</span>
+        </div>
+        <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--text-muted)' }}>
+          Switch the functional layout and structure of the main Dashboard page to fit your workflow.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+          {layoutModes.map((lm) => {
+            const isSelected = dashboardLayout === lm.id;
+            return (
+              <div
+                key={lm.id}
+                onClick={() => onSelectDashboardLayout(lm.id)}
+                style={{
+                  border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-purple)',
+                  background: isSelected ? 'var(--bg-card-subtle)' : 'var(--bg-card)',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: isSelected ? '0 4px 16px rgba(124, 58, 237, 0.12)' : 'none',
+                }}
+              >
+                <strong style={{ fontSize: '13.5px', color: 'var(--text-dark)', fontWeight: 800, display: 'block', marginBottom: '6px' }}>
+                  {lm.name}
+                </strong>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>{lm.desc}</div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
