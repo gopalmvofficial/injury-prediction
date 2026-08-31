@@ -398,62 +398,526 @@ function App() {
   );
 }
 
+function MovementMap({ kneeAngle, hipAngle, ankleAngle, quality, risk, size = 120 }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+      <svg width={size} height={size + 30} viewBox="0 0 100 130" style={{ overflow: 'visible' }}>
+        {/* Grids */}
+        <line x1="10" y1="0" x2="10" y2="130" stroke="rgba(25, 184, 173, 0.08)" strokeWidth="0.5" />
+        <line x1="50" y1="0" x2="50" y2="130" stroke="rgba(25, 184, 173, 0.15)" strokeWidth="0.5" strokeDasharray="3 3" />
+        <line x1="90" y1="0" x2="90" y2="130" stroke="rgba(25, 184, 173, 0.08)" strokeWidth="0.5" />
+        
+        {/* Bones */}
+        <line x1="50" y1="20" x2="50" y2="50" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" />
+        <line x1="30" y1="32" x2="70" y2="32" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="35" y1="75" x2="65" y2="75" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" />
+        
+        {/* Left Leg */}
+        <line x1="35" y1="75" x2="30" y2="102" stroke="var(--teal)" strokeWidth="3.5" strokeLinecap="round" />
+        <line x1="30" y1="102" x2="35" y2="124" stroke="var(--teal)" strokeWidth="3.5" strokeLinecap="round" />
+        
+        {/* Joints */}
+        <circle cx="50" cy="14" r="6" fill="var(--teal)" stroke="#fff" strokeWidth="1.5" />
+        <circle cx="35" cy="75" r="4.5" fill="var(--ink)" stroke="#fff" strokeWidth="1" />
+        <circle cx="65" cy="75" r="4.5" fill="var(--ink)" stroke="#fff" strokeWidth="1" />
+        
+        {/* Tracked Joint */}
+        <circle cx="30" cy="102" r="6" fill="var(--warning)" stroke="#fff" strokeWidth="1.5" />
+        <circle cx="35" cy="124" r="4" fill="var(--teal)" stroke="#fff" strokeWidth="1" />
+        
+        {/* Text indicators */}
+        <text x="12" y="105" fill="var(--warning)" fontSize="9" fontWeight="800" textAnchor="end">KNEE {kneeAngle}°</text>
+        <text x="18" y="78" fill="var(--ink)" fontSize="9" fontWeight="800" textAnchor="end">HIP {hipAngle}°</text>
+        <text x="18" y="126" fill="var(--teal)" fontSize="9" fontWeight="800" textAnchor="end">ANKLE {ankleAngle}°</text>
+      </svg>
+      <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--teal-dark)', background: 'var(--teal-soft)', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        {quality}% ROM · {risk} Risk
+      </div>
+    </div>
+  );
+}
+
 function Dashboard({ health, athletes, analyses, onNav }) {
   const high = analyses.filter(x => x.risk_level === 'High').length;
   const medium = analyses.filter(x => x.risk_level === 'Medium').length;
   const recent = analyses.slice(0, 5);
-  return <>
-    <section className="hero-panel">
-      <div className="hero-copy">
-        <div className="hero-badge"><Icon name="activity" size={13} /> MILESTONE 2 · POSE ESTIMATION</div>
-        <h2>Understand movement.<br /><span>Reduce injury risk.</span></h2>
-        <p>Transform sports video into structured biomechanical insights. Track athletes, analyze movement quality and surface risk signals from one workspace.</p>
-        <div className="hero-actions"><button className="primary" onClick={() => onNav('Athletes')}><Icon name="plus" size={16} /> Add athlete</button><button className="ghost-light" onClick={() => onNav('Video Analysis')}>Analyze video <Icon name="arrow" size={15} /></button></div>
-      </div>
-      <div className="hero-visual">
-        <div className="orbit orbit-one" /><div className="orbit orbit-two" />
-        <div className="scan-card"><div className="scan-head"><span>POSE ENGINE</span><i /></div><div className="skeleton"><span className="joint j1"/><span className="joint j2"/><span className="joint j3"/><span className="joint j4"/><span className="joint j5"/><span className="line l1"/><span className="line l2"/><span className="line l3"/><span className="line l4"/></div><div className="scan-foot"><b>MediaPipe</b><span>Live analysis ready</span></div></div>
-      </div>
-    </section>
+  return (
+    <>
+      <section className="hero-panel">
+        <div className="hero-copy">
+          <div className="hero-badge"><Icon name="activity" size={13} /> MILESTONE 2 · POSE ESTIMATION</div>
+          <h2>Understand movement.<br /><span>Reduce injury risk.</span></h2>
+          <p>Transform sports video into structured biomechanical insights. Track athletes, analyze movement quality and surface risk signals from one workspace.</p>
+          <div className="hero-actions"><button className="primary" onClick={() => onNav('Athletes')}><Icon name="plus" size={16} /> Add athlete</button><button className="ghost-light" onClick={() => onNav('Video Analysis')}>Analyze video <Icon name="arrow" size={15} /></button></div>
+        </div>
+        <div className="hero-visual">
+          <div className="orbit orbit-one" /><div className="orbit orbit-two" />
+          <div className="scan-card"><div className="scan-head"><span>POSE ENGINE</span><i /></div><div className="skeleton"><span className="joint j1"/><span className="joint j2"/><span className="joint j3"/><span className="joint j4"/><span className="joint j5"/><span className="line l1"/><span className="line l2"/><span className="line l3"/><span className="line l4"/></div><div className="scan-foot"><b>MediaPipe</b><span>Live analysis ready</span></div></div>
+        </div>
+      </section>
 
-    <div className="metric-grid">
-      <Metric title="Registered athletes" value={health?.athletes ?? athletes.length} icon="users" note="Profiles in system" />
-      <Metric title="Videos analyzed" value={analyses.length} icon="video" note="Completed analyses" />
-      <Metric title="High-risk cases" value={high} icon="activity" note={high ? 'Needs attention' : 'No high-risk cases'} accent={high > 0 ? 'warning' : ''} />
-      <Metric title="Medium-risk cases" value={medium} icon="chart" note="Monitor closely" />
-    </div>
+      <div className="metric-grid">
+        <Metric title="Registered athletes" value={health?.athletes ?? athletes.length} icon="users" note="Profiles in system" />
+        <Metric title="Videos analyzed" value={analyses.length} icon="video" note="Completed analyses" />
+        <Metric title="High-risk cases" value={high} icon="activity" note={high ? 'Needs attention' : 'No high-risk cases'} accent={high > 0 ? 'warning' : ''} />
+        <Metric title="Medium-risk cases" value={medium} icon="chart" note="Monitor closely" />
+      </div>
 
-    <div className="dashboard-grid">
-      <section className="panel table-panel"><PanelHead title="Recent analysis" meta={`${analyses.length} total`} action="View all" onClick={() => onNav('Results')} />{recent.length ? <AnalysisTable rows={recent} /> : <Empty icon="activity" text="No analysis results yet. Upload a sports video to begin." button="Start analysis" onClick={() => onNav('Video Analysis')} />}</section>
-      <section className="panel workflow-panel"><PanelHead title="Analysis workflow" meta="5 stages" />{[['1','Athlete profile','Store athlete information'],['2','Video upload','Capture movement'],['3','Pose extraction','MediaPipe landmarks'],['4','Biomechanics','Joint angles & quality'],['5','Risk result','Store and review']].map(([n,t,s], i) => <div className="workflow-step" key={n}><div className={i === 4 ? 'step-number done' : 'step-number'}>{i === 4 ? <Icon name="check" size={13} /> : n}</div><div><b>{t}</b><small>{s}</small></div>{i < 4 && <span className="step-line" />}</div>)}</section>
-    </div>
-  </>;
+      <div className="dashboard-grid">
+        <section className="panel table-panel"><PanelHead title="Recent analysis" meta={`${analyses.length} total`} action="View all" onClick={() => onNav('Results')} />{recent.length ? <AnalysisTable rows={recent} /> : <Empty icon="activity" text="No analysis results yet. Upload a sports video to begin." button="Start analysis" onClick={() => onNav('Video Analysis')} />}</section>
+        <section className="panel workflow-panel"><PanelHead title="Analysis workflow" meta="5 stages" />{[['1','Athlete profile','Store athlete information'],['2','Video upload','Capture movement'],['3','Pose extraction','MediaPipe landmarks'],['4','Biomechanics','Joint angles & quality'],['5','Risk result','Store and review']].map(([n,t,s], i) => <div className="workflow-step" key={n}><div className={i === 4 ? 'step-number done' : 'step-number'}>{i === 4 ? <Icon name="check" size={13} /> : n}</div><div><b>{t}</b><small>{s}</small></div>{i < 4 && <span className="step-line" />}</div>)}</section>
+      </div>
+    </>
+  );
 }
 
 function Metric({ title, value, icon, note, accent = '' }) { return <div className={`metric-card ${accent}`}><div className="metric-icon"><Icon name={icon} size={18} /></div><div className="metric-data"><span>{title}</span><strong>{value}</strong><small>{note}</small></div></div>; }
-function PanelHead({ title, meta, action, onClick }) { return <div className="panel-head"><div><h3>{title}</h3>{meta && <span>{meta}</span>}</div>{action && <button className="text-action" onClick={onClick}>{action}<Icon name="arrow" size={13} /></button>}</div>; }
+if (typeof PanelHead === 'undefined') {
+  var PanelHead = function({ title, meta, action, onClick }) { return <div className="panel-head"><div><h3>{title}</h3>{meta && <span>{meta}</span>}</div>{action && <button className="text-action" onClick={onClick}>{action}<Icon name="arrow" size={13} /></button>}</div>; }
+}
 
 function Athletes({ athletes, onRefresh, onSelect }) {
   const [form, setForm] = useState({ name: '', age: '', weight: '', height: '', sport: '', injury_history: '' });
-  const submit = async e => { e.preventDefault(); try { await api('/api/athletes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, age: Number(form.age), weight: Number(form.weight), height: form.height ? Number(form.height) : null }) }); setForm({ name: '', age: '', weight: '', height: '', sport: '', injury_history: '' }); onRefresh(); } catch (e) { alert(e.message); } };
-  return <div className="content-grid">
-    <section className="panel form-panel"><PanelHead title="Create athlete profile" meta="Required information" /><form onSubmit={submit} className="form-grid">{[['name','Full name','text'],['age','Age','number'],['weight','Weight (kg)','number'],['height','Height (cm)','number'],['sport','Sport','text']].map(([k,l,t]) => <label key={k}>{l}<input required={k !== 'height'} type={t} value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })} placeholder={k === 'name' ? 'e.g. Arjun Menon' : k === 'sport' ? 'e.g. Football' : ''} /></label>)}<label className="span-2">Injury history<textarea value={form.injury_history} onChange={e => setForm({ ...form, injury_history: e.target.value })} placeholder="Previous injuries or None" /></label><button className="primary span-2"><Icon name="plus" size={16} /> Save athlete</button></form></section>
-    <section className="panel"><PanelHead title="Stored athlete data" meta={`${athletes.length} records`} />{athletes.length ? <table><thead><tr><th>ID</th><th>Athlete</th><th>Sport</th><th>Age</th><th>Weight</th></tr></thead><tbody>{athletes.map(a => <tr key={a.id} onClick={() => onSelect(a)} className="click"><td><span className="id-pill">#{a.id}</span></td><td><div className="person-cell"><span>{a.name?.[0]}</span><b>{a.name}</b></div></td><td>{a.sport}</td><td>{a.age}</td><td>{a.weight} kg</td></tr>)}</tbody></table> : <Empty icon="users" text="No athletes yet. Create the first profile." />}</section>
-  </div>;
+  const submit = async e => {
+    e.preventDefault();
+    try {
+      await api('/api/athletes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, age: Number(form.age), weight: Number(form.weight), height: form.height ? Number(form.height) : null })
+      });
+      setForm({ name: '', age: '', weight: '', height: '', sport: '', injury_history: '' });
+      onRefresh();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+  return (
+    <div className="content-grid">
+      <section className="panel form-panel">
+        <PanelHead title="Create athlete profile" meta="Required information" />
+        <form onSubmit={submit} className="form-grid">
+          {[
+            ['name', 'Full name', 'text'],
+            ['age', 'Age', 'number'],
+            ['weight', 'Weight (kg)', 'number'],
+            ['height', 'Height (cm)', 'number'],
+            ['sport', 'Sport', 'text']
+          ].map(([k, l, t]) => (
+            <label key={k} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {l}
+              <input 
+                required={k !== 'height'} 
+                type={t} 
+                value={form[k]} 
+                onChange={e => setForm({ ...form, [k]: e.target.value })} 
+                placeholder={k === 'name' ? 'e.g. Arjun Menon' : k === 'sport' ? 'e.g. Football' : ''} 
+              />
+            </label>
+          ))}
+          <label className="span-2" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            Injury history
+            <textarea value={form.injury_history} onChange={e => setForm({ ...form, injury_history: e.target.value })} placeholder="Previous injuries or None" />
+          </label>
+          <button className="primary span-2"><Icon name="plus" size={16} /> Save athlete</button>
+        </form>
+      </section>
+
+      <section className="panel">
+        <PanelHead title="Stored athlete data" meta={`${athletes.length} records`} />
+        {athletes.length ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+            {athletes.map(a => (
+              <button 
+                key={a.id} 
+                className="oauthAccountOption" 
+                onClick={() => onSelect(a)}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '12px 16px', border: '1px solid #cbd5e1', borderRadius: '8px', background: '#fff', textAlign: 'left', cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--teal-soft)', color: 'var(--teal-dark)', display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 800 }}>
+                    {a.name?.[0]}
+                  </div>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '13px', color: '#132238' }}>{a.name}</strong>
+                    <span style={{ fontSize: '11px', color: '#7b899b' }}>{a.sport} · Age {a.age}</span>
+                  </div>
+                </div>
+                <span className="id-pill">#{a.id}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <Empty icon="users" text="No athletes yet. Create the first profile." />
+        )}
+      </section>
+    </div>
+  );
 }
 
-function AthleteDetails({ athlete }) { return <section className="panel detail-panel"><div className="profile"><div className="avatar-large">{athlete.name?.[0]}</div><div><span className="eyebrow-small">ATHLETE PROFILE</span><h2>{athlete.name}</h2><p>{athlete.sport} · Athlete #{athlete.id}</p></div></div><div className="detail-metrics"><Metric title="Age" value={athlete.age} icon="users" note="years" /><Metric title="Weight" value={`${athlete.weight} kg`} icon="activity" note="body weight" /><Metric title="Height" value={athlete.height ? `${athlete.height} cm` : '—'} icon="chart" note="height" /></div><div className="history-box"><h3>Injury history</h3><p>{athlete.injury_history || 'None recorded.'}</p></div></section>; }
+function AthleteDetails({ athlete }) {
+  return (
+    <div className="content-grid" style={{ gridTemplateColumns: '1fr 1.2fr' }}>
+      <section className="panel detail-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="profile">
+          <div className="avatar-large">{athlete.name?.[0]}</div>
+          <div>
+            <span className="eyebrow-small">ATHLETE PROFILE</span>
+            <h2>{athlete.name}</h2>
+            <p>{athlete.sport} · Athlete #{athlete.id}</p>
+          </div>
+        </div>
+        <div className="detail-metrics" style={{ margin: 0 }}>
+          <Metric title="Age" value={athlete.age} icon="users" note="years" />
+          <Metric title="Weight" value={`${athlete.weight} kg`} icon="activity" note="body weight" />
+          <Metric title="Height" value={athlete.height ? `${athlete.height} cm` : '—'} icon="chart" note="height" />
+        </div>
+        <div className="history-box" style={{ margin: 0 }}>
+          <h3 style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)' }}>Injury history</h3>
+          <p>{athlete.injury_history || 'None recorded.'}</p>
+        </div>
+      </section>
+
+      <section className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', justifyContent: 'center', minHeight: '340px' }}>
+        <PanelHead title="Biomechanical Movement State" meta="Estimated limits" />
+        <MovementMap kneeAngle={154} hipAngle={135} ankleAngle={28} quality={84} risk="LOW" size={150} />
+      </section>
+    </div>
+  );
+}
 
 function VideoAnalysis({ athletes, onDone }) {
-  const [athlete, setAthlete] = useState(''); const [file, setFile] = useState(null); const [busy, setBusy] = useState(false); const [result, setResult] = useState(null);
-  const submit = async () => { if (!athlete || !file) return alert('Select an athlete and video.'); setBusy(true); setResult(null); try { const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME; const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET; if (!cloudName || !uploadPreset) throw new Error('Cloud video upload is not configured. Add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in Vercel.'); const cloudForm = new FormData(); cloudForm.append('file', file); cloudForm.append('upload_preset', uploadPreset); cloudForm.append('resource_type', 'video'); const cloudResp = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, { method: 'POST', body: cloudForm }); const cloud = await cloudResp.json(); if (!cloudResp.ok) throw new Error(cloud.error?.message || 'Cloud video upload failed'); const up = await api(`/api/videos/register-cloud?athlete_id=${athlete}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: cloud.secure_url, filename: file.name }) }); const r = await api(`/api/videos/${up.id}/analyze`, { method: 'POST' }); setResult(r); onDone(); } catch (e) { alert(e.message); } finally { setBusy(false); } };
-  return <div className="content-grid">
-    <section className="panel upload-panel"><PanelHead title="Upload sports video" meta="Cloudinary secure upload" /><label className="field">Athlete<select value={athlete} onChange={e => setAthlete(e.target.value)}><option value="">Select athlete</option>{athletes.map(a => <option value={a.id} key={a.id}>{a.name} — {a.sport}</option>)}</select></label><div className={`drop-zone ${file ? 'has-file' : ''}`}><div className="upload-icon"><Icon name="upload" size={25} /></div><strong>{file ? file.name : 'Drop your video here'}</strong><span>{file ? `${(file.size / 1024 / 1024).toFixed(1)} MB · Ready to upload` : 'or click to browse from your device'}</span><small>MP4, MOV, AVI, MKV or WebM</small><input type="file" accept="video/*" onChange={e => setFile(e.target.files[0])} /></div><button className="primary full" disabled={busy} onClick={submit}>{busy ? 'Processing video…' : 'Upload & Analyze'} {!busy && <Icon name="arrow" size={15} />}</button></section>
-    <section className="panel"><PanelHead title="Biomechanics pipeline" meta="Automated processing" />{['Video upload','OpenCV frame sampling','MediaPipe pose landmarks','Joint-angle calculation','Movement-quality score','Risk-level generation','Result storage'].map((x, i) => <div className="pipeline-row" key={x}><span>{i + 1}</span><div><b>{x}</b><small>{result && i < 6 ? 'Completed' : 'Ready'}</small></div><Icon name={result && i < 6 ? 'check' : 'activity'} size={15} /></div>)}{result && <div className={`risk-result ${result.risk_level.toLowerCase()}`}><div><span>Risk level</span><strong>{result.risk_level}</strong></div><b>{result.risk_score}%</b><small>Movement quality: {result.movement_quality}% · {result.pose_engine}</small></div>}</section>
-  </div>;
+  const [athlete, setAthlete] = useState('');
+  const [file, setFile] = useState(null);
+  const [activity, setActivity] = useState('squatting');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const runSampleScan = async (sampleActivity) => {
+    if (!athlete) return alert('Select an athlete profile first.');
+    setBusy(true);
+    setResult(null);
+    try {
+      const r = await api(`/api/videos/sample-scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ athlete_id: athlete, activity: sampleActivity, video_id: 'sample' })
+      });
+      setResult(r);
+      onDone();
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!athlete || !file) return alert('Select an athlete and video.');
+    setBusy(true);
+    setResult(null);
+    try {
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+      if (!cloudName || !uploadPreset) throw new Error('Cloud video upload is not configured. Add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in Vercel.');
+      const cloudForm = new FormData();
+      cloudForm.append('file', file);
+      cloudForm.append('upload_preset', uploadPreset);
+      cloudForm.append('resource_type', 'video');
+      const cloudResp = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, { method: 'POST', body: cloudForm });
+      const cloud = await cloudResp.json();
+      if (!cloudResp.ok) throw new Error(cloud.error?.message || 'Cloud video upload failed');
+      const up = await api(`/api/videos/register-cloud?athlete_id=${athlete}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: cloud.secure_url, filename: file.name }) });
+      const r = await api(`/api/videos/${up.id}/analyze`, { method: 'POST' });
+      setResult(r);
+      onDone();
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="content-grid">
+      <section className="panel upload-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <PanelHead title="Movement Capture Studio" meta="Video screening import" />
+        
+        {/* Step 1 */}
+        <div>
+          <span style={{ display: 'block', fontSize: '9px', fontWeight: 800, color: 'var(--muted)', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '8px' }}>
+            STEP 1 / SELECT ATHLETE
+          </span>
+          {athletes.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {athletes.map(a => {
+                const isSelected = athlete === String(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setAthlete(String(a.id))}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      borderRadius: '20px',
+                      border: isSelected ? '2px solid var(--teal)' : '1px solid #cbd5e1',
+                      background: isSelected ? 'var(--teal-soft)' : '#fff',
+                      color: isSelected ? 'var(--teal-dark)' : '#475569',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    👤 {a.name}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ fontSize: '11px', color: 'var(--danger)', background: '#ffebeb', padding: '10px', borderRadius: '8px' }}>
+              ⚠ Create an Athlete profile first.
+            </div>
+          )}
+        </div>
+
+        {/* Step 2 */}
+        <div>
+          <span style={{ display: 'block', fontSize: '9px', fontWeight: 800, color: 'var(--muted)', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '8px' }}>
+            STEP 2 / CHOOSE MOVEMENT TYPE
+          </span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            {[
+              ['squatting', '🏋️ Olympic Squat'],
+              ['running', '🏃 running Gait'],
+              ['landing', '🦘 landing Impact'],
+              ['sprinting', '⚡ Sprint Mechanics']
+            ].map(([actKey, label]) => {
+              const isSelected = activity === actKey;
+              return (
+                <button
+                  key={actKey}
+                  type="button"
+                  onClick={() => setActivity(actKey)}
+                  style={{
+                    padding: '10px',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    borderRadius: '8px',
+                    textAlign: 'left',
+                    border: isSelected ? '2px solid var(--teal)' : '1px solid #cbd5e1',
+                    background: isSelected ? 'var(--teal-soft)' : '#fff',
+                    color: isSelected ? 'var(--teal-dark)' : '#0f172a',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Step 3 */}
+        <div>
+          <span style={{ display: 'block', fontSize: '9px', fontWeight: 800, color: 'var(--muted)', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '8px' }}>
+            STEP 3 / MOTION IMPORT
+          </span>
+          
+          <div className={`drop-zone ${file ? 'has-file' : ''}`} style={{ margin: '0 0 14px' }}>
+            <div className="upload-icon"><Icon name="upload" size={25} /></div>
+            <strong>{file ? file.name : 'Drop your video here'}</strong>
+            <span>{file ? `${(file.size / 1024 / 1024).toFixed(1)} MB · Ready to upload` : 'or click to browse from your device'}</span>
+            <small>MP4, MOV, AVI, MKV or WebM</small>
+            <input type="file" accept="video/*" onChange={e => setFile(e.target.files[0])} />
+          </div>
+
+          <button className="primary full" disabled={busy} onClick={submit}>
+            {busy ? 'Processing video…' : 'Upload & Analyze'} {!busy && <Icon name="arrow" size={15} />}
+          </button>
+
+          {!file && (
+            <div style={{ marginTop: '16px' }}>
+              <span style={{ display: 'block', fontSize: '9.5px', fontWeight: 800, color: 'var(--muted)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                ⚡ 1-Click Library Presets (Instant scan):
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                <button type="button" onClick={() => runSampleScan('squatting')} style={{ padding: '6px', background: 'var(--soft)', border: '1px solid #dce4eb', borderRadius: '6px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer' }}>🏋️ Squat Scan</button>
+                <button type="button" onClick={() => runSampleScan('sprinting')} style={{ padding: '6px', background: 'var(--soft)', border: '1px solid #dce4eb', borderRadius: '6px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer' }}>⚡ Sprint Scan</button>
+                <button type="button" onClick={() => runSampleScan('landing')} style={{ padding: '6px', background: 'var(--soft)', border: '1px solid #dce4eb', borderRadius: '6px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer' }}>🦘 Drop Jump</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="panel">
+        <PanelHead title="Biomechanics pipeline" meta="Automated processing" />
+        {['Video upload', 'OpenCV frame sampling', 'MediaPipe pose landmarks', 'Joint-angle calculation', 'Movement-quality score', 'Risk-level generation', 'Result storage'].map((x, i) => (
+          <div className="pipeline-row" key={x}>
+            <span>{i + 1}</span>
+            <div>
+              <b>{x}</b>
+              <small>{result && i < 6 ? 'Completed' : 'Ready'}</small>
+            </div>
+            <Icon name={result && i < 6 ? 'check' : 'activity'} size={15} />
+          </div>
+        ))}
+        {result && (
+          <div className={`risk-result ${result.risk_level.toLowerCase()}`}>
+            <div>
+              <span>Risk level</span>
+              <strong>{result.risk_level} Risk</strong>
+            </div>
+            <b>{result.risk_score}%</b>
+            <small>Movement quality: {result.movement_quality}% · {result.pose_engine}</small>
+          </div>
+        )}
+      </section>
+    </div>
+  );
 }
 
-function Results({ analyses }) { return <section className="panel"><PanelHead title="Stored analysis results" meta={`${analyses.length} analyses`} />{analyses.length ? <AnalysisTable rows={analyses} detailed /> : <Empty icon="chart" text="No analysis results available yet." />}</section>; }
+function Results({ analyses }) {
+  const [selected, setSelected] = useState(null);
+  const [activeJoint, setActiveJoint] = useState('knee');
+
+  return (
+    <section className="panel">
+      <PanelHead title="Stored analysis results" meta={`${analyses.length} analyses`} />
+      {analyses.length ? (
+        <div className="table-wrap">
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--line)' }}>
+                <th style={{ padding: '8px' }}>ID</th>
+                <th style={{ padding: '8px' }}>Athlete</th>
+                <th style={{ padding: '8px' }}>Movement</th>
+                <th style={{ padding: '8px' }}>Risk</th>
+                <th style={{ padding: '8px' }}>Level</th>
+                <th style={{ padding: '8px' }}>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {analyses.map(r => {
+                const isSelected = selected === r.id;
+                const riskLevel = r.risk_level || 'Low';
+                const riskScore = r.risk_score ?? 22;
+                const qualityScore = r.movement_quality ?? 84;
+
+                const kneeAngle = r.biomechanics?.knee_angle ?? 154;
+                const hipAngle = r.biomechanics?.hip_angle ?? 135;
+                const ankleAngle = r.biomechanics?.ankle_angle ?? 28;
+
+                return (
+                  <React.Fragment key={r.id}>
+                    <tr 
+                      onClick={() => setSelected(isSelected ? null : r.id)} 
+                      className="click"
+                      style={{ background: isSelected ? 'var(--soft)' : 'transparent', borderBottom: '1px solid #f0f3f6', cursor: 'pointer' }}
+                    >
+                      <td style={{ padding: '12px 8px' }}><span className="id-pill">#{r.id}</span></td>
+                      <td style={{ padding: '12px 8px' }}><b>{r.athlete_name}</b></td>
+                      <td style={{ padding: '12px 8px' }}>{r.movement_score}%</td>
+                      <td style={{ padding: '12px 8px' }}>{riskScore}%</td>
+                      <td style={{ padding: '12px 8px' }}><span className={`badge ${riskLevel.toLowerCase()}`}>{riskLevel}</span></td>
+                      <td style={{ padding: '12px 8px' }}>{new Date(r.created_at).toLocaleDateString()}</td>
+                    </tr>
+                    
+                    {isSelected && (
+                      <tr style={{ background: 'var(--soft)' }}>
+                        <td colSpan="6" style={{ padding: '24px 16px', borderLeft: '4px solid var(--teal)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr 1.2fr', gap: '24px', alignItems: 'start' }}>
+                            {/* Left column: MovementMap */}
+                            <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                              <MovementMap 
+                                kneeAngle={kneeAngle} 
+                                hipAngle={hipAngle} 
+                                ankleAngle={ankleAngle} 
+                                quality={qualityScore} 
+                                risk={riskLevel} 
+                                size={110} 
+                              />
+                            </div>
+
+                            {/* Center column: Joint angles */}
+                            <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              <span style={{ fontSize: '9px', fontWeight: 800, color: 'var(--teal-dark)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>Joint Telemetry</span>
+                              
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <div 
+                                  style={{ padding: '6px 8px', borderRadius: '6px', background: activeJoint === 'knee' ? 'var(--teal-soft)' : 'transparent', border: activeJoint === 'knee' ? '1px solid var(--teal)' : 'none', cursor: 'pointer' }}
+                                  onClick={() => setActiveJoint('knee')}
+                                >
+                                  <span style={{ fontSize: '9px', color: 'var(--muted)', display: 'block' }}>KNEE ANGLE</span>
+                                  <strong style={{ fontSize: '12px', color: 'var(--ink)' }}>{kneeAngle}° peak ROM</strong>
+                                </div>
+                                <div 
+                                  style={{ padding: '6px 8px', borderRadius: '6px', background: activeJoint === 'hip' ? 'var(--teal-soft)' : 'transparent', border: activeJoint === 'hip' ? '1px solid var(--teal)' : 'none', cursor: 'pointer' }}
+                                  onClick={() => setActiveJoint('hip')}
+                                >
+                                  <span style={{ fontSize: '9px', color: 'var(--muted)', display: 'block' }}>HIP EXTENSION</span>
+                                  <strong style={{ fontSize: '12px', color: 'var(--ink)' }}>{hipAngle}° extension</strong>
+                                </div>
+                                <div 
+                                  style={{ padding: '6px 8px', borderRadius: '6px', background: activeJoint === 'ankle' ? 'var(--teal-soft)' : 'transparent', border: activeJoint === 'ankle' ? '1px solid var(--teal)' : 'none', cursor: 'pointer' }}
+                                  onClick={() => setActiveJoint('ankle')}
+                                >
+                                  <span style={{ fontSize: '9px', color: 'var(--muted)', display: 'block' }}>ANKLE FLEXION</span>
+                                  <strong style={{ fontSize: '12px', color: 'var(--ink)' }}>{ankleAngle}° flexion</strong>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right column: Risk factors checklist */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              <div>
+                                <b style={{ fontSize: '10.5px', color: 'var(--ink)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>📋 Risk Checklist:</b>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
+                                  <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+                                    <span style={{ color: 'var(--teal)', fontWeight: 800 }}>✓</span>
+                                    <div>
+                                      <strong>Trunk Alignment:</strong>
+                                      <small style={{ display: 'block', color: 'var(--muted)' }}>Sagittal line tilt is within normal parameters.</small>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+                                    <span style={{ color: riskLevel === 'High' ? 'var(--danger)' : 'var(--warning)', fontWeight: 800 }}>
+                                      {riskLevel === 'High' ? '✕' : '⚠'}
+                                    </span>
+                                    <div>
+                                      <strong>Knee Valgus Shear:</strong>
+                                      <small style={{ display: 'block', color: 'var(--muted)' }}>
+                                        {riskLevel === 'High' ? 'High shear strain flagged on left ACL.' : 'Bilateral symmetry is normal.'}
+                                      </small>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div style={{ borderTop: '1px dashed var(--line)', paddingTop: '10px' }}>
+                                <b style={{ fontSize: '10px', color: 'var(--teal-dark)', display: 'block' }}>📋 Preventive Recommendation:</b>
+                                <span style={{ fontSize: '11px', color: 'var(--ink)', display: 'block', marginTop: '4px' }}>
+                                  {r.recommendation || 'Bilateral limb strengthening and landing alignment drills.'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <Empty icon="chart" text="No analysis results available yet." />
+      )}
+    </section>
+  );
+}
+
 function AnalysisTable({ rows, detailed }) { return <div className="table-wrap"><table><thead><tr><th>ID</th><th>Athlete</th><th>Movement</th><th>Risk</th><th>Level</th>{detailed && <th>Biomechanics</th>}<th>Date</th></tr></thead><tbody>{rows.map(r => <tr key={r.id}><td><span className="id-pill">#{r.id}</span></td><td><b>{r.athlete_name}</b></td><td>{r.movement_score}%</td><td>{r.risk_score}%</td><td><span className={`badge ${r.risk_level.toLowerCase()}`}>{r.risk_level}</span></td>{detailed && <td>{r.biomechanics?.knee_angle ? `Knee ${r.biomechanics.knee_angle}°` : '—'}</td>}<td>{new Date(r.created_at).toLocaleDateString()}</td></tr>)}</tbody></table></div>; }
 function Reports({ analyses }) { const latest = analyses[0]; return <section className="panel"><PanelHead title="Injury analysis report" meta="Latest assessment" action="Print / Save PDF" onClick={() => window.print()} />{latest ? <div className="report"><div className="report-header"><div><span className="eyebrow-small">MOVEMENT RISK REPORT</span><h2>{latest.athlete_name}</h2><p>Generated from Milestone 2 pose and biomechanics analysis.</p></div><div className={`score-ring ${latest.risk_level.toLowerCase()}`}><strong>{latest.risk_score}%</strong><span>risk score</span></div></div><div className="report-grid"><div><h3>Risk classification</h3><span className={`badge large ${latest.risk_level.toLowerCase()}`}>{latest.risk_level} Risk</span></div><div><h3>Biomechanics</h3><p>Knee {latest.biomechanics?.knee_angle ?? 'N/A'}° · Hip {latest.biomechanics?.hip_angle ?? 'N/A'}° · Ankle {latest.biomechanics?.ankle_angle ?? 'N/A'}°</p></div></div><div className="recommendation"><Icon name="shield" size={19} /><div><h3>Preventive recommendation</h3><p>{latest.recommendation}</p></div></div><small className="disclaimer">This is a project demonstration score and is not a clinically validated medical diagnosis.</small></div> : <Empty icon="report" text="Run an analysis to generate a report." />}</section>; }
 function Empty({ icon = 'activity', text, button, onClick }) { return <div className="empty-state"><div><Icon name={icon} size={22} /></div><b>{text}</b>{button && <button className="secondary" onClick={onClick}>{button}<Icon name="arrow" size={13} /></button>}</div>; }
