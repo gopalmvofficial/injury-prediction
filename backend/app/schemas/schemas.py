@@ -136,9 +136,11 @@ class AnalysisResult(BaseModel):
     pose_detection_rate_pct: Optional[float] = None
     movement_quality: Optional[MovementQuality] = None
     biomechanics: Optional[Biomechanics] = None
-    observations: List[str] = Field(default_factory=list)
     processed_video_path: Optional[str] = None
     landmarks_file_path: Optional[str] = None
+    risk_score: Optional[float] = None
+    risk_level: Optional[str] = None
+    recommendations: List[str] = Field(default_factory=list)
     error: Optional[str] = None
 
 

@@ -79,5 +79,5 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user: User = De
         high_risk_athletes=high_risk_athletes,
         risk_distribution=risk_distribution,
         recent_athletes=[_athlete_to_schema(a) for a in recent_athletes],
-        recent_analyses=[_analysis_to_schema(a) for a in recent_analyses],
+        recent_analyses=[_analysis_to_schema(a, db) for a in recent_analyses],
     )
