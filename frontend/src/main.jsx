@@ -128,10 +128,37 @@ function App() {
         localStorage.setItem('sir_cached_athletes', JSON.stringify(finalAthletes));
       }
 
-      setSummary(sum);
+      let finalSummary = sum || {
+        total_athletes: finalAthletes.length,
+        total_videos: 0,
+        total_analyses: 0,
+        high_risk_athletes: 0,
+        risk_distribution: { LOW: 0, MEDIUM: 0, HIGH: 0 },
+        recent_athletes: [],
+        recent_analyses: [],
+      };
+
+      try {
+        const cachedAnalysesStr = localStorage.getItem('sir_cached_analyses');
+        const cachedAnalyses = cachedAnalysesStr ? JSON.parse(cachedAnalysesStr) : [];
+        if (cachedAnalyses && cachedAnalyses.length > 0) {
+          if (!finalSummary.recent_analyses || finalSummary.recent_analyses.length === 0) {
+            finalSummary.recent_analyses = cachedAnalyses;
+            finalSummary.total_analyses = cachedAnalyses.length;
+            finalSummary.total_videos = cachedAnalyses.length;
+          } else {
+            const existingIds = new Set(finalSummary.recent_analyses.map(a => a.analysis_id || a.id));
+            const toAdd = cachedAnalyses.filter(a => !existingIds.has(a.analysis_id || a.id));
+            finalSummary.recent_analyses = [...finalSummary.recent_analyses, ...toAdd];
+            localStorage.setItem('sir_cached_analyses', JSON.stringify(finalSummary.recent_analyses));
+          }
+        }
+      } catch {}
+
+      setSummary(finalSummary);
       setAthletes(finalAthletes);
       setHealth(h);
-      return sum;
+      return finalSummary;
     } catch (e) {
       setToast(e.message);
       return null;
@@ -1684,6 +1711,12 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
       const riskResult = await api(`/api/risk/${res.analysis_id}`).catch(() => null);
       setRisk(riskResult || res);
 
+      try {
+        const cachedAnalysesStr = localStorage.getItem('sir_cached_analyses');
+        const cachedAnalyses = cachedAnalysesStr ? JSON.parse(cachedAnalysesStr) : [];
+        localStorage.setItem('sir_cached_analyses', JSON.stringify([res, ...cachedAnalyses]));
+      } catch {}
+
       // Immediately refresh squad data
       await onDone();
     } catch (err) {
@@ -1715,6 +1748,12 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
 
       setResult(analysisResult);
       setRisk(analysisResult);
+
+      try {
+        const cachedAnalysesStr = localStorage.getItem('sir_cached_analyses');
+        const cachedAnalyses = cachedAnalysesStr ? JSON.parse(cachedAnalysesStr) : [];
+        localStorage.setItem('sir_cached_analyses', JSON.stringify([analysisResult, ...cachedAnalyses]));
+      } catch {}
 
       // Refresh squad data in parent
       await onDone();
