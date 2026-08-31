@@ -2147,13 +2147,17 @@ function AnalysisTable({ rows }) {
 function Reports({ summary }) {
   const latest = summary?.recent_analyses?.[0];
   const [speaking, setSpeaking] = useState(false);
-  const [clinicName, setClinicName] = useState('Sports Medicine & Kinetic Intelligence Center');
-  const [physicianName, setPhysicianName] = useState('Dr. Sarah Chen, PT, DPT (Lead Biomechanist)');
+  const [clinicName, setClinicName] = useState('');
+  const [physicianName, setPhysicianName] = useState('');
   const token = localStorage.getItem('sir_token');
 
   const downloadPdf = async (analysisId) => {
     try {
-      const target = `${API_BASE_URL}/api/reports/${analysisId}`;
+      const q = new URLSearchParams();
+      if (clinicName && clinicName.trim()) q.append('clinic_name', clinicName.trim());
+      if (physicianName && physicianName.trim()) q.append('physician_name', physicianName.trim());
+      const queryStr = q.toString() ? `?${q.toString()}` : '';
+      const target = `${API_BASE_URL}/api/reports/${analysisId}${queryStr}`;
       const res = await fetch(target, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -2187,32 +2191,37 @@ function Reports({ summary }) {
         bilateral symmetry indices, plain-English injury likelihoods, and actionable 4-week exercise prescriptions.
       </p>
 
-      {/* PDF Clinic Branding Customizer */}
+      {/* PDF Clinic Branding Customizer (Empty by default for manual entry) */}
       <div style={{ marginTop: '16px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-        <b style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '10px' }}>
-          🏥 PDF Clinic & Team Branding Customizer:
+        <b style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '4px' }}>
+          🏥 PDF Clinic & Examiner Branding (Optional / Custom Entry):
         </b>
+        <p style={{ fontSize: '11.5px', color: '#64748b', margin: '0 0 12px' }}>
+          Enter your facility and examiner name below. They will be printed directly onto your generated clinical PDF assessment.
+        </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
             <label style={{ fontSize: '11.5px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
-              Clinic / Team Name:
+              Clinic / Team Facility Name:
             </label>
             <input
               type="text"
               value={clinicName}
               onChange={(e) => setClinicName(e.target.value)}
-              style={{ width: '100%', padding: '7px 10px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              placeholder="e.g. Apex Sports Performance & Orthopedic Clinic"
+              style={{ width: '100%', padding: '8px 12px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', boxSizing: 'border-box' }}
             />
           </div>
           <div>
             <label style={{ fontSize: '11.5px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
-              Lead Physician / Head Coach Signature:
+              Lead Physician / Head Coach Signature Name:
             </label>
             <input
               type="text"
               value={physicianName}
               onChange={(e) => setPhysicianName(e.target.value)}
-              style={{ width: '100%', padding: '7px 10px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              placeholder="e.g. Dr. Sarah Chen, PT, DPT (Lead Biomechanist)"
+              style={{ width: '100%', padding: '8px 12px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', boxSizing: 'border-box' }}
             />
           </div>
         </div>
