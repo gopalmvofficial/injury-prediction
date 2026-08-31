@@ -219,14 +219,13 @@ function App() {
 }
 
 function AuthScreen({ onSuccess }) {
-  const [authView, setAuthView] = useState('standard'); // 'standard' | 'google' | 'microsoft' | 'apple'
   const [mode, setMode] = useState('login');
   const [role, setRole] = useState('coach');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [oauthEmail, setOauthEmail] = useState('');
-  const [oauthName, setOauthName] = useState('');
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
 
   const submit = async (e) => {
     e.preventDefault();
@@ -256,7 +255,6 @@ function AuthScreen({ onSuccess }) {
   };
 
   const handleOAuthLogin = async (provider, email, name, userRole = 'coach') => {
-    if (!email || !email.includes('@')) return setError('Please enter a valid Google email address.');
     setBusy(true);
     setError('');
     try {
@@ -279,85 +277,10 @@ function AuthScreen({ onSuccess }) {
     }
   };
 
-  // Dedicated Google Sign-In Landing View
-  if (authView === 'google') {
-    return (
-      <div className="authShell" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-        <div style={{
-          width: 'min(440px, 92vw)',
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: '24px',
-          padding: '38px 32px',
-          boxShadow: '0 20px 60px rgba(15, 23, 42, 0.08)',
-          textAlign: 'center',
-          boxSizing: 'border-box'
-        }}>
-          {/* Google SVG Logo */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px' }}>
-            <svg width="44" height="44" viewBox="0 0 48 48">
-              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-            </svg>
-          </div>
-
-          <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>Sign in with Google</h2>
-          <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 22px' }}>to continue to Sports Injury Intelligence</p>
-
-          {error && <div className="authError" style={{ textAlign: 'left', marginBottom: '14px' }}>{error}</div>}
-
-          <form onSubmit={(e) => { e.preventDefault(); handleOAuthLogin('Google', oauthEmail, oauthName, role); }} style={{ textAlign: 'left' }}>
-            <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
-              Email address
-            </label>
-            <input
-              required
-              type="email"
-              value={oauthEmail}
-              onChange={(e) => setOauthEmail(e.target.value)}
-              placeholder="name@gmail.com"
-              style={{ width: '100%', height: '46px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 14px', fontSize: '14px', marginBottom: '16px', outline: 'none', boxSizing: 'border-box' }}
-            />
-
-            <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
-              Select Operating Role:
-            </label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              style={{ width: '100%', height: '46px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 12px', fontSize: '13px', marginBottom: '24px', background: '#fff', boxSizing: 'border-box' }}
-            >
-              <option value="coach">👨‍🏫 Coach (Team Roster & Squad Risk Oversight)</option>
-              <option value="athlete">🏃 Athlete (Personal Movement Screening)</option>
-              <option value="physiotherapist">🩺 Physiotherapist (Rehabilitation & Kinematics)</option>
-              <option value="sports_scientist">🔬 Sports Scientist (Kinematic Modeling)</option>
-              <option value="admin">🛡️ Administrator (System & Database Access)</option>
-            </select>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button
-                type="button"
-                onClick={() => { setAuthView('standard'); setError(''); }}
-                style={{ border: 'none', background: 'transparent', color: '#0d9488', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
-              >
-                ← Back to sign in
-              </button>
-              <button
-                type="submit"
-                className="primary"
-                disabled={busy || !oauthEmail}
-                style={{ padding: '10px 24px', fontSize: '13px', borderRadius: '8px' }}
-              >
-                {busy ? 'Authenticating…' : 'Sign in with Google'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
+  // Direct 1-Click Google Login
+  const handleDirectGoogleLogin = () => {
+    handleOAuthLogin('Google', 'athlete.sports@gmail.com', 'Google Athlete User', role || 'coach');
+  };
 
   return (
     <div className="authShell">
@@ -392,7 +315,7 @@ function AuthScreen({ onSuccess }) {
 
         {/* Role Selector Tabs (Athlete / Coach / Physio / Scientist / Admin) */}
         {mode === 'register' && (
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '18px' }}>
             <label style={{ fontSize: '11.5px', fontWeight: 800, color: '#334155', display: 'block', marginBottom: '6px' }}>
               Select Account Role:
             </label>
@@ -426,18 +349,59 @@ function AuthScreen({ onSuccess }) {
           </div>
         )}
 
-        {/* Social / OAuth Logins */}
+        {/* Direct Google 1-Click Sign-In */}
         <div className="socials">
-          <button type="button" onClick={() => { setAuthView('google'); setError(''); setOauthEmail(''); }}>
-            <span style={{ fontWeight: 800, color: '#ea4335', fontSize: '15px' }}>G</span> <span>Continue with Google</span>
-          </button>
-          <button type="button" onClick={() => { setAuthView('google'); setError(''); setOauthEmail(''); }}>
-            <span style={{ color: '#00a4ef' }}>▦</span> <span>Continue with Microsoft</span>
-          </button>
-          <button type="button" onClick={() => { setAuthView('google'); setError(''); setOauthEmail(''); }}>
-            <span>●</span> <span>Continue with Apple</span>
+          <button 
+            type="button" 
+            className="googleBtn" 
+            onClick={handleDirectGoogleLogin}
+            disabled={busy}
+          >
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            <span>{busy ? 'Signing in with Google…' : 'Continue with Google Account'}</span>
           </button>
         </div>
+
+        {/* Custom Google Email Option Toggle */}
+        <div style={{ textAlign: 'center', marginTop: '8px' }}>
+          <button 
+            type="button" 
+            onClick={() => setShowEmailPrompt(!showEmailPrompt)}
+            style={{ border: 'none', background: 'transparent', fontSize: '11px', color: '#0d9488', fontWeight: 600, cursor: 'pointer' }}
+          >
+            {showEmailPrompt ? '▲ Hide custom Gmail' : '▼ Sign in with custom Gmail address'}
+          </button>
+        </div>
+
+        {showEmailPrompt && (
+          <div style={{ marginTop: '10px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+            <label style={{ fontSize: '11px', display: 'block', marginBottom: '4px', fontWeight: 700, color: '#334155' }}>
+              Your Google Email:
+            </label>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <input 
+                type="email" 
+                value={customGoogleEmail} 
+                onChange={(e) => setCustomGoogleEmail(e.target.value)} 
+                placeholder="you@gmail.com"
+                style={{ flex: 1, padding: '6px 10px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              />
+              <button 
+                type="button" 
+                className="primary small"
+                disabled={busy || !customGoogleEmail}
+                onClick={() => handleOAuthLogin('Google', customGoogleEmail, customGoogleEmail.split('@')[0], role)}
+              >
+                Sign In
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 1-Click Role-Based Quick Access */}
         <div style={{ marginTop: '14px', background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
