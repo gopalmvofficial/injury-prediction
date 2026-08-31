@@ -83,7 +83,13 @@ class Athlete(AthleteCreate):
 # Videos / Analysis
 # ---------------------------------------------------------------------------
 
-ActivityType = Literal["squat", "running", "jumping_landing"]
+ActivityType = Literal[
+    "squat", "squatting",
+    "running", "sprinting",
+    "jumping", "landing", "jumping_landing",
+    "throwing", "cutting", "cutting_movements",
+    "sport_specific_drills", "drills"
+]
 AnalysisStatus = Literal["pending", "processing", "completed", "failed"]
 
 

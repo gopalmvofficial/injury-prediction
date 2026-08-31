@@ -243,8 +243,17 @@ def compute_movement_consistency(angle_series: Dict[str, JointAngleSeries], prim
 
 PRIMARY_JOINT_BY_ACTIVITY = {
     "squat": "left_knee",
+    "squatting": "left_knee",
     "running": "left_hip",
+    "sprinting": "left_hip",
+    "jumping": "left_knee",
+    "landing": "left_knee",
     "jumping_landing": "left_knee",
+    "throwing": "right_elbow",
+    "cutting": "left_knee",
+    "cutting_movements": "left_knee",
+    "sport_specific_drills": "left_knee",
+    "drills": "left_knee",
 }
 
 
