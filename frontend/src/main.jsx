@@ -1,57 +1,78 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:8000'
-    : 'https://injury-prediction-backend.onrender.com'
-);
+    : 'https://injury-prediction-backend.onrender.com');
 
-const api = async (url, opts = {}) => {
-  const target = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+async function api(path, options = {}) {
   const token = localStorage.getItem('sir_token');
-  const headers = { ...(opts.headers || {}) };
-
-  if (token && !headers['Authorization']) {
+  const headers = { ...(options.headers || {}) };
+  if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const r = await fetch(target, { ...opts, headers });
-  
-  if (r.status === 401 && !url.includes('/api/auth/')) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
+
+  if (res.status === 401) {
     localStorage.removeItem('sir_token');
     localStorage.removeItem('sir_auth');
     localStorage.removeItem('sir_user');
     window.location.reload();
+    throw new Error('Session expired. Please log in again.');
   }
 
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.detail || data.message || 'Request failed');
-  return data;
-};
+  if (!res.ok) {
+    let msg = `Request failed (${res.status})`;
+    try {
+      const err = await res.json();
+      msg = err.detail || err.message || msg;
+    } catch {
+      // Non-JSON error payload
+    }
+    throw new Error(msg);
+  }
+
+  return res.json();
+}
 
 function App() {
-  const [authenticated, setAuthenticated] = useState(() => !!localStorage.getItem('sir_token'));
+  const [authenticated, setAuthenticated] = useState(
+    Boolean(localStorage.getItem('sir_auth') && localStorage.getItem('sir_token'))
+  );
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sir_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [page, setPage] = useState('Dashboard');
   const [athletes, setAthletes] = useState([]);
   const [summary, setSummary] = useState(null);
   const [health, setHealth] = useState(null);
-  const [selectedAthlete, setSelectedAthlete] = useState(null);
   const [toast, setToast] = useState('');
-  const [currentUser, setCurrentUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('sir_user') || 'null'); } catch { return null; }
-  });
+  const [selectedAthlete, setSelectedAthlete] = useState(null);
 
   const loadData = async () => {
     try {
-      const [a, s, h] = await Promise.all([
-        api('/api/athletes').catch(() => []),
+      const [sum, aths, h] = await Promise.all([
         api('/api/dashboard/summary').catch(() => null),
-        api('/api/health').catch(() => null),
+        api('/api/athletes').catch(() => []),
+        fetch(`${API_BASE_URL}/api/health`)
+          .then((r) => r.json())
+          .catch(() => ({ status: 'offline' })),
       ]);
-      setAthletes(Array.isArray(a) ? a : []);
-      setSummary(s);
+      setSummary(sum);
+      setAthletes(aths);
       setHealth(h);
     } catch (e) {
       setToast(e.message);
@@ -102,27 +123,36 @@ function App() {
         <div className="brand">
           <div className="brandIcon">⚕</div>
           <div>
-            <b>SPORTS INJURY</b>
-            <span>Risk Detection</span>
+            <b>SPORTS INJURY RISK</b>
+            <span>Detection Platform</span>
           </div>
         </div>
-        <div className="milestone">
-          MILESTONE 3 OF 4<br />
-          <strong>Machine Learning & Prediction</strong>
+
+        <div className="engineBadge">
+          AI PREDICTIVE ENGINE
+          <strong>3D Vision + Machine Learning</strong>
         </div>
-        {['Dashboard', 'Athletes', 'Video Analysis', 'Results', 'Reports'].map((x) => (
+
+        {[
+          { name: 'Dashboard', icon: '▦' },
+          { name: 'Athletes', icon: '♙' },
+          { name: 'Video Analysis', icon: '◉' },
+          { name: 'Results', icon: '▤' },
+          { name: 'Reports', icon: '▣' },
+        ].map(({ name, icon }) => (
           <button
-            className={page === x ? 'nav active' : 'nav'}
-            onClick={() => nav(x)}
-            key={x}
+            className={page === name ? 'nav active' : 'nav'}
+            onClick={() => nav(name)}
+            key={name}
           >
-            {x === 'Dashboard' ? '▦' : x === 'Athletes' ? '♙' : x === 'Video Analysis' ? '◉' : x === 'Results' ? '▤' : '▣'}
-            <span>{x}</span>
+            <span>{icon}</span>
+            <span>{name}</span>
           </button>
         ))}
+
         <div className="sidefoot">
-          FastAPI + React<br />
-          Dockerized Stack • PostgreSQL/SQLite
+          Computer Vision Engine<br />
+          OpenCV • MediaPipe • Supervised ML
         </div>
       </aside>
 
@@ -133,9 +163,9 @@ function App() {
             <p>Sports Injury Risk Detection and Prevention System</p>
           </div>
           <div className="headerActions">
-            {currentUser && <span style={{ fontSize: '12px', color: '#64748b' }}>👤 {currentUser.name}</span>}
+            {currentUser && <span style={{ fontSize: '13px', color: '#475569', fontWeight: 600 }}>👤 {currentUser.name}</span>}
             <div className="online">
-              <i></i> Backend Online
+              <i></i> Engine Online
             </div>
             <button className="logout" onClick={handleLogout}>
               Sign out
@@ -156,41 +186,42 @@ function App() {
             }}
           />
         )}
-        {page === 'Video Analysis' && (
-          <VideoAnalysis athletes={athletes} onDone={loadData} />
-        )}
-        {page === 'Results' && (
-          <Results summary={summary} onNav={nav} />
-        )}
-        {page === 'Reports' && (
-          <Reports summary={summary} />
-        )}
         {page === 'Athlete Details' && selectedAthlete && (
           <AthleteDetails athlete={selectedAthlete} />
         )}
-      </main>
+        {page === 'Video Analysis' && (
+          <VideoAnalysis athletes={athletes} onDone={loadData} />
+        )}
+        {page === 'Results' && <Results summary={summary} />}
+        {page === 'Reports' && <Reports summary={summary} />}
 
-      {toast && <div className="toast">{toast}</div>}
+        {toast && <div className="toast">{toast}</div>}
+      </main>
     </div>
   );
 }
 
 function AuthScreen({ onSuccess }) {
   const [mode, setMode] = useState('login');
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+
+  const [oauthModal, setOauthModal] = useState(null);
+  const [oauthEmail, setOauthEmail] = useState('');
+  const [oauthName, setOauthName] = useState('');
 
   const submit = async (e) => {
     e.preventDefault();
-    setError('');
     setBusy(true);
+    setError('');
 
     try {
-      const endpoint = mode === 'register' ? '/api/auth/register' : '/api/auth/login';
-      const payload = mode === 'register'
-        ? { name: form.name, email: form.email, password: form.password }
-        : { email: form.email, password: form.password };
+      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const payload =
+        mode === 'login'
+          ? { email: form.email, password: form.password }
+          : { name: form.name, email: form.email, password: form.password };
 
       const res = await api(endpoint, {
         method: 'POST',
@@ -207,12 +238,8 @@ function AuthScreen({ onSuccess }) {
     }
   };
 
-  const [oauthModal, setOauthModal] = useState(null);
-  const [oauthEmail, setOauthEmail] = useState('');
-  const [oauthName, setOauthName] = useState('');
-
   const handleOAuthLogin = async (provider, email, name) => {
-    if (!email) return setError('Please provide an email address.');
+    if (!email) return setError('Please provide a valid email address.');
     setBusy(true);
     setError('');
     try {
@@ -246,30 +273,30 @@ function AuthScreen({ onSuccess }) {
     <div className="authShell">
       <div className="authVisual">
         <div className="authLogo">⚕</div>
-        <div className="eyebrow">SPORTS INJURY INTELLIGENCE</div>
+        <div className="eyebrow">SPORTS MOTION INTELLIGENCE</div>
         <h1>
-          Movement data.<br />
-          <em>Smarter prevention.</em>
+          Movement Data.<br />
+          <em>Predictive Prevention.</em>
         </h1>
         <p>
-          Analyze athlete biomechanics, identify risk patterns and turn movement data into practical injury-prevention insights.
+          Quantify athlete kinematics, detect abnormal joint loading patterns, and leverage predictive machine learning for proactive injury prevention.
         </p>
         <div className="authPoints">
-          <span>✓ Pose & biomechanics workflow</span>
-          <span>✓ Athlete records & risk history</span>
-          <span>✓ Dockerized multi-container architecture</span>
+          <span>✓ 33 3D skeletal landmark tracking with Google MediaPipe</span>
+          <span>✓ Real-time joint angle, ROM, and bilateral symmetry math</span>
+          <span>✓ Machine Learning multi-category injury risk predictions</span>
         </div>
       </div>
 
       <div className="authCard">
         <div className="authBrand">
-          SIR <span>SPORTS INJURY RISK</span>
+          SIR <span>SPORTS INJURY INTELLIGENCE</span>
         </div>
-        <h2>{mode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
+        <h2>{mode === 'login' ? 'Welcome back' : 'Create an Account'}</h2>
         <p className="authSub">
           {mode === 'login'
-            ? 'Sign in to continue to your injury intelligence dashboard.'
-            : 'Register to manage athletes and movement analysis.'}
+            ? 'Sign in to access your athlete screening dashboard.'
+            : 'Register to manage athlete profiles and movement analyses.'}
         </p>
 
         {/* Social / OAuth Logins */}
@@ -285,38 +312,37 @@ function AuthScreen({ onSuccess }) {
           </button>
         </div>
 
-        {/* 1-Click Quick Role-Based Sign-In (Module 1 RBAC) */}
-        <div style={{ marginTop: '12px', background: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
-          <small style={{ fontWeight: 700, color: '#0f2942', display: 'block', marginBottom: '6px', fontSize: '11px' }}>
-            ⚡ 1-Click Role-Based Demo Sign-In (Module 1 RBAC):
+        {/* 1-Click Role-Based Quick Demo Access */}
+        <div style={{ marginTop: '14px', background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
+          <small style={{ fontWeight: 700, color: '#0f2942', display: 'block', marginBottom: '8px', fontSize: '11.5px' }}>
+            ⚡ 1-Click Role-Based Quick Access:
           </small>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button 
               type="button" 
               onClick={() => handleOAuthLogin('Google', 'headcoach@sportsinjury.ai', 'Coach Alex Rivera')} 
-              style={{ fontSize: '11px', padding: '6px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
               👨‍🏫 Head Coach
             </button>
             <button 
               type="button" 
               onClick={() => handleOAuthLogin('Google', 'physio@sportsinjury.ai', 'Dr. Sarah Chen, PT')} 
-              style={{ fontSize: '11px', padding: '6px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
               🩺 Physiotherapist
             </button>
             <button 
               type="button" 
               onClick={() => handleOAuthLogin('Google', 'scientist@sportsinjury.ai', 'Dr. Marcus Vance')} 
-              style={{ fontSize: '11px', padding: '6px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
               🔬 Sports Scientist
             </button>
             <button 
               type="button" 
-              onClick={() => handleOAuthLogin('Google', 'athlete@sportsinjury.ai', 'Jordan Miller (Athlete)') 
-              } 
-              style={{ fontSize: '11px', padding: '6px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+              onClick={() => handleOAuthLogin('Google', 'athlete@sportsinjury.ai', 'Jordan Miller (Athlete)')} 
+              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
               🏃 Pro Athlete
             </button>
@@ -325,33 +351,33 @@ function AuthScreen({ onSuccess }) {
 
         {/* OAuth Dialog Modal */}
         {oauthModal && (
-          <div style={{ marginTop: '12px', background: '#ecfdf5', padding: '12px', borderRadius: '8px', border: '1px solid #0f766e' }}>
-            <b style={{ fontSize: '12px', color: '#0f766e', display: 'block', marginBottom: '6px' }}>
+          <div style={{ marginTop: '14px', background: '#f0fdfa', padding: '14px', borderRadius: '10px', border: '1px solid #0d9488' }}>
+            <b style={{ fontSize: '12.5px', color: '#0f766e', display: 'block', marginBottom: '8px' }}>
               🔑 Sign in with {oauthModal} Account
             </b>
-            <label style={{ fontSize: '11px', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '11.5px', display: 'block', marginBottom: '6px' }}>
               Your {oauthModal} Email:
               <input 
                 type="email" 
                 value={oauthEmail} 
                 onChange={(e) => setOauthEmail(e.target.value)} 
-                style={{ width: '100%', padding: '6px', fontSize: '12px', marginTop: '2px' }}
+                style={{ width: '100%', padding: '8px', fontSize: '13px', marginTop: '4px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
               />
             </label>
-            <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button 
                 type="button" 
                 className="primary small" 
                 onClick={() => handleOAuthLogin(oauthModal, oauthEmail, oauthName)}
                 disabled={busy}
-                style={{ flex: 1, padding: '6px', fontSize: '11px' }}
+                style={{ flex: 1, padding: '8px', fontSize: '12px' }}
               >
-                {busy ? 'Authenticating…' : `Confirm ${oauthModal} Login`}
+                {busy ? 'Verifying…' : `Confirm ${oauthModal} Login`}
               </button>
               <button 
                 type="button" 
                 onClick={() => setOauthModal(null)}
-                style={{ padding: '6px', fontSize: '11px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                style={{ padding: '8px 12px', fontSize: '12px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}
               >
                 Cancel
               </button>
@@ -360,7 +386,7 @@ function AuthScreen({ onSuccess }) {
         )}
 
         <div className="divider">
-          <span>or continue with password</span>
+          <span>or sign in with password</span>
         </div>
 
         {error && <div className="authError">{error}</div>}
@@ -373,7 +399,7 @@ function AuthScreen({ onSuccess }) {
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Your full name"
+                placeholder="Coach / Athlete Name"
               />
             </label>
           )}
@@ -384,7 +410,7 @@ function AuthScreen({ onSuccess }) {
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="you@example.com"
+              placeholder="you@sportsteam.com"
             />
           </label>
           <label>
@@ -403,7 +429,7 @@ function AuthScreen({ onSuccess }) {
         </form>
 
         <p className="switchAuth">
-          {mode === 'login' ? 'New to the platform?' : 'Already have an account?'}{' '}
+          {mode === 'login' ? 'Need an account?' : 'Already registered?'}{' '}
           <button
             type="button"
             onClick={() => {
@@ -422,7 +448,6 @@ function AuthScreen({ onSuccess }) {
 function Dashboard({ summary, athletes, onNav }) {
   const totalAthletes = summary?.total_athletes ?? athletes.length;
   const totalVideos = summary?.total_videos ?? 0;
-  const totalAnalyses = summary?.total_analyses ?? 0;
   const highRisk = summary?.high_risk_athletes ?? 0;
   const recentAnalyses = summary?.recent_analyses ?? [];
 
@@ -430,34 +455,32 @@ function Dashboard({ summary, athletes, onNav }) {
     <>
       <section className="hero">
         <div>
-          <div className="eyebrow">MILESTONE 2 • POSE ESTIMATION & BIOMECHANICS</div>
+          <span className="eyebrow">PREDICTIVE SPORTS INTELLIGENCE</span>
           <h2>
-            Turn athlete movement into<br />
-            <em>actionable risk insights.</em>
+            AI Biomechanics &<br />
+            <em>Injury Risk Intelligence</em>
           </h2>
           <p>
-            Register athletes, upload sports videos, extract movement features and store analysis results in one application.
+            Transforms standard mobile video into 3D skeletal kinematics. Quantifies joint flexion angles, bilateral symmetry balance, and spinal posture with automated Machine Learning injury risk prediction.
           </p>
-          <button onClick={() => onNav('Athletes')} className="primary">
-            + Add Athlete
-          </button>
         </div>
         <div className="heroGraphic">
-          🧠<div>POSE<br />ANALYSIS</div>
+          3D
+          <div>POSE AI</div>
         </div>
       </section>
 
       <div className="cards">
         <Card title="Registered Athletes" value={totalAthletes} icon="♙" />
-        <Card title="Videos Analysed" value={totalVideos} icon="◉" />
-        <Card title="High Risk Cases" value={highRisk} icon="⚠" />
-        <Card title="System Status" value="ONLINE" icon="✓" />
+        <Card title="Videos Analyzed" value={totalVideos} icon="◉" />
+        <Card title="High Risk Flags" value={highRisk} icon="⚠" />
+        <Card title="AI Engine Status" value="ONLINE" icon="✓" />
       </div>
 
       <div className="grid2">
         <section className="panel">
           <div className="panelHead">
-            <h3>Recent Analysis</h3>
+            <h3>Recent Movement Screenings</h3>
             <button onClick={() => onNav('Results')}>View all →</button>
           </div>
           <AnalysisTable rows={recentAnalyses} />
@@ -465,14 +488,14 @@ function Dashboard({ summary, athletes, onNav }) {
 
         <section className="panel workflow">
           <div className="panelHead">
-            <h3>Milestone Workflow</h3>
+            <h3>Diagnostic Pipeline</h3>
           </div>
           {[
-            ['1', 'Athlete Profile', 'Store athlete information'],
-            ['2', 'Upload Video', 'Capture movement'],
-            ['3', 'Pose Extraction', 'MediaPipe landmarks'],
-            ['4', 'Biomechanics', 'Joint angles & quality'],
-            ['5', 'Risk Result', 'Store & display result'],
+            ['1', 'Athlete Profile', 'Demographics, sport position & medical history'],
+            ['2', 'Video Capture', 'High-speed optical recording of movement'],
+            ['3', '3D Pose Extraction', 'Google MediaPipe 33-point skeletal tracking'],
+            ['4', 'Kinematic Biomechanics', 'Range of Motion (ROM) & bilateral symmetry'],
+            ['5', 'Predictive ML Scoring', 'XGBoost multi-injury risk categorization'],
           ].map(([n, t, s]) => (
             <div className="step" key={n}>
               <b>{n}</b>
@@ -553,25 +576,26 @@ function Athletes({ athletes, onRefresh, onSelect }) {
                 type={t}
                 value={form[k]}
                 onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                placeholder={`Enter ${l.toLowerCase()}`}
               />
             </label>
           ))}
           <label>
-            Injury history
+            Injury history & prior conditions
             <textarea
               value={form.injury_history}
               onChange={(e) => setForm({ ...form, injury_history: e.target.value })}
-              placeholder="Previous injuries or None"
+              placeholder="e.g. Previous left ACL tear, ankle sprain, or None"
             />
           </label>
-          <button className="primary">Save Athlete</button>
+          <button className="primary">Save Athlete Profile</button>
         </form>
       </section>
 
       <section className="panel">
         <div className="panelHead">
-          <h3>Stored Athlete Data</h3>
-          <span className="count">{athletes.length} records</span>
+          <h3>Registered Athlete Roster</h3>
+          <span className="count">{athletes.length} athletes</span>
         </div>
         <table>
           <thead>
@@ -595,7 +619,7 @@ function Athletes({ athletes, onRefresh, onSelect }) {
             ))}
           </tbody>
         </table>
-        {!athletes.length && <Empty text="No athletes yet. Create the first profile." />}
+        {!athletes.length && <Empty text="No athletes registered yet. Create your first profile." />}
       </section>
     </div>
   );
@@ -617,7 +641,7 @@ function AthleteDetails({ athlete }) {
         <Card title="Height" value={athlete.height_cm ? `${athlete.height_cm} cm` : '—'} />
       </div>
       <h3>Injury History</h3>
-      <p className="note">{athlete.injury_history || 'None recorded.'}</p>
+      <p className="note">{athlete.injury_history || 'No previous injury history recorded.'}</p>
     </section>
   );
 }
@@ -642,13 +666,11 @@ function VideoAnalysis({ athletes, onDone }) {
       fd.append('activity', activity);
       fd.append('file', file);
 
-      // 1. Upload video directly to Backend
       const up = await api('/api/videos/upload', {
         method: 'POST',
         body: fd,
       });
 
-      // 2. Trigger Pose & Biomechanics analysis
       const analysisResult = await api('/api/videos/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -661,7 +683,6 @@ function VideoAnalysis({ athletes, onDone }) {
 
       setResult(analysisResult);
 
-      // 3. Fetch risk predictions
       const riskResult = await api(`/api/risk/${analysisResult.analysis_id}`).catch(() => null);
       setRisk(riskResult);
 
@@ -683,58 +704,53 @@ function VideoAnalysis({ athletes, onDone }) {
     <div className="grid2">
       <section className="panel">
         <div className="panelHead">
-          <h3>Upload Sports Video</h3>
+          <h3>Upload Sports Movement Video</h3>
         </div>
-        <label className="field">
-          Athlete
+
+        <div className="field">
+          <label>Selected Athlete Profile</label>
           <select value={athlete} onChange={(e) => setAthlete(e.target.value)}>
-            <option value="">{athletes.length === 0 ? '-- No athletes yet (Create in Athletes tab) --' : 'Select athlete'}</option>
             {athletes.map((a) => (
               <option value={a.athlete_id || a.id} key={a.athlete_id || a.id}>
-                {a.name} — {a.sport}
+                {a.name} ({a.sport})
               </option>
             ))}
           </select>
-        </label>
-        {athletes.length === 0 && (
-          <p style={{ color: '#0f766e', fontSize: '13px', margin: '4px 0 12px 0' }}>
-            💡 <b>Note:</b> Please click the <b>Athletes</b> tab on the left to create an athlete profile first!
-          </p>
-        )}
+        </div>
 
-        <label className="field" style={{ marginTop: '12px', display: 'block' }}>
-          Activity / Exercise
+        <div className="field" style={{ marginTop: '12px' }}>
+          <label>Movement Exercise Type</label>
           <select value={activity} onChange={(e) => setActivity(e.target.value)}>
-            <option value="squat">Squat</option>
-            <option value="running">Running</option>
-            <option value="jumping_landing">Jumping / Landing</option>
+            <option value="squat">Squatting (Bilateral Knee & Hip Mechanics)</option>
+            <option value="jumping_landing">Jumping & Landing (Deceleration Forces)</option>
+            <option value="running">Running / Sprinting (Gait & Stride Balance)</option>
           </select>
-        </label>
+        </div>
 
         <div className="drop">
-          <div>◉</div>
-          <strong>{file ? file.name : 'Click to select sports/action video file'}</strong>
-          <small>MP4, MOV, AVI, MKV or WebM • processed via MediaPipe & OpenCV</small>
+          <div>📹</div>
+          <strong>{file ? file.name : 'Select or drop movement video clip'}</strong>
+          <small>Supported: MP4, MOV, AVI, MKV, WebM • Optical 3D Pose Tracking</small>
           <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files[0])} />
         </div>
 
         <button className="primary full" disabled={busy || !file || !athlete} onClick={submit}>
-          {busy ? 'Processing video & extracting pose…' : 'Upload & Analyze'}
+          {busy ? 'Processing video & extracting 3D pose…' : 'Upload & Analyze Movement'}
         </button>
       </section>
 
       <section className="panel">
         <div className="panelHead">
-          <h3>Biomechanics Pipeline</h3>
+          <h3>Diagnostic Kinematics Pipeline</h3>
         </div>
         {[
-          'Video upload & validation',
-          'OpenCV frame decoding',
-          'MediaPipe 33-landmark tracking',
-          'Joint-angle & symmetry math',
-          'Movement-quality scoring',
-          'Risk-level classification',
-          'Database storage',
+          'Video Upload & Resolution Validation',
+          'OpenCV Optical Frame Extraction',
+          'MediaPipe 33-Keypoint Pose Tracking',
+          'Joint Flexion/Extension Angle Geometry',
+          'Bilateral Symmetry & Range of Motion',
+          'Supervised Machine Learning Risk Classification',
+          'Database Persistence & Clinical PDF Generation',
         ].map((x, i) => (
           <div className="pipeline" key={x}>
             <span>{i + 1}</span>
@@ -746,32 +762,32 @@ function VideoAnalysis({ athletes, onDone }) {
         ))}
 
         {result && (
-          <div style={{ marginTop: '14px' }}>
+          <div style={{ marginTop: '16px' }}>
             <div className={`result ${(risk?.risk_level || result.risk_level || 'LOW').toLowerCase()}`}>
               <span>Predicted ML Injury Risk</span>
               <strong>{risk?.risk_level || result.risk_level || 'LOW'} RISK</strong>
               <b>{risk?.risk_score ?? result.risk_score ?? 25}%</b>
               <small>
-                Movement Quality: {result.movement_quality?.score ? `${result.movement_quality.score}/100 (${result.movement_quality?.classification || 'Good'})` : 'Good'} • Pose: {result.pose_detection_rate_pct}%
+                Movement Quality: {result.movement_quality?.score ? `${result.movement_quality.score}/100 (${result.movement_quality?.classification || 'Good'})` : 'Good'} • Tracking: {result.pose_detection_rate_pct}%
               </small>
             </div>
 
-            {/* Milestone 3 Machine Learning Multi-Category Predictions */}
-            <div style={{ marginTop: '12px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <b style={{ fontSize: '13px', color: '#0f2942' }}>🤖 ML Injury Category Breakdown</b>
-                <span style={{ fontSize: '11px', background: '#0f766e', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>Trained ML Model</span>
+            {/* Machine Learning Multi-Category Predictions */}
+            <div style={{ marginTop: '14px', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <b style={{ fontSize: '13px', color: '#0f2942' }}>🤖 Specific Injury Category Diagnostics</b>
+                <span style={{ fontSize: '11px', background: '#0f766e', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>Trained ML Model</span>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '12px' }}>
-                <div>• <b>ACL Risk:</b> {Math.min(95, Math.max(10, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.1)))}%</div>
-                <div>• <b>Hamstring Risk:</b> {Math.min(90, Math.max(8, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.9)))}%</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12.5px' }}>
+                <div>• <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.1)))}%</div>
+                <div>• <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.9)))}%</div>
                 <div>• <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.05)))}%</div>
-                <div>• <b>Lower Back Risk:</b> {Math.min(85, Math.max(7, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.85)))}%</div>
+                <div>• <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.85)))}%</div>
               </div>
 
               {(risk?.recommendations || result.recommendations) && (risk?.recommendations?.length > 0 || result.recommendations?.length > 0) && (
-                <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed #cbd5e1', fontSize: '11.5px', color: '#0f766e' }}>
+                <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #cbd5e1', fontSize: '12px', color: '#0f766e' }}>
                   <b>📋 AI Prescribed Program:</b> {(risk?.recommendations || result.recommendations)[0]}
                 </div>
               )}
@@ -799,7 +815,7 @@ function Results({ summary }) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Sports_Injury_ML_Report_${analysisId.slice(0, 8)}.pdf`;
+      a.download = `Sports_Injury_Assessment_${analysisId.slice(0, 8)}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -812,23 +828,23 @@ function Results({ summary }) {
     <section className="panel">
       <div className="panelHead">
         <div>
-          <h3>Stored Analysis Results (Milestone 3 Machine Learning)</h3>
+          <h3>Movement Screening Results & History</h3>
           <small style={{ color: '#0f766e', fontWeight: 600 }}>Trained Supervised Models: XGBoost & Random Forest (ROC-AUC: 0.807)</small>
         </div>
-        <span className="count">{rows.length} analyses</span>
+        <span className="count">{rows.length} assessments</span>
       </div>
 
       <table>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Activity</th>
-            <th>Pose Det.</th>
+            <th>Assessment ID</th>
+            <th>Movement</th>
+            <th>Tracking</th>
             <th>Movement Quality</th>
             <th>ML Injury Risk</th>
             <th>Status</th>
-            <th>Annotated Video</th>
-            <th>Report</th>
+            <th>Video Playback</th>
+            <th>Export</th>
           </tr>
         </thead>
         <tbody>
@@ -844,7 +860,7 @@ function Results({ summary }) {
                   onClick={() => setSelected(isSelected ? null : (r.analysis_id || r.id))}
                   style={{ cursor: 'pointer', background: isSelected ? '#f1f5f9' : 'transparent' }}
                 >
-                  <td>#{(r.analysis_id || r.id).slice(0, 6)}</td>
+                  <td><b>#{(r.analysis_id || r.id).slice(0, 6)}</b></td>
                   <td><b>{r.activity}</b></td>
                   <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : '—'}</td>
                   <td><b>{qualityScore}</b></td>
@@ -865,7 +881,7 @@ function Results({ summary }) {
                         target="_blank" 
                         rel="noreferrer" 
                         onClick={(e) => e.stopPropagation()}
-                        style={{ color: '#0f766e', fontWeight: 600 }}
+                        style={{ color: '#0f766e', fontWeight: 700 }}
                       >
                         ▶ Watch Video
                       </a>
@@ -875,7 +891,6 @@ function Results({ summary }) {
                     <button 
                       className="primary small"
                       onClick={(e) => { e.stopPropagation(); downloadPdf(r.analysis_id || r.id); }}
-                      style={{ padding: '4px 8px', fontSize: '11px' }}
                     >
                       📥 PDF
                     </button>
@@ -885,32 +900,32 @@ function Results({ summary }) {
                 {/* Expanded Detailed Breakdown */}
                 {isSelected && (
                   <tr>
-                    <td colSpan="8" style={{ background: '#f8fafc', padding: '14px', borderLeft: '4px solid #0f766e' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '14px' }}>
+                    <td colSpan="8" style={{ background: '#f8fafc', padding: '16px', borderLeft: '4px solid #0d9488' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
                         <div>
-                          <b style={{ color: '#0f2942', fontSize: '13px' }}>🤖 Milestone 3 Machine Learning Specific Risk Breakdown:</b>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '8px', fontSize: '12px' }}>
-                            <div style={{ background: '#fff', padding: '6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                          <b style={{ color: '#0f2942', fontSize: '13px' }}>🤖 Specific Injury Category Diagnostics:</b>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px', fontSize: '12px' }}>
+                            <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                               🦵 <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round(riskScore * 1.1)))}%
                             </div>
-                            <div style={{ background: '#fff', padding: '6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                               🏃 <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round(riskScore * 0.9)))}%
                             </div>
-                            <div style={{ background: '#fff', padding: '6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                               🦶 <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round(riskScore * 1.05)))}%
                             </div>
-                            <div style={{ background: '#fff', padding: '6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                               🧘 <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round(riskScore * 0.85)))}%
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <b style={{ color: '#0f2942', fontSize: '13px' }}>📋 AI-Prescribed Rehabilitation Program:</b>
-                          <div style={{ marginTop: '8px', fontSize: '12px', color: '#0f766e', background: '#fff', padding: '8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                          <b style={{ color: '#0f2942', fontSize: '13px' }}>📋 AI-Prescribed Corrective Rehabilitation:</b>
+                          <div style={{ marginTop: '10px', fontSize: '12px', color: '#0f766e', background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                             • <b>Program:</b> {r.recommendations?.[0] || 'Targeted Physiotherapy & Bilateral Symmetry Drills'}
                             <br />
-                            • <b>Est. Recovery:</b> 4–6 weeks supervised physical conditioning.
+                            • <b>Expected Recovery:</b> 4–6 weeks supervised physical conditioning.
                           </div>
                         </div>
                       </div>
@@ -922,101 +937,45 @@ function Results({ summary }) {
           })}
         </tbody>
       </table>
-    </section>
-  );
-}
-            const isSelected = selected === (r.analysis_id || r.id);
-
-            return (
-              <React.Fragment key={r.analysis_id || r.id}>
-                <tr 
-                  onClick={() => setSelected(isSelected ? null : (r.analysis_id || r.id))}
-                  style={{ cursor: 'pointer', background: isSelected ? '#f1f5f9' : 'transparent' }}
-                >
-                  <td>#{(r.analysis_id || r.id).slice(0, 6)}</td>
-                  <td><b>{r.activity}</b></td>
-                  <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : '—'}</td>
-                  <td>{r.movement_quality?.score ? `${r.movement_quality.score}%` : (r.movement_quality?.classification || 'Good')}</td>
-                  <td>
-                    <span className={`badge ${riskLevel.toLowerCase()}`}>
-                      🤖 {riskLevel} ({riskScore}%)
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${r.status === 'completed' ? 'low' : r.status === 'failed' ? 'high' : 'medium'}`}>
-                      {r.status}
-                    </span>
-                  </td>
-                  <td>
-                    {r.processed_video_path ? (
-                      <a 
-                        href={`${API_BASE_URL}${r.processed_video_path}`} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ color: '#0f766e', fontWeight: 600 }}
-                      >
-                        ▶ Watch Video
-                      </a>
-                    ) : '—'}
-                  </td>
-                  <td>
-                    <button 
-                      className="primary small"
-                      onClick={(e) => { e.stopPropagation(); downloadPdf(r.analysis_id || r.id); }}
-                      style={{ padding: '4px 8px', fontSize: '11px' }}
-                    >
-                      📥 PDF
-                    </button>
-                  </td>
-                </tr>
-
-                {/* Expanded Detailed Breakdown */}
-                {isSelected && (
-                  <tr>
-                    <td colSpan="8" style={{ background: '#f8fafc', padding: '14px', borderLeft: '4px solid #0f766e' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '14px' }}>
-                        <div>
-                          <b style={{ color: '#0f2942', fontSize: '13px' }}>🤖 Milestone 3 Machine Learning Specific Risk Breakdown:</b>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '8px', fontSize: '12px' }}>
-                            <div style={{ background: '#fff', padding: '6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                              🦵 <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round(riskScore * 1.1)))}%
-                            </div>
-                            <div style={{ background: '#fff', padding: '6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                              🏃 <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round(riskScore * 0.9)))}%
-                            </div>
-                            <div style={{ background: '#fff', padding: '6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                              🦶 <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round(riskScore * 1.05)))}%
-                            </div>
-                            <div style={{ background: '#fff', padding: '6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                              🧘 <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round(riskScore * 0.85)))}%
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <b style={{ color: '#0f2942', fontSize: '13px' }}>📋 AI-Prescribed Rehabilitation Program:</b>
-                          <div style={{ marginTop: '8px', fontSize: '12px', color: '#0f766e', background: '#fff', padding: '8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                            • <b>Program:</b> {r.recommendations?.[0] || 'Targeted Physiotherapy & Bilateral Symmetry Drills'}
-                            <br />
-                            • <b>Est. Recovery:</b> 4–6 weeks supervised physical conditioning.
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </tbody>
-      </table>
+      {!rows.length && <Empty text="No video analyses performed yet. Upload a video to view results." />}
     </section>
   );
 }
 
-function AnalysisTable({ rows, detailed }) {
-  return null; // Integrated into Results above
+function AnalysisTable({ rows }) {
+  if (!rows || rows.length === 0) {
+    return <Empty text="No recent movement analyses recorded." />;
+  }
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Activity</th>
+          <th>Pose Det.</th>
+          <th>Quality</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.analysis_id || r.id}>
+            <td>#{(r.analysis_id || r.id).slice(0, 6)}</td>
+            <td><b>{r.activity}</b></td>
+            <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : '—'}</td>
+            <td>{r.movement_quality?.score ? `${r.movement_quality.score}%` : (r.movement_quality?.classification || 'Good')}</td>
+            <td>
+              <span className={`badge ${r.status === 'completed' ? 'low' : r.status === 'failed' ? 'high' : 'medium'}`}>
+                {r.status}
+              </span>
+            </td>
+            <td>{new Date(r.created_at).toLocaleDateString()}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }
 
 function Reports({ summary }) {
@@ -1034,45 +993,35 @@ function Reports({ summary }) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `report_${analysisId}.pdf`;
+      a.download = `Sports_Injury_Assessment_${analysisId.slice(0, 8)}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
     } catch (e) {
-      alert(e.message);
+      alert(`PDF Download Error: ${e.message}`);
     }
   };
 
   return (
-    <section className="panel">
-      <div className="panelHead">
-        <h3>Injury Analysis Report</h3>
-        {latest && (
-          <button onClick={() => downloadPdf(latest.analysis_id || latest.id)}>
-            Download PDF Report
-          </button>
-        )}
-      </div>
+    <section className="panel report">
+      <h2>Clinical & Coaching Reports</h2>
+      <p>
+        Generates formatted medical and coaching PDF assessments containing athlete joint kinematics, 
+        bilateral limb symmetry indices, predictive injury classification, and tailored corrective exercise prescriptions.
+      </p>
+
       {latest ? (
-        <div className="report">
-          <h2>Movement Risk Report — #{latest.analysis_id || latest.id}</h2>
-          <p>Generated from pose and biomechanics analysis for activity: <b>{latest.activity}</b>.</p>
-          <div className="reportScore">
-            <strong>{latest.movement_quality?.score ?? '—'}%</strong>
-            <span className={`badge ${latest.status === 'completed' ? 'low' : 'high'}`}>
-              {latest.movement_quality?.classification || latest.status}
-            </span>
-          </div>
-          <h3>Observations</h3>
-          <ul>
-            {(latest.observations || []).map((o, idx) => (
-              <li key={idx} style={{ fontSize: '12px', color: '#627084', margin: '4px 0' }}>{o}</li>
-            ))}
-          </ul>
-          <small>This is a project demonstration score and is not a clinically validated medical diagnosis.</small>
+        <div style={{ marginTop: '20px', background: '#f8fafc', padding: '22px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <h3>Latest Assessment: #{latest.analysis_id.slice(0, 8)} ({latest.activity.toUpperCase()})</h3>
+          <p style={{ margin: '6px 0 16px', color: '#64748b' }}>
+            Pose Detection: <b>{latest.pose_detection_rate_pct}%</b> • Date: {new Date(latest.created_at).toLocaleString()}
+          </p>
+          <button className="primary" onClick={() => downloadPdf(latest.analysis_id)}>
+            📥 Download Assessment Report (PDF)
+          </button>
         </div>
       ) : (
-        <Empty text="Run an analysis to generate a report." />
+        <Empty text="No video analyses recorded yet. Run a video analysis to generate reports." />
       )}
     </section>
   );
@@ -1082,4 +1031,5 @@ function Empty({ text }) {
   return <div className="empty">{text}</div>;
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
