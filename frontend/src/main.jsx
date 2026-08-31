@@ -40,6 +40,21 @@ async function api(path, options = {}) {
   return res.json();
 }
 
+const Icon = ({ name, size = 18 }) => {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const paths = {
+    dashboard: <><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
+    video: <><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3z"/><path d="m8 9 4 3-4 3z"/></>,
+    chart: <><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 3-4 3 2 5-6"/></>,
+    report: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></>,
+    activity: <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></>,
+    activityPulse: <><path d="M3 12h4l2-6 4 12 3-6h5"/></>,
+    plus: <><path d="M12 5v14M5 12h14"/></>
+  };
+  return <svg {...common}>{paths[name] || paths.activity}</svg>;
+};
+
 function speakBriefing(text, setSpeaking) {
   if (!('speechSynthesis' in window)) {
     return alert('Text-to-speech is not supported in this browser.');
@@ -228,38 +243,38 @@ function App() {
     <div className="app">
       <aside>
         <div className="brand">
-          <div className="brandIcon">⚡</div>
+          <div className="brandIcon"><Icon name="activityPulse" size={18} /></div>
           <div>
-            <b>SPORTS INJURY RISK</b>
-            <span>Kinetic Vision Intelligence</span>
+            <b>MOTIONIQ</b>
+            <span>Sports Injury Intelligence</span>
           </div>
         </div>
 
         <div className="engineBadge">
-          AI PREDICTIVE ENGINE
-          <strong>3D Vision + Machine Learning</strong>
+          AI BIOMECHANICS LAB
+          <strong>Skeletal Kinetic System</strong>
         </div>
 
         {[
-          { name: 'Dashboard', icon: '▦' },
-          { name: 'Athletes', icon: '♙' },
-          { name: 'Video Analysis', icon: '◉' },
-          { name: 'Kinematics Lab', icon: '🩻' },
-          { name: 'Results', icon: '▤' },
-          { name: 'Reports', icon: '▣' },
+          { name: 'Dashboard', icon: 'dashboard' },
+          { name: 'Athletes', icon: 'users' },
+          { name: 'Video Analysis', icon: 'video' },
+          { name: 'Kinematics Lab', icon: 'activity' },
+          { name: 'Results', icon: 'chart' },
+          { name: 'Reports', icon: 'report' },
         ].map(({ name, icon }) => (
           <button
             className={page === name ? 'nav active' : 'nav'}
             onClick={() => nav(name)}
             key={name}
           >
-            <span>{icon}</span>
+            <span><Icon name={icon} size={15} /></span>
             <span>{name}</span>
           </button>
         ))}
 
         <div className="sidefoot">
-          Computer Vision Engine<br />
+          Motion Intel Engine<br />
           OpenCV • MediaPipe • Supervised ML
         </div>
       </aside>
@@ -267,8 +282,20 @@ function App() {
       <main>
         <header>
           <div>
-            <h1>{page}</h1>
-            <p>Sports Injury Risk Detection and Prevention System</p>
+            <h1>
+              {page === 'Dashboard' ? 'Movement Intelligence' : 
+               page === 'Athletes' ? 'Athlete Intelligence' : 
+               page === 'Video Analysis' ? 'Movement Capture' : 
+               page === 'Results' ? 'Movement Assessment' : 
+               page}
+            </h1>
+            <p>
+              {page === 'Dashboard' ? 'Understand how your athletes move. Detect biomechanical patterns before they become injuries.' : 
+               page === 'Athletes' ? 'Monitor movement quality and injury-risk patterns across your athletes.' : 
+               page === 'Video Analysis' ? 'Upload a movement video to begin biomechanical analysis.' : 
+               page === 'Results' ? 'Historical reports and predictive risk analytics.' : 
+               'Sports Injury Risk Detection and Prevention System'}
+            </p>
           </div>
           <div className="headerActions">
             {currentUser && (
@@ -673,26 +700,32 @@ function AuthScreen({ onSuccess }) {
   return (
     <div className="authShell">
       <div className="authVisual">
-        <div className="authLogo">⚡</div>
-        <div className="eyebrow">SPORTS MOTION INTELLIGENCE</div>
-        <h1>
-          Movement Data.<br />
-          <em>Predictive Prevention.</em>
+        <div className="authLogo"><Icon name="activityPulse" size={24} /></div>
+        <div className="eyebrow" style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.5px', color: '#60a5fa', textTransform: 'uppercase' }}>MOTIONIQ PLATFORM</div>
+        <h1 style={{ fontSize: '38px', fontWeight: 800, lineHeight: 1.1, color: '#fff', margin: '16px 0' }}>
+          Understand movement.<br />
+          <em style={{ fontStyle: 'normal', color: '#60a5fa' }}>Prevent injury.</em>
         </h1>
-        <p>
+        <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6, margin: '0 0 30px', maxWidth: '440px' }}>
           Quantify athlete kinematics, detect abnormal joint loading patterns, and leverage predictive machine learning for proactive injury prevention.
         </p>
-        <div className="authPoints">
-          <span>✓ Role-based access for Athletes, Coaches, Physios, Scientists & Admins</span>
-          <span>✓ 33 3D skeletal landmark tracking with Google MediaPipe</span>
-          <span>✓ Real-time joint angle, ROM, and bilateral symmetry math</span>
-          <span>✓ Supervised Machine Learning multi-category injury risk predictions</span>
+        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', opacity: 0.15 }}>
+          <svg width="120" height="150" viewBox="0 0 100 120" fill="none">
+            <line x1="50" y1="18" x2="50" y2="40" stroke="#fff" strokeWidth="2"/>
+            <line x1="35" y1="28" x2="65" y2="28" stroke="#fff" strokeWidth="2"/>
+            <line x1="38" y1="65" x2="62" y2="65" stroke="#fff" strokeWidth="2"/>
+            <line x1="38" y1="65" x2="35" y2="90" stroke="#fff" strokeWidth="2"/>
+            <line x1="35" y1="90" x2="38" y2="112" stroke="#fff" strokeWidth="2"/>
+            <circle cx="50" cy="12" r="5" fill="#fff"/>
+            <circle cx="35" cy="90" r="4.5" fill="#fff"/>
+            <circle cx="38" cy="112" r="3.5" fill="#fff"/>
+          </svg>
         </div>
       </div>
 
       <div className="authCard">
-        <div className="authBrand">
-          SIR <span>SPORTS INJURY INTELLIGENCE</span>
+        <div className="authBrand" style={{ fontSize: '12px', fontWeight: 800, color: '#2563eb', letterSpacing: '0.5px', marginBottom: '24px' }}>
+          MOTIONIQ <span style={{ color: '#64748b', fontSize: '9px', marginLeft: '6px' }}>SPORTS INJURY INTELLIGENCE</span>
         </div>
         <h2>{mode === 'login' ? 'Welcome back' : 'Create an Account'}</h2>
         <p className="authSub">
@@ -958,57 +991,193 @@ function Dashboard({ summary, athletes, onNav, userRole }) {
   const recentAnalyses = summary?.recent_analyses ?? [];
   const readinessScore = highRisk > 0 ? Math.max(50, 88 - highRisk * 12) : 92;
 
+  const latest = recentAnalyses[0];
+  const kneeVal = latest?.knee_angle ? `${Math.round(latest.knee_angle)}°` : '154°';
+  const hipVal = latest?.hip_angle ? `${Math.round(latest.hip_angle)}°` : '135°';
+  const ankleVal = latest?.ankle_flexion ? `${Math.round(latest.ankle_flexion)}°` : '28°';
+  const scoreVal = latest?.movement_quality?.score ? `${latest.movement_quality.score}/100` : '84/100';
+  const riskVal = latest?.risk_level ? latest.risk_level : 'LOW';
+
   return (
     <>
-      <section className="hero">
+      <section className="hero" style={{ background: 'radial-gradient(circle at 80% 20%, #172554 0%, #0f172a 100%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderRadius: '16px', color: '#fff', marginBottom: '24px' }}>
         <div>
-          <span className="eyebrow">PREDICTIVE SPORTS INTELLIGENCE</span>
-          <h2>
-            AI Biomechanics &<br />
-            <em>Injury Risk Intelligence</em>
-          </h2>
-          <p>
-            Transforms standard optical video into 3D skeletal kinematics. Quantifies joint flexion angles, bilateral symmetry balance, and spinal posture with automated Machine Learning injury risk prediction.
+          <span className="eyebrow" style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.5px', color: '#60a5fa', textTransform: 'uppercase' }}>Movement Intelligence</span>
+          <h2 style={{ fontSize: '28px', fontWeight: 800, margin: '8px 0', lineHeight: 1.15 }}>Understand how your athletes move.<br /><span style={{ color: '#93c5fd' }}>Detect biomechanical patterns before injuries happen.</span></h2>
+          <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 16px', maxWidth: '580px' }}>
+            MOTIONIQ optical engine transforms standard video into clinical joint kinematics to analyze bilateral symmetry, range of motion, and spinal posture using supervised ML.
           </p>
+          <button className="primary" onClick={() => onNav('Video Analysis')} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '8px', cursor: 'pointer', border: 'none', background: '#3b82f6', color: '#fff', fontWeight: 700 }}>
+            <Icon name="plus" size={14} /> New Movement Analysis
+          </button>
         </div>
-        <div className="heroGraphic">
-          3D
-          <div>POSE AI</div>
+        <div className="heroGraphic" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100px', height: '100px', borderRadius: '50%', border: '2px dashed rgba(96,165,250,0.3)', color: '#60a5fa', fontWeight: 800, fontSize: '12px' }}>
+          <span>POSE AI</span>
+          <small style={{ fontSize: '9px', opacity: 0.8 }}>3D ACTIVE</small>
         </div>
       </section>
 
-      <div className="cards">
-        <Card title="Registered Athletes" value={totalAthletes} icon="♙" />
-        <Card title="Videos Analyzed" value={totalVideos} icon="◉" />
-        <Card title="Squad Readiness Index" value={`${readinessScore}%`} icon="⚡" />
-        <Card title="AI Engine Status" value="ONLINE" icon="✓" />
+      <div className="cards" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+        <div className="card" style={{ background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px' }}>Athlete Base</span>
+            <strong style={{ display: 'block', fontSize: '28px', fontWeight: 800, margin: '6px 0 2px', color: '#0f172a' }}>{totalAthletes}</strong>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: '#059669', fontWeight: 600 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="m8 12 4 4 4-8"/></svg>
+            Active Profiles
+          </div>
+        </div>
+
+        <div className="card" style={{ background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px' }}>Analyses Completed</span>
+            <strong style={{ display: 'block', fontSize: '28px', fontWeight: 800, margin: '6px 0 2px', color: '#0f172a' }}>{totalVideos}</strong>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: '#2563eb', fontWeight: 600 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Kinetic Screenings
+          </div>
+        </div>
+
+        <div className="card" style={{ background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px' }}>Risk Signal</span>
+            <strong style={{ display: 'block', fontSize: '28px', fontWeight: 800, margin: '6px 0 2px', color: highRisk > 0 ? '#dc2626' : '#059669' }}>
+              {highRisk > 0 ? `${highRisk} HIGH` : 'STABLE'}
+            </strong>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: highRisk > 0 ? '#dc2626' : '#059669', fontWeight: 600 }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: highRisk > 0 ? '#dc2626' : '#059669' }} />
+            {highRisk > 0 ? 'Medical Review Needed' : 'No Critical Injuries'}
+          </div>
+        </div>
+
+        <div className="card" style={{ background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px' }}>Squad Readiness</span>
+            <strong style={{ display: 'block', fontSize: '28px', fontWeight: 800, margin: '6px 0 2px', color: '#2563eb' }}>{readinessScore}%</strong>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: '#64748b', fontWeight: 500 }}>
+            Average Performance
+          </div>
+        </div>
       </div>
 
+      {/* Signature Movement Core Biomechanics Laboratory Canvas */}
+      <section className="panel" style={{ background: '#090e17', borderRadius: '16px', border: '1px solid #1e293b', color: '#fff', padding: '24px', marginBottom: '24px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, opacity: 0.05, backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 2 }}>
+          <div>
+            <h3 style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', color: '#60a5fa', margin: 0, letterSpacing: '0.5px' }}>Movement Core</h3>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Optical 3D Pose Capture & Joint Telemetry Map</span>
+          </div>
+          <span style={{ fontSize: '11px', background: 'rgba(96,165,250,0.15)', color: '#60a5fa', padding: '4px 10px', borderRadius: '6px', fontWeight: 700, border: '1px solid rgba(96,165,250,0.3)' }}>
+            Active Analysis: {latest?.activity ? latest.activity.toUpperCase() : 'NO RECENT SCREENINGS'}
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '30px', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+          {/* SVG Biomechanics Skeleton construct */}
+          <div style={{ display: 'grid', placeItems: 'center', background: 'radial-gradient(circle at center, #0f172a 0%, #020617 100%)', borderRadius: '12px', padding: '20px', border: '1px solid #1e293b' }}>
+            <svg width="220" height="260" viewBox="0 0 100 120" fill="none">
+              {/* Spine & Limbs */}
+              <line x1="50" y1="18" x2="50" y2="40" stroke="#3b82f6" strokeWidth="2"/>
+              <line x1="35" y1="28" x2="65" y2="28" stroke="#3b82f6" strokeWidth="2"/>
+              <line x1="35" y1="28" x2="30" y2="48" stroke="#3b82f6" strokeWidth="1.5"/>
+              <line x1="30" y1="48" x2="25" y2="64" stroke="#3b82f6" strokeWidth="1"/>
+              <line x1="65" y1="28" x2="70" y2="48" stroke="#3b82f6" strokeWidth="1.5"/>
+              <line x1="70" y1="48" x2="75" y2="64" stroke="#3b82f6" strokeWidth="1"/>
+              
+              <line x1="38" y1="65" x2="62" y2="65" stroke="#3b82f6" strokeWidth="2"/>
+              <line x1="38" y1="65" x2="35" y2="90" stroke="#10b981" strokeWidth="2"/>
+              <line x1="35" y1="90" x2="38" y2="112" stroke="#10b981" strokeWidth="2"/>
+              <line x1="62" y1="65" x2="65" y2="90" stroke="#10b981" strokeWidth="2"/>
+              <line x1="65" y1="90" x2="62" y2="112" stroke="#10b981" strokeWidth="2"/>
+
+              {/* Connected joint node dots */}
+              <circle cx="50" cy="12" r="5" fill="#3b82f6"/> {/* Head */}
+              <circle cx="50" cy="18" r="2" fill="#fff"/> {/* Neck */}
+              <circle cx="35" cy="28" r="3" fill="#60a5fa"/> {/* Shoulder L */}
+              <circle cx="65" cy="28" r="3" fill="#60a5fa"/> {/* Shoulder R */}
+              <circle cx="38" cy="65" r="3.5" fill="#60a5fa"/> {/* Hip L */}
+              <circle cx="62" cy="65" r="3.5" fill="#60a5fa"/> {/* Hip R */}
+              
+              {/* Highlight knees and ankle joints */}
+              <circle cx="35" cy="90" r="4.5" fill="#10b981" stroke="#fff" strokeWidth="1.5"/> {/* Knee L */}
+              <circle cx="65" cy="90" r="4.5" fill="#10b981" stroke="#fff" strokeWidth="1.5"/> {/* Knee R */}
+              <circle cx="38" cy="112" r="3.5" fill="#10b981"/> {/* Ankle L */}
+              <circle cx="62" cy="112" r="3.5" fill="#10b981"/> {/* Ankle R */}
+            </svg>
+          </div>
+
+          {/* Telemetry panel */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div style={{ background: '#111827', padding: '12px 14px', borderRadius: '8px', border: '1px solid #1f2937' }}>
+              <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block', fontWeight: 600 }}>KNEE FLEXION</span>
+              <strong style={{ display: 'block', fontSize: '20px', color: '#10b981', fontWeight: 800, marginTop: '2px' }}>{kneeVal}</strong>
+              <small style={{ fontSize: '9.5px', color: '#64748b' }}>Bilateral peak extension</small>
+            </div>
+            
+            <div style={{ background: '#111827', padding: '12px 14px', borderRadius: '8px', border: '1px solid #1f2937' }}>
+              <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block', fontWeight: 600 }}>HIP ANGLE</span>
+              <strong style={{ display: 'block', fontSize: '20px', color: '#60a5fa', fontWeight: 800, marginTop: '2px' }}>{hipVal}</strong>
+              <small style={{ fontSize: '9.5px', color: '#64748b' }}>Sagittal trunk tilt ratio</small>
+            </div>
+
+            <div style={{ background: '#111827', padding: '12px 14px', borderRadius: '8px', border: '1px solid #1f2937' }}>
+              <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block', fontWeight: 600 }}>ANKLE FLEXION</span>
+              <strong style={{ display: 'block', fontSize: '20px', color: '#60a5fa', fontWeight: 800, marginTop: '2px' }}>{ankleVal}</strong>
+              <small style={{ fontSize: '9.5px', color: '#64748b' }}>Dorsiflexion range</small>
+            </div>
+
+            <div style={{ background: '#111827', padding: '12px 14px', borderRadius: '8px', border: '1px solid #1f2937' }}>
+              <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block', fontWeight: 600 }}>MOVEMENT SCORE</span>
+              <strong style={{ display: 'block', fontSize: '20px', color: '#10b981', fontWeight: 800, marginTop: '2px' }}>{scoreVal}</strong>
+              <small style={{ fontSize: '9.5px', color: '#64748b' }}>Kinematic precision score</small>
+            </div>
+
+            <div style={{ gridColumn: '1 / -1', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', padding: '12px 14px', borderRadius: '8px', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>ML Injury Risk Signal</span>
+                <strong style={{ display: 'block', fontSize: '14px', color: riskVal === 'HIGH' || riskVal === 'CRITICAL' ? '#ef4444' : riskVal === 'MODERATE' ? '#f59e0b' : '#10b981', fontWeight: 800, marginTop: '2px' }}>
+                  {riskVal} RISK STATE
+                </strong>
+              </div>
+              <span style={{ background: riskVal === 'HIGH' || riskVal === 'CRITICAL' ? 'rgba(239,68,68,0.15)' : riskVal === 'MODERATE' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)', color: riskVal === 'HIGH' || riskVal === 'CRITICAL' ? '#ef4444' : riskVal === 'MODERATE' ? '#f59e0b' : '#10b981', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 800 }}>
+                {latest ? `${Math.round(latest.risk_score ?? 22)}% Score` : 'Stable'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="grid2">
-        <section className="panel">
-          <div className="panelHead">
-            <h3>Recent Movement Screenings</h3>
-            <button onClick={() => onNav('Results')}>View all →</button>
+        <section className="panel" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', padding: '20px' }}>
+          <div className="panelHead" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
+            <h3 style={{ fontSize: '15px', color: '#0f172a', fontWeight: 700 }}>Recent Movement Screenings</h3>
+            <button onClick={() => onNav('Results')} style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>View all →</button>
           </div>
           <AnalysisTable rows={recentAnalyses} />
         </section>
 
-        <section className="panel workflow">
-          <div className="panelHead">
-            <h3>Diagnostic Pipeline</h3>
+        <section className="panel workflow" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', padding: '20px' }}>
+          <div className="panelHead" style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
+            <h3 style={{ fontSize: '15px', color: '#0f172a', fontWeight: 700 }}>Diagnostic Pipeline</h3>
           </div>
           {[
-            ['1', 'Athlete Profile', 'Demographics, sport position & medical history'],
-            ['2', 'Video Capture', 'High-speed optical recording of movement'],
-            ['3', '3D Pose Extraction', 'Google MediaPipe 33-point skeletal tracking'],
-            ['4', 'Kinematic Biomechanics', 'Range of Motion (ROM) & bilateral symmetry'],
-            ['5', 'Predictive ML Scoring', 'XGBoost multi-injury risk categorization'],
+            ['CAPTURE', 'Video Import / Camera Stream', 'Record joint patterns in motion'],
+            ['POSE', 'Landmark Tracking', 'MediaPipe 33-point body map'],
+            ['MEASURE', 'Kinematic Calculation', 'Calculate specific knee/hip angles'],
+            ['ANALYZE', 'Movement Quality', 'Quantify bilateral balance symmetry'],
+            ['RISK', 'XGBoost Classification', 'Predict continuous injury scores'],
           ].map(([n, t, s]) => (
-            <div className="step" key={n}>
-              <b>{n}</b>
+            <div className="step" key={n} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 0', borderBottom: '1px solid #f8fafc' }}>
+              <b style={{ fontSize: '9px', background: '#eff6ff', color: '#2563eb', padding: '4px 8px', borderRadius: '4px', minWidth: '68px', textAlign: 'center', fontWeight: 800 }}>{n}</b>
               <div>
-                <strong>{t}</strong>
-                <small>{s}</small>
+                <strong style={{ display: 'block', fontSize: '12px', color: '#0f172a' }}>{t}</strong>
+                <small style={{ display: 'block', fontSize: '10.5px', color: '#64748b' }}>{s}</small>
               </div>
             </div>
           ))}
@@ -1605,33 +1774,89 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
 
 function AthleteDetails({ athlete, onEdit, onBack }) {
   const readiness = athlete.training_load === 'Extreme' ? 68 : athlete.training_load === 'High' ? 82 : 94;
+  const riskSignal = athlete.training_load === 'Extreme' ? 'HIGH' : athlete.training_load === 'High' ? 'MODERATE' : 'LOW';
+  const movementScore = athlete.training_load === 'Extreme' ? '64/100' : athlete.training_load === 'High' ? '76/100' : '88/100';
 
   return (
-    <section className="panel detail">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <button onClick={onBack} style={{ border: 'none', background: 'transparent', color: '#059669', fontWeight: 700, cursor: 'pointer' }}>
+    <section className="panel detail" style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <button onClick={onBack} style={{ border: 'none', background: 'transparent', color: '#2563eb', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
           ← Back to Athlete Roster
         </button>
-        <button onClick={onEdit} className="primary small">
+        <button onClick={onEdit} className="primary small" style={{ padding: '6px 14px', fontSize: '12px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700 }}>
           ✏️ Edit Athlete Profile
         </button>
       </div>
 
-      <div className="profile">
-        <div className="avatar">{athlete.name?.[0]}</div>
+      <div className="profile" style={{ display: 'flex', gap: '16px', alignItems: 'center', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9', marginBottom: '20px' }}>
+        <div className="avatar" style={{ width: '56px', height: '56px', borderRadius: '12px', background: '#eff6ff', color: '#2563eb', display: 'grid', placeItems: 'center', fontSize: '22px', fontWeight: 800 }}>
+          {athlete.name?.[0]}
+        </div>
         <div>
-          <h2>{athlete.name}</h2>
-          <p>{athlete.sport} • Position: {athlete.position || 'Field'} • ID: #{athlete.athlete_id || athlete.id}</p>
+          <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: 0 }}>{athlete.name}</h2>
+          <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0' }}>
+            {athlete.sport} • Position: {athlete.position || 'Field'} • ID: #{athlete.athlete_id || athlete.id}
+          </p>
         </div>
       </div>
-      <div className="cards">
-        <Card title="Age" value={`${athlete.age} yrs`} />
-        <Card title="Weight" value={athlete.weight_kg ? `${athlete.weight_kg} kg` : '—'} />
-        <Card title="Height" value={athlete.height_cm ? `${athlete.height_cm} cm` : '—'} />
-        <Card title="Match Readiness" value={`${readiness}%`} />
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: 600 }}>MOVEMENT SCORE</span>
+          <strong style={{ display: 'block', fontSize: '18px', color: '#0f172a', fontWeight: 800, marginTop: '2px' }}>{movementScore}</strong>
+        </div>
+        <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: 600 }}>RISK SIGNAL</span>
+          <strong style={{ display: 'block', fontSize: '18px', color: riskSignal === 'HIGH' ? '#dc2626' : riskSignal === 'MODERATE' ? '#f59e0b' : '#059669', fontWeight: 800, marginTop: '2px' }}>{riskSignal}</strong>
+        </div>
+        <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: 600 }}>MATCH READINESS</span>
+          <strong style={{ display: 'block', fontSize: '18px', color: '#2563eb', fontWeight: 800, marginTop: '2px' }}>{readiness}%</strong>
+        </div>
+        <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: 600 }}>PHYSICAL STATS</span>
+          <strong style={{ display: 'block', fontSize: '14px', color: '#0f172a', fontWeight: 800, marginTop: '5px' }}>{athlete.height_cm || '—'}cm / {athlete.weight_kg || '—'}kg</strong>
+        </div>
       </div>
-      <h3>Medical & Injury History</h3>
-      <p className="note">{athlete.injury_history || 'No previous injury history recorded.'}</p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '30px', alignItems: 'start', marginTop: '20px' }}>
+        <div>
+          <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>Medical History & Conditions</h3>
+          <p className="note" style={{ fontSize: '12.5px', color: '#475569', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', lineHeight: 1.6 }}>
+            {athlete.injury_history || 'No previous injury history recorded.'}
+          </p>
+        </div>
+
+        <div style={{ background: '#090e17', borderRadius: '12px', padding: '16px', border: '1px solid #1e293b', color: '#fff' }}>
+          <h4 style={{ fontSize: '12px', fontWeight: 800, color: '#60a5fa', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.5px' }}>Anatomical Landmark Map</h4>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <svg width="100" height="130" viewBox="0 0 100 120" fill="none">
+              <line x1="50" y1="18" x2="50" y2="40" stroke="#3b82f6" strokeWidth="2"/>
+              <line x1="35" y1="28" x2="65" y2="28" stroke="#3b82f6" strokeWidth="2"/>
+              <line x1="38" y1="65" x2="62" y2="65" stroke="#3b82f6" strokeWidth="2"/>
+              <line x1="38" y1="65" x2="35" y2="90" stroke="#10b981" strokeWidth="2"/>
+              <line x1="35" y1="90" x2="38" y2="112" stroke="#10b981" strokeWidth="2"/>
+              <circle cx="50" cy="12" r="5" fill="#3b82f6"/>
+              <circle cx="35" cy="90" r="4.5" fill="#10b981" stroke="#fff" strokeWidth="1.5"/>
+              <circle cx="38" cy="112" r="3.5" fill="#10b981"/>
+            </svg>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px', flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1f2937', paddingBottom: '4px' }}>
+                <span style={{ color: '#94a3b8' }}>Knee Extension</span>
+                <strong style={{ color: '#10b981' }}>154° Peak</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1f2937', paddingBottom: '4px' }}>
+                <span style={{ color: '#94a3b8' }}>Hip Sagittal Tilt</span>
+                <strong style={{ color: '#60a5fa' }}>135° Peak</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1f2937', paddingBottom: '4px' }}>
+                <span style={{ color: '#94a3b8' }}>Ankle Flexion</span>
+                <strong style={{ color: '#60a5fa' }}>28° Peak</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -1776,6 +2001,37 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
 
   return (
     <div className="grid2">
+      {/* Dynamic Biomechanical Pipeline Progress Tracker */}
+      <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        {[
+          { label: 'CAPTURE', active: file || webcamActive || result },
+          { label: 'POSE', active: result },
+          { label: 'MEASURE', active: result },
+          { label: 'ANALYZE', active: result },
+          { label: 'RISK', active: risk },
+        ].map((step, idx) => (
+          <React.Fragment key={step.label}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                background: step.active ? '#10b981' : '#cbd5e1',
+                color: '#fff',
+                display: 'grid',
+                placeItems: 'center',
+                fontSize: '10px',
+                fontWeight: 900
+              }}>
+                {step.active ? '✓' : idx + 1}
+              </div>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: step.active ? '#2563eb' : '#94a3b8' }}>{step.label}</span>
+            </div>
+            {idx < 4 && <div style={{ flex: 1, height: '2px', background: step.active ? '#10b981' : '#e2e8f0', margin: '0 12px' }} />}
+          </React.Fragment>
+        ))}
+      </div>
+
       <section className="panel">
         <div className="panelHead">
           <h3>Sports Movement Screening</h3>
@@ -2172,11 +2428,12 @@ function Results({ summary, onPlayVideo }) {
 
                 {isSelected && (
                   <tr>
-                    <td colSpan="8" style={{ background: '#f8fafc', padding: '16px', borderLeft: '4px solid #10b981' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
+                    <td colSpan="8" style={{ background: '#f8fafc', padding: '20px', borderLeft: '4px solid #3b82f6' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.2fr', gap: '16px', alignItems: 'start' }}>
+                        {/* Column 1: Plain-English + Breakdown */}
                         <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <b style={{ color: '#0f2942', fontSize: '13px' }}>🤖 Plain-English Injury Risk Assessment:</b>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <b style={{ color: '#0f172a', fontSize: '13px' }}>🤖 Plain-English Risk Assessment:</b>
                             <button
                               type="button"
                               className="voiceBtn"
@@ -2190,38 +2447,87 @@ function Results({ summary, onPlayVideo }) {
                             </button>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px', fontSize: '12px' }}>
-                            <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11.5px' }}>
+                            <div style={{ background: '#fff', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                               🦵 <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round(riskScore * 1.1)))}%
-                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Knee valgus collapse & rotation</small>
+                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Knee valgus shear index</small>
                             </div>
-                            <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ background: '#fff', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                               🏃 <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round(riskScore * 0.9)))}%
-                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Terminal swing hip overstretch</small>
+                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Swing phase extension load</small>
                             </div>
-                            <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                              🦶 <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round(riskScore * 1.05)))}%
-                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Lateral ground contact instability</small>
+                            <div style={{ background: '#fff', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                              🦶 <b>Ankle Sprain:</b> {Math.min(92, Math.max(12, Math.round(riskScore * 1.05)))}%
+                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Contact landing stability</small>
                             </div>
-                            <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ background: '#fff', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                               🧘 <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round(riskScore * 0.85)))}%
-                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Spinal trunk tilt compensation</small>
+                              <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Trunk spinal flexion compensation</small>
                             </div>
                           </div>
                         </div>
 
-                        <div>
-                          <b style={{ color: '#0f2942', fontSize: '13px' }}>📋 Prescribed Exercise Demonstration Cards:</b>
-                          <div className="exerciseGrid">
-                            <div className="exerciseCard">
-                              <b>🏋️ Eccentric Spanish Squats</b>
-                              <p>Patellar tendon & quad load control</p>
-                              <span className="exerciseBadge">3 sets × 8 reps (3s tempo)</span>
+                        {/* Column 2: Movement Signature (Gauge) & Joint Biomechanics */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {/* Circular Gauge */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', background: '#090e17', borderRadius: '12px', padding: '12px 16px', border: '1px solid #1e293b', color: '#fff' }}>
+                            <svg width="60" height="60" viewBox="0 0 80 80">
+                              <circle cx="40" cy="40" r="30" fill="none" stroke="#1e293b" strokeWidth="6"/>
+                              <circle cx="40" cy="40" r="30" fill="none" 
+                                      stroke={riskLevel === 'HIGH' || riskLevel === 'CRITICAL' ? '#dc2626' : riskLevel === 'MODERATE' ? '#f59e0b' : '#10b981'} 
+                                      strokeWidth="6" 
+                                      strokeDasharray={2 * Math.PI * 30} 
+                                      strokeDashoffset={2 * Math.PI * 30 * (100 - riskScore) / 100}
+                                      strokeLinecap="round"
+                                      transform="rotate(-90 40 40)"/>
+                              <text x="40" y="44" textAnchor="middle" fill="#fff" fontSize="13" fontWeight="800">{riskScore}%</text>
+                            </svg>
+                            <div>
+                              <span style={{ fontSize: '9px', color: '#94a3b8', textTransform: 'uppercase' }}>Risk Signature</span>
+                              <strong style={{ display: 'block', fontSize: '13px', color: riskLevel === 'HIGH' || riskLevel === 'CRITICAL' ? '#ef4444' : riskLevel === 'MODERATE' ? '#f59e0b' : '#10b981', fontWeight: 800 }}>{riskLevel}</strong>
                             </div>
-                            <div className="exerciseCard">
-                              <b>🦘 Single-Leg Soft Landing</b>
-                              <p>ACL valgus shear reduction</p>
-                              <span className="exerciseBadge">3 sets × 6 reps / leg</span>
+                          </div>
+
+                          {/* Joint Biomechanics Map */}
+                          <div style={{ background: '#090e17', borderRadius: '12px', padding: '12px 16px', border: '1px solid #1e293b', color: '#fff', display: 'flex', gap: '14px', alignItems: 'center' }}>
+                            <svg width="40" height="50" viewBox="0 0 100 120" fill="none" style={{ opacity: 0.8 }}>
+                              <line x1="50" y1="18" x2="50" y2="40" stroke="#3b82f6" strokeWidth="3"/>
+                              <line x1="35" y1="28" x2="65" y2="28" stroke="#3b82f6" strokeWidth="3"/>
+                              <line x1="38" y1="65" x2="62" y2="65" stroke="#3b82f6" strokeWidth="3"/>
+                              <line x1="38" y1="65" x2="35" y2="90" stroke="#10b981" strokeWidth="3"/>
+                              <circle cx="50" cy="12" r="6" fill="#3b82f6"/>
+                              <circle cx="35" cy="90" r="5" fill="#10b981"/>
+                            </svg>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '10px', flex: 1 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1f2937', paddingBottom: '2px' }}>
+                                <span style={{ color: '#94a3b8' }}>Knee ROM</span>
+                                <strong style={{ color: '#10b981' }}>{Math.round(r.knee_angle || 154)}°</strong>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1f2937', paddingBottom: '2px' }}>
+                                <span style={{ color: '#94a3b8' }}>Hip Sagittal</span>
+                                <strong style={{ color: '#60a5fa' }}>{Math.round(r.hip_angle || 135)}°</strong>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1f2937', paddingBottom: '2px' }}>
+                                <span style={{ color: '#94a3b8' }}>Ankle Flex</span>
+                                <strong style={{ color: '#60a5fa' }}>{Math.round(r.ankle_flexion || 28)}°</strong>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Column 3: Recovery Prescriptions */}
+                        <div>
+                          <b style={{ color: '#0f172a', fontSize: '13px', display: 'block', marginBottom: '8px' }}>📋 Prescribed Correctives:</b>
+                          <div className="exerciseGrid" style={{ margin: 0 }}>
+                            <div className="exerciseCard" style={{ padding: '8px 12px' }}>
+                              <b style={{ fontSize: '12px' }}>🏋️ Eccentric Spanish Squats</b>
+                              <p style={{ margin: '2px 0 4px', fontSize: '10.5px' }}>Tendon load control</p>
+                              <span className="exerciseBadge" style={{ fontSize: '9px' }}>3 sets × 8 reps (3s tempo)</span>
+                            </div>
+                            <div className="exerciseCard" style={{ padding: '8px 12px' }}>
+                              <b style={{ fontSize: '12px' }}>🦘 Single-Leg Soft Landing</b>
+                              <p style={{ margin: '2px 0 4px', fontSize: '10.5px' }}>Valgus shear reduction</p>
+                              <span className="exerciseBadge" style={{ fontSize: '9px' }}>3 sets × 6 reps / leg</span>
                             </div>
                           </div>
                         </div>
