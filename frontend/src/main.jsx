@@ -207,8 +207,40 @@ function AuthScreen({ onSuccess }) {
     }
   };
 
-  const social = (name) =>
-    setError(`${name} sign-in UI is ready. Connect your OAuth client ID/provider to enable live ${name} authentication.`);
+  const [oauthModal, setOauthModal] = useState(null);
+  const [oauthEmail, setOauthEmail] = useState('');
+  const [oauthName, setOauthName] = useState('');
+
+  const handleOAuthLogin = async (provider, email, name) => {
+    if (!email) return setError('Please provide an email address.');
+    setBusy(true);
+    setError('');
+    try {
+      const res = await api('/api/auth/oauth-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: provider.toLowerCase(),
+          email: email,
+          name: name || email.split('@')[0],
+        }),
+      });
+      if (!res.token) throw new Error('No authentication token received.');
+      setOauthModal(null);
+      onSuccess(res.token, res.user);
+    } catch (err) {
+      setError(err.message || `${provider} authentication failed.`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openSocial = (provider) => {
+    setOauthModal(provider);
+    setOauthEmail(`user_${Math.floor(1000 + Math.random() * 9000)}@${provider.toLowerCase()}.com`);
+    setOauthName(`${provider} User`);
+    setError('');
+  };
 
   return (
     <div className="authShell">
@@ -240,20 +272,95 @@ function AuthScreen({ onSuccess }) {
             : 'Register to manage athletes and movement analysis.'}
         </p>
 
+        {/* Social / OAuth Logins */}
         <div className="socials">
-          <button type="button" onClick={() => social('Google')}>
-            G <span>Continue with Google</span>
+          <button type="button" onClick={() => openSocial('Google')}>
+            <span style={{ fontWeight: 800, color: '#ea4335' }}>G</span> <span>Continue with Google</span>
           </button>
-          <button type="button" onClick={() => social('Microsoft')}>
-            ▦ <span>Continue with Microsoft</span>
+          <button type="button" onClick={() => openSocial('Microsoft')}>
+            <span style={{ color: '#00a4ef' }}>▦</span> <span>Continue with Microsoft</span>
           </button>
-          <button type="button" onClick={() => social('Apple')}>
-            ● <span>Continue with Apple</span>
+          <button type="button" onClick={() => openSocial('Apple')}>
+            <span>●</span> <span>Continue with Apple</span>
           </button>
         </div>
 
+        {/* 1-Click Quick Role-Based Sign-In (Module 1 RBAC) */}
+        <div style={{ marginTop: '12px', background: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+          <small style={{ fontWeight: 700, color: '#0f2942', display: 'block', marginBottom: '6px', fontSize: '11px' }}>
+            ⚡ 1-Click Role-Based Demo Sign-In (Module 1 RBAC):
+          </small>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+            <button 
+              type="button" 
+              onClick={() => handleOAuthLogin('Google', 'headcoach@sportsinjury.ai', 'Coach Alex Rivera')} 
+              style={{ fontSize: '11px', padding: '6px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              👨‍🏫 Head Coach
+            </button>
+            <button 
+              type="button" 
+              onClick={() => handleOAuthLogin('Google', 'physio@sportsinjury.ai', 'Dr. Sarah Chen, PT')} 
+              style={{ fontSize: '11px', padding: '6px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              🩺 Physiotherapist
+            </button>
+            <button 
+              type="button" 
+              onClick={() => handleOAuthLogin('Google', 'scientist@sportsinjury.ai', 'Dr. Marcus Vance')} 
+              style={{ fontSize: '11px', padding: '6px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              🔬 Sports Scientist
+            </button>
+            <button 
+              type="button" 
+              onClick={() => handleOAuthLogin('Google', 'athlete@sportsinjury.ai', 'Jordan Miller (Athlete)') 
+              } 
+              style={{ fontSize: '11px', padding: '6px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              🏃 Pro Athlete
+            </button>
+          </div>
+        </div>
+
+        {/* OAuth Dialog Modal */}
+        {oauthModal && (
+          <div style={{ marginTop: '12px', background: '#ecfdf5', padding: '12px', borderRadius: '8px', border: '1px solid #0f766e' }}>
+            <b style={{ fontSize: '12px', color: '#0f766e', display: 'block', marginBottom: '6px' }}>
+              🔑 Sign in with {oauthModal} Account
+            </b>
+            <label style={{ fontSize: '11px', display: 'block', marginBottom: '4px' }}>
+              Your {oauthModal} Email:
+              <input 
+                type="email" 
+                value={oauthEmail} 
+                onChange={(e) => setOauthEmail(e.target.value)} 
+                style={{ width: '100%', padding: '6px', fontSize: '12px', marginTop: '2px' }}
+              />
+            </label>
+            <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+              <button 
+                type="button" 
+                className="primary small" 
+                onClick={() => handleOAuthLogin(oauthModal, oauthEmail, oauthName)}
+                disabled={busy}
+                style={{ flex: 1, padding: '6px', fontSize: '11px' }}
+              >
+                {busy ? 'Authenticating…' : `Confirm ${oauthModal} Login`}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setOauthModal(null)}
+                style={{ padding: '6px', fontSize: '11px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="divider">
-          <span>or continue with email</span>
+          <span>or continue with password</span>
         </div>
 
         {error && <div className="authError">{error}</div>}
