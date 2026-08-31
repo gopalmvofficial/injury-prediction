@@ -55,6 +55,45 @@ function speakBriefing(text, setSpeaking) {
   window.speechSynthesis.speak(utterance);
 }
 
+const ICON_SETS = {
+  emoji: {
+    Dashboard: '📊',
+    Athletes: '🏃',
+    'Video Analysis': '🎥',
+    'Kinematics Lab': '🦴',
+    Results: '📈',
+    Reports: '📄',
+    Settings: '⚙️',
+  },
+  tech: {
+    Dashboard: '⚡',
+    Athletes: '🎯',
+    'Video Analysis': '📹',
+    'Kinematics Lab': '🧬',
+    Results: '📉',
+    Reports: '📑',
+    Settings: '🛠️',
+  },
+  clinical: {
+    Dashboard: '📋',
+    Athletes: '👟',
+    'Video Analysis': '🎬',
+    'Kinematics Lab': '🩺',
+    Results: '📊',
+    Reports: '🧾',
+    Settings: '⚙️',
+  },
+  minimal: {
+    Dashboard: '▪',
+    Athletes: '▫',
+    'Video Analysis': '▶',
+    'Kinematics Lab': '◆',
+    Results: '▲',
+    Reports: '📄',
+    Settings: '⚙',
+  }
+};
+
 function App() {
   const [authenticated, setAuthenticated] = useState(
     Boolean(localStorage.getItem('sir_auth') && localStorage.getItem('sir_token'))
@@ -75,13 +114,21 @@ function App() {
   const [toast, setToast] = useState('');
   const [selectedAthlete, setSelectedAthlete] = useState(null);
 
-  // Dynamic Website Theme / Template State
+  // Dynamic Customizations State
   const [theme, setTheme] = useState(() => localStorage.getItem('motioniq_theme') || 'vibrant');
+  const [iconPack, setIconPack] = useState(() => localStorage.getItem('motioniq_icon_pack') || 'emoji');
+  const [cardStyle, setCardStyle] = useState(() => localStorage.getItem('motioniq_card_style') || 'modern');
+  const [fontStyle, setFontStyle] = useState(() => localStorage.getItem('motioniq_font_style') || 'modern');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-card-style', cardStyle);
+    document.documentElement.setAttribute('data-font-style', fontStyle);
     localStorage.setItem('motioniq_theme', theme);
-  }, [theme]);
+    localStorage.setItem('motioniq_icon_pack', iconPack);
+    localStorage.setItem('motioniq_card_style', cardStyle);
+    localStorage.setItem('motioniq_font_style', fontStyle);
+  }, [theme, iconPack, cardStyle, fontStyle]);
 
   // Edit User Profile Modal State
   const [profileModal, setProfileModal] = useState(false);
@@ -256,16 +303,19 @@ function App() {
           { name: 'Results', icon: '📈' },
           { name: 'Reports', icon: '📄' },
           { name: 'Settings', icon: '⚙️' },
-        ].map(({ name, icon }) => (
-          <button
-            className={page === name ? 'nav active' : 'nav'}
-            onClick={() => nav(name)}
-            key={name}
-          >
-            <span>{icon}</span>
-            <span>{name}</span>
-          </button>
-        ))}
+        ].map(({ name, icon }) => {
+          const resolvedIcon = (ICON_SETS[iconPack] || ICON_SETS.emoji)[name] || icon;
+          return (
+            <button
+              className={page === name ? 'nav active' : 'nav'}
+              onClick={() => nav(name)}
+              key={name}
+            >
+              <span>{resolvedIcon}</span>
+              <span>{name}</span>
+            </button>
+          );
+        })}
 
         <div className="sidefoot">
           MotionIQ v2.0 · Milestone 2<br />
@@ -403,6 +453,12 @@ function App() {
             currentUser={currentUser}
             theme={theme}
             onSelectTheme={setTheme}
+            iconPack={iconPack}
+            onSelectIconPack={setIconPack}
+            cardStyle={cardStyle}
+            onSelectCardStyle={setCardStyle}
+            fontStyle={fontStyle}
+            onSelectFontStyle={setFontStyle}
             onOpenProfile={() => {
               setProfileForm({ name: currentUser?.name || '', role: currentUser?.role || 'coach' });
               setProfileModal(true);
@@ -2569,7 +2625,19 @@ function Reports({ summary }) {
   );
 }
 
-function Settings({ currentUser, theme, onSelectTheme, onOpenProfile, onLogout }) {
+function Settings({
+  currentUser,
+  theme,
+  onSelectTheme,
+  iconPack,
+  onSelectIconPack,
+  cardStyle,
+  onSelectCardStyle,
+  fontStyle,
+  onSelectFontStyle,
+  onOpenProfile,
+  onLogout
+}) {
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
@@ -2580,6 +2648,25 @@ function Settings({ currentUser, theme, onSelectTheme, onOpenProfile, onLogout }
     { id: 'slate-pro', name: 'Template 4: Slate Pro', desc: 'Sober corporate slate sidebar with steel blue highlights', previewBg: 'linear-gradient(135deg, #1e293b, #0284c7)', accent: '#0284c7' },
     { id: 'emerald-sport', name: 'Template 7: Emerald Sport', desc: 'High-performance forest emerald green with gold details', previewBg: 'linear-gradient(135deg, #064e3b, #059669)', accent: '#059669' },
     { id: 'rose-gold', name: 'Template 8: Crimson Rose', desc: 'Deep burgundy sidebar with rich rose-gold accents', previewBg: 'linear-gradient(135deg, #881337, #e11d48)', accent: '#e11d48' },
+  ];
+
+  const iconPacks = [
+    { id: 'emoji', name: 'Vivid Emoji', sample: '📊 🏃 🎥 🦴 📈', desc: 'Colorful emoji icon set' },
+    { id: 'tech', name: 'Cyber & Tech', sample: '⚡ 🎯 📹 🧬 📉', desc: 'High-tech telemetry icons' },
+    { id: 'clinical', name: 'Sports Clinical', sample: '📋 👟 🎬 🩺 📊', desc: 'Medical & rehabilitation icons' },
+    { id: 'minimal', name: 'Minimal Shapes', sample: '▪ ▫ ▶ ◆ ▲', desc: 'Geometric minimalist shapes' },
+  ];
+
+  const cardStyles = [
+    { id: 'modern', name: 'Modern Rounded', desc: '14px rounded corners, colored top stripe & soft shadow' },
+    { id: 'bordered', name: 'Minimal Bordered', desc: 'Flat 8px corners, clean 1px border, zero shadow' },
+    { id: 'glass', name: 'Glassmorphism', desc: 'Semi-transparent frosted glass panels with backdrop blur' },
+  ];
+
+  const fontStyles = [
+    { id: 'modern', name: 'Plus Jakarta Sans', desc: 'Modern high-tech SaaS sans-serif' },
+    { id: 'system', name: 'System Sans-Serif', desc: 'Native OS enterprise font family' },
+    { id: 'mono', name: 'JetBrains Mono', desc: 'Data-driven biomechanist monospace font' },
   ];
 
   return (
@@ -2642,6 +2729,107 @@ function Settings({ currentUser, theme, onSelectTheme, onOpenProfile, onLogout }
                   )}
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>{t.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Navigation Icon Pack Switcher */}
+      <section className="panel" style={{ marginBottom: '22px' }}>
+        <div className="panelHead">
+          <h3>Navigation Icon Set</h3>
+          <span className="count">{iconPack.toUpperCase()}</span>
+        </div>
+        <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--text-muted)' }}>
+          Customize the icons displayed throughout the sidebar navigation and action buttons.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px' }}>
+          {iconPacks.map((ip) => {
+            const isSelected = iconPack === ip.id;
+            return (
+              <div
+                key={ip.id}
+                onClick={() => onSelectIconPack(ip.id)}
+                style={{
+                  border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-purple)',
+                  background: isSelected ? 'var(--bg-card-subtle)' : 'var(--bg-card)',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <strong style={{ fontSize: '14px', color: 'var(--text-dark)', fontWeight: 800 }}>{ip.name}</strong>
+                  <span style={{ fontSize: '16px', letterSpacing: '4px' }}>{ip.sample}</span>
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{ip.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Card Surface & Layout Customization */}
+      <section className="panel" style={{ marginBottom: '22px' }}>
+        <div className="panelHead">
+          <h3>Card Surface & Container Style</h3>
+          <span className="count">{cardStyle.toUpperCase()}</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          {cardStyles.map((cs) => {
+            const isSelected = cardStyle === cs.id;
+            return (
+              <div
+                key={cs.id}
+                onClick={() => onSelectCardStyle(cs.id)}
+                style={{
+                  border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-purple)',
+                  background: isSelected ? 'var(--bg-card-subtle)' : 'var(--bg-card)',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <strong style={{ fontSize: '13.5px', color: 'var(--text-dark)', fontWeight: 800, display: 'block', marginBottom: '4px' }}>
+                  {cs.name}
+                </strong>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: 1.3 }}>{cs.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Typography Font Family */}
+      <section className="panel" style={{ marginBottom: '22px' }}>
+        <div className="panelHead">
+          <h3>Typography & Font Family</h3>
+          <span className="count">{fontStyle.toUpperCase()}</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          {fontStyles.map((fs) => {
+            const isSelected = fontStyle === fs.id;
+            return (
+              <div
+                key={fs.id}
+                onClick={() => onSelectFontStyle(fs.id)}
+                style={{
+                  border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-purple)',
+                  background: isSelected ? 'var(--bg-card-subtle)' : 'var(--bg-card)',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <strong style={{ fontSize: '13.5px', color: 'var(--text-dark)', fontWeight: 800, display: 'block', marginBottom: '4px' }}>
+                  {fs.name}
+                </strong>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: 1.3 }}>{fs.desc}</div>
               </div>
             );
           })}
