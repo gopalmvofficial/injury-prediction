@@ -245,3 +245,182 @@ header p { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
 @media (max-width:960px) { aside { width: 72px; } .brand div:last-child,.engineBadge,.nav span,.sidefoot { display: none; } .brand { margin-left:0; justify-content:center; } .nav { justify-content:center; padding:14px 0; } .app main { margin-left:72px; width:calc(100% - 72px); padding:22px; } .cards { grid-template-columns:1fr 1fr; } .grid2 { grid-template-columns:1fr; } .heroGraphic { display:none; } }
 @media (max-width:850px) { .authShell { grid-template-columns:1fr; } .authVisual { display:none; } .authCard { margin:30px auto; } }
 @media (max-width:560px) { .cards { grid-template-columns:1fr; } .form { grid-template-columns:1fr; } .hero h2 { font-size:22px; } }
+
+/* ─── KPI Cards (Template 3 style) ──────────────────────── */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpiCard {
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 1px 3px rgba(124,58,237,0.04), 0 8px 24px rgba(124,58,237,0.07);
+  border: 1px solid #ddd6fe;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+
+.kpiCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 6px rgba(124,58,237,0.08), 0 20px 40px rgba(124,58,237,0.14);
+}
+
+.kpiTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.kpiLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+}
+
+.kpiIcon {
+  font-size: 20px;
+  opacity: 0.85;
+}
+
+.kpiValue {
+  font-size: 36px;
+  font-weight: 900;
+  color: #1e1b4b;
+  font-family: 'JetBrains Mono', 'Plus Jakarta Sans', monospace;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.kpiBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  width: fit-content;
+}
+
+/* ─── Athlete Roster Grid (Template 3 cards) ─────────────── */
+.athleteRosterGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.athleteCard {
+  background: #faf9ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 14px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.athleteCard:hover {
+  background: #f5f3ff;
+  border-color: #a78bfa;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124,58,237,0.12);
+}
+
+.athleteCardTop {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.athleteAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 800;
+  flex-shrink: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.athleteCardInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.athleteCardName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e1b4b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.athleteCardSport {
+  font-size: 11.5px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.riskPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  width: fit-content;
+}
+
+.athleteCardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #ede9fe;
+  padding-top: 10px;
+}
+
+.athleteMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.athleteMetaRow span {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.athleteMetaRow strong {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1e1b4b;
+  text-align: right;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .kpiGrid { grid-template-columns: repeat(2, 1fr); }
+  .athleteRosterGrid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .kpiGrid { grid-template-columns: 1fr; }
+  .athleteRosterGrid { grid-template-columns: 1fr; }
+}
