@@ -94,8 +94,42 @@ function App() {
           .then((r) => r.json())
           .catch(() => ({ status: 'offline' })),
       ]);
+
+      let finalAthletes = aths || [];
+
+      // Check if browser has cached athletes from previous session that need restoring
+      if (!finalAthletes || finalAthletes.length === 0) {
+        try {
+          const cachedStr = localStorage.getItem('sir_cached_athletes');
+          const cached = cachedStr ? JSON.parse(cachedStr) : [];
+          if (cached && cached.length > 0) {
+            for (const ca of cached) {
+              await api('/api/athletes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name: ca.name,
+                  sport: ca.sport,
+                  position: ca.position,
+                  age: ca.age,
+                  height_cm: ca.height_cm,
+                  weight_kg: ca.weight_kg,
+                  injury_history: ca.injury_history,
+                  training_load: ca.training_load || 'Moderate',
+                }),
+              }).catch(() => null);
+            }
+            finalAthletes = await api('/api/athletes').catch(() => cached);
+          }
+        } catch {
+          // ignore cache errors
+        }
+      } else {
+        localStorage.setItem('sir_cached_athletes', JSON.stringify(finalAthletes));
+      }
+
       setSummary(sum);
-      setAthletes(aths);
+      setAthletes(finalAthletes);
       setHealth(h);
       return sum;
     } catch (e) {
@@ -1305,7 +1339,7 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
   const submit = async (e) => {
     e.preventDefault();
     try {
-      await api('/api/athletes', {
+      const created = await api('/api/athletes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1319,6 +1353,11 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
           training_load: form.training_load || 'Moderate',
         }),
       });
+      try {
+        const cachedStr = localStorage.getItem('sir_cached_athletes');
+        const cached = cachedStr ? JSON.parse(cachedStr) : [];
+        localStorage.setItem('sir_cached_athletes', JSON.stringify([created, ...cached]));
+      } catch {}
       setForm({
         name: '',
         sport: '',
