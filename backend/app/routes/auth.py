@@ -45,7 +45,13 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="An account with this email already exists.")
 
     password_hash, salt = hash_password(payload.password)
-    user = User(name=payload.name, email=payload.email, password_hash=password_hash, password_salt=salt)
+    user = User(
+        name=payload.name,
+        email=payload.email,
+        role=payload.role or "coach",
+        password_hash=password_hash,
+        password_salt=salt,
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -53,7 +59,13 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
     token = create_session(db, user.id)
     return AuthResponse(
         token=token,
-        user=UserOut(user_id=user.id, name=user.name, email=user.email, created_at=user.created_at),
+        user=UserOut(
+            user_id=user.id,
+            name=user.name,
+            email=user.email,
+            role=getattr(user, "role", "coach") or "coach",
+            created_at=user.created_at,
+        ),
     )
 
 
@@ -66,7 +78,13 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
     token = create_session(db, user.id)
     return AuthResponse(
         token=token,
-        user=UserOut(user_id=user.id, name=user.name, email=user.email, created_at=user.created_at),
+        user=UserOut(
+            user_id=user.id,
+            name=user.name,
+            email=user.email,
+            role=getattr(user, "role", "coach") or "coach",
+            created_at=user.created_at,
+        ),
     )
 
 
@@ -77,7 +95,13 @@ def oauth_login(payload: OAuthLoginRequest, db: Session = Depends(get_db)):
         # Auto-create user from Google / Social OAuth profile
         display_name = payload.name.strip() if payload.name and payload.name.strip() else payload.email.split("@")[0].title()
         password_hash, salt = hash_password(f"oauth_{payload.provider}_{payload.email}_key")
-        user = User(name=display_name, email=payload.email, password_hash=password_hash, password_salt=salt)
+        user = User(
+            name=display_name,
+            email=payload.email,
+            role=payload.role or "coach",
+            password_hash=password_hash,
+            password_salt=salt,
+        )
         db.add(user)
         db.commit()
         db.refresh(user)
@@ -85,13 +109,22 @@ def oauth_login(payload: OAuthLoginRequest, db: Session = Depends(get_db)):
     token = create_session(db, user.id)
     return AuthResponse(
         token=token,
-        user=UserOut(user_id=user.id, name=user.name, email=user.email, created_at=user.created_at),
+        user=UserOut(
+            user_id=user.id,
+            name=user.name,
+            email=user.email,
+            role=getattr(user, "role", "coach") or "coach",
+            created_at=user.created_at,
+        ),
     )
 
 
 @router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
     return UserOut(
-        user_id=current_user.id, name=current_user.name, email=current_user.email,
+        user_id=current_user.id,
+        name=current_user.name,
+        email=current_user.email,
+        role=getattr(current_user, "role", "coach") or "coach",
         created_at=current_user.created_at,
     )

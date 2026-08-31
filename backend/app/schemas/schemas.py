@@ -18,6 +18,7 @@ class UserRegister(BaseModel):
     name: str
     email: EmailStr
     password: str = Field(min_length=6)
+    role: Optional[str] = "coach"
 
 
 class UserLogin(BaseModel):
@@ -29,6 +30,7 @@ class OAuthLoginRequest(BaseModel):
     provider: str = "google"
     email: EmailStr
     name: str
+    role: Optional[str] = "coach"
     avatar_url: Optional[str] = None
 
 
@@ -36,6 +38,7 @@ class UserOut(BaseModel):
     user_id: str
     name: str
     email: str
+    role: str = "coach"
     created_at: datetime
 
 

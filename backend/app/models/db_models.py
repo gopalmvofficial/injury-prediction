@@ -30,6 +30,7 @@ class User(Base):
     id = Column(String, primary_key=True, default=_uuid("USER"))
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False, index=True)
+    role = Column(String, default="coach", nullable=False)  # athlete, coach, physiotherapist, sports_scientist, admin
     password_hash = Column(String, nullable=False)
     password_salt = Column(String, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
