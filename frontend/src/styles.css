@@ -1279,12 +1279,12 @@ header p {
   font-size: 12px;
 }
 
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 960px) {
   aside {
     width: 72px;
   }
-  .brand div:last-child, .engineBadge, .nav span:last-child, .sidefoot {
+  .brand div:last-child, .engineBadge, .nav span, .sidefoot {
     display: none;
   }
   .brand {
@@ -1298,15 +1298,13 @@ header p {
   .app main {
     margin-left: 72px;
     width: calc(100% - 72px);
-    padding: 20px;
+    padding: 22px;
   }
   .cards {
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
   }
   .grid2 {
     grid-template-columns: 1fr;
-    gap: 16px;
   }
   .heroGraphic {
     display: none;
@@ -1325,74 +1323,14 @@ header p {
   }
 }
 
-@media (max-width: 768px) {
-  table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-}
-
-@media (max-width: 600px) {
-  /* Convert left sidebar to bottom tab navigation on mobile screens */
-  aside {
-    width: 100% !important;
-    height: 64px !important;
-    flex-direction: row !important;
-    position: fixed !important;
-    inset: auto 0 0 0 !important;
-    border-right: none !important;
-    border-top: 1px solid var(--sidebar-border) !important;
-    padding: 0 8px !important;
-    justify-content: space-around !important;
-    align-items: center !important;
-    background: #060a12 !important;
-    z-index: 9999 !important;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-  }
-  .brand, .sidefoot, .engineBadge, .nav span:last-child {
-    display: none !important;
-  }
-  .nav {
-    width: auto !important;
-    height: 48px !important;
-    aspect-ratio: 1 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    font-size: 20px !important;
-  }
-  .app main {
-    margin-left: 0 !important;
-    width: 100% !important;
-    padding: 14px !important;
-    padding-bottom: 90px !important; /* Prevents navigation overlapping content */
-  }
-  header {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 10px !important;
-  }
-  .headerActions {
-    width: 100% !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-  }
+@media (max-width: 560px) {
   .cards {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
   }
   .form {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
   }
   .hero h2 {
-    font-size: 22px !important;
-  }
-  .oauthModalCard {
-    width: 95% !important;
-    padding: 18px !important;
+    font-size: 23px;
   }
 }
