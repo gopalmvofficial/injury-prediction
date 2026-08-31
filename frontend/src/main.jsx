@@ -44,6 +44,11 @@ function AuthScreen({ onAuthenticated }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  // OAuth Simulation State
+  const [oauthProvider, setOauthProvider] = useState(null); // 'google' | 'microsoft' | 'apple' | null
+  const [oauthEmail, setOauthEmail] = useState('');
+  const [oauthName, setOauthName] = useState('');
+
   const submit = async (e) => {
     e.preventDefault();
     setError('');
@@ -83,7 +88,40 @@ function AuthScreen({ onAuthenticated }) {
     if (url) {
       window.location.href = url;
     } else {
-      setError(`${name} sign-in needs to be connected to an OAuth provider in the backend.`);
+      // Instead of locking the user out with a dead-end error, trigger the simulated OAuth flow
+      setOauthProvider(name);
+      setOauthEmail('');
+      setOauthName('');
+    }
+  };
+
+  const submitOauth = async (e) => {
+    if (e) e.preventDefault();
+    setError('');
+    setBusy(true);
+
+    try {
+      const result = await api('/api/auth/oauth-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: oauthProvider,
+          email: oauthEmail,
+          name: oauthName || oauthEmail.split('@')[0],
+          role: 'coach'
+        })
+      });
+
+      localStorage.setItem('injurySenseAuth', JSON.stringify({
+        user: result.user || result,
+        token: result.access_token || result.token || null
+      }));
+      setOauthProvider(null);
+      onAuthenticated();
+    } catch (err) {
+      setError(err.message || 'OAuth authentication failed.');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -149,6 +187,84 @@ function AuthScreen({ onAuthenticated }) {
           <small className="auth-legal">By continuing, you agree to the platform terms and privacy policy.</small>
         </div>
       </div>
+
+      {/* Simulated OAuth Provider Selector Modal */}
+      {oauthProvider && (
+        <div className="oauthModalOverlay" onClick={() => setOauthProvider(null)}>
+          <div className="oauthModalCard" style={{ textAlign: 'left' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 4px', color: '#0f172a' }}>Simulate {oauthProvider.toUpperCase()} Sign-in</h3>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 16px' }}>
+              Select a preset test profile or sign in using a custom account via the backend <code>/api/auth/oauth-login</code> route.
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+              <button 
+                type="button" 
+                className="oauthAccountOption" 
+                onClick={() => {
+                  setOauthEmail('arjun.menon@gmail.com');
+                  setOauthName('Arjun Menon');
+                }}
+                style={{ background: oauthEmail === 'arjun.menon@gmail.com' ? '#f0fdf4' : '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <div>
+                  <strong style={{ display: 'block', fontSize: '12px', color: '#0f172a' }}>Arjun Menon</strong>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>arjun.menon@gmail.com</span>
+                </div>
+                <span style={{ fontSize: '10px', background: '#ecfdf5', color: '#059669', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>Google User</span>
+              </button>
+
+              <button 
+                type="button" 
+                className="oauthAccountOption" 
+                onClick={() => {
+                  setOauthEmail('sarah.coach@outlook.com');
+                  setOauthName('Sarah Coach');
+                }}
+                style={{ background: oauthEmail === 'sarah.coach@outlook.com' ? '#f0fdf4' : '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <div>
+                  <strong style={{ display: 'block', fontSize: '12px', color: '#0f172a' }}>Sarah Coach</strong>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>sarah.coach@outlook.com</span>
+                </div>
+                <span style={{ fontSize: '10px', background: '#eff6ff', color: '#2563eb', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>Microsoft User</span>
+              </button>
+            </div>
+
+            <form onSubmit={submitOauth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', fontSize: '11.5px', fontWeight: 700, color: '#334155', gap: '4px' }}>
+                Email Account:
+                <input 
+                  required 
+                  type="email" 
+                  value={oauthEmail} 
+                  onChange={e => setOauthEmail(e.target.value)} 
+                  placeholder="name@example.com" 
+                  style={{ padding: '8px 12px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                />
+              </label>
+
+              <label style={{ display: 'flex', flexDirection: 'column', fontSize: '11.5px', fontWeight: 700, color: '#334155', gap: '4px' }}>
+                Full Name:
+                <input 
+                  type="text" 
+                  value={oauthName} 
+                  onChange={e => setOauthName(e.target.value)} 
+                  placeholder="Full Name" 
+                  style={{ padding: '8px 12px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                />
+              </label>
+
+              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                <button type="button" className="btnSecondary" style={{ flex: 1 }} onClick={() => setOauthProvider(null)}>Cancel</button>
+                <button type="submit" className="primary" style={{ flex: 1 }} disabled={!oauthEmail || busy}>
+                  {busy ? 'Connecting…' : 'Sign in'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
