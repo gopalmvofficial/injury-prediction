@@ -283,8 +283,8 @@ function AuthScreen({ onSuccess }) {
 
   const openSocial = (provider) => {
     setOauthModal(provider);
-    setOauthEmail(`user_${Math.floor(1000 + Math.random() * 9000)}@${provider.toLowerCase()}.com`);
-    setOauthName(`${provider} User`);
+    setOauthEmail('');
+    setOauthName('');
     setError('');
   };
 
@@ -358,7 +358,7 @@ function AuthScreen({ onSuccess }) {
         {/* Social / OAuth Logins */}
         <div className="socials">
           <button type="button" onClick={() => openSocial('Google')}>
-            <span style={{ fontWeight: 800, color: '#ea4335' }}>G</span> <span>Continue with Google</span>
+            <span style={{ fontWeight: 800, color: '#ea4335', fontSize: '15px' }}>G</span> <span>Continue with Google</span>
           </button>
           <button type="button" onClick={() => openSocial('Microsoft')}>
             <span style={{ color: '#00a4ef' }}>▦</span> <span>Continue with Microsoft</span>
@@ -367,6 +367,93 @@ function AuthScreen({ onSuccess }) {
             <span>●</span> <span>Continue with Apple</span>
           </button>
         </div>
+
+        {/* Dedicated Google / Social Sign-In Modal */}
+        {oauthModal && (
+          <div style={{ marginTop: '16px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1.5px solid #0d9488', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <b style={{ fontSize: '13px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: oauthModal === 'Google' ? '#ea4335' : oauthModal === 'Microsoft' ? '#00a4ef' : '#000', fontWeight: 800 }}>
+                  {oauthModal === 'Google' ? 'G' : oauthModal === 'Microsoft' ? '▦' : '●'}
+                </span>
+                Sign in with {oauthModal} Account
+              </b>
+              <button 
+                type="button" 
+                onClick={() => setOauthModal(null)} 
+                style={{ border: 'none', background: 'transparent', fontSize: '14px', color: '#94a3b8', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Quick One-Click Google Profiles */}
+            <div style={{ marginBottom: '12px' }}>
+              <small style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                Choose a verified account:
+              </small>
+              <div style={{ display: 'grid', gap: '6px' }}>
+                {[
+                  { name: 'Gopal M V', email: 'gopalmvofficial@gmail.com', r: 'coach', title: 'Lead Coach / Athlete' },
+                  { name: 'Dr. Sarah Chen, PT', email: 'sarah.chen.pt@gmail.com', r: 'physiotherapist', title: 'Physiotherapist' },
+                  { name: 'Jordan Miller', email: 'jordan.athlete@gmail.com', r: 'athlete', title: 'Pro Athlete' },
+                ].map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => handleOAuthLogin(oauthModal, acc.email, acc.name, acc.r)}
+                    disabled={busy}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 10px',
+                      background: '#fff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '11.5px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div>
+                      <b style={{ color: '#0f172a', display: 'block' }}>{acc.name}</b>
+                      <span style={{ color: '#64748b', fontSize: '10.5px' }}>{acc.email}</span>
+                    </div>
+                    <span style={{ fontSize: '10px', color: '#0d9488', fontWeight: 700, background: '#f0fdfa', padding: '2px 6px', borderRadius: '4px' }}>
+                      {acc.title} →
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="divider" style={{ margin: '10px 0' }}>
+              <span>or enter your own {oauthModal} email</span>
+            </div>
+
+            <label style={{ fontSize: '11px', display: 'block', marginBottom: '6px', color: '#334155', fontWeight: 700 }}>
+              Your {oauthModal} Email:
+              <input 
+                type="email" 
+                value={oauthEmail} 
+                onChange={(e) => setOauthEmail(e.target.value)} 
+                placeholder={`yourname@${oauthModal.toLowerCase() === 'google' ? 'gmail.com' : 'outlook.com'}`}
+                style={{ width: '100%', padding: '8px 10px', fontSize: '12.5px', marginTop: '4px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+              />
+            </label>
+
+            <button 
+              type="button" 
+              className="primary full" 
+              onClick={() => handleOAuthLogin(oauthModal, oauthEmail, oauthName, role)}
+              disabled={busy || !oauthEmail}
+              style={{ marginTop: '8px', padding: '9px', fontSize: '12px' }}
+            >
+              {busy ? 'Authenticating with Google…' : `Continue with ${oauthModal}`}
+            </button>
+          </div>
+        )}
 
         {/* 1-Click Role-Based Quick Access */}
         <div style={{ marginTop: '14px', background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
@@ -404,42 +491,6 @@ function AuthScreen({ onSuccess }) {
             </button>
           </div>
         </div>
-
-        {/* OAuth Dialog Modal */}
-        {oauthModal && (
-          <div style={{ marginTop: '14px', background: '#f0fdfa', padding: '14px', borderRadius: '10px', border: '1px solid #0d9488' }}>
-            <b style={{ fontSize: '12.5px', color: '#0f766e', display: 'block', marginBottom: '8px' }}>
-              🔑 Sign in with {oauthModal} Account
-            </b>
-            <label style={{ fontSize: '11.5px', display: 'block', marginBottom: '6px' }}>
-              Your {oauthModal} Email:
-              <input 
-                type="email" 
-                value={oauthEmail} 
-                onChange={(e) => setOauthEmail(e.target.value)} 
-                style={{ width: '100%', padding: '8px', fontSize: '13px', marginTop: '4px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
-              />
-            </label>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-              <button 
-                type="button" 
-                className="primary small" 
-                onClick={() => handleOAuthLogin(oauthModal, oauthEmail, oauthName, role)}
-                disabled={busy}
-                style={{ flex: 1, padding: '8px', fontSize: '12px' }}
-              >
-                {busy ? 'Verifying…' : `Confirm ${oauthModal} Login`}
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setOauthModal(null)}
-                style={{ padding: '8px 12px', fontSize: '12px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
 
         <div className="divider">
           <span>or sign in with password</span>
