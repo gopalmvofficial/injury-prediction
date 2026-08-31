@@ -2,8 +2,29 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'
+    : 'https://injury-prediction-backend.onrender.com');
+
 const api = async (url, opts = {}) => {
-  const r = await fetch(url, opts);
+  const headers = { ...(opts.headers || {}) };
+  
+  let token = null;
+  try {
+    const authData = JSON.parse(localStorage.getItem('injurySenseAuth'));
+    token = authData?.token || authData?.access_token;
+  } catch (e) {}
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const r = await fetch(`${API_BASE_URL}${url}`, {
+    ...opts,
+    headers
+  });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(data.detail || 'Request failed');
   return data;
