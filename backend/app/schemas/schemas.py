@@ -42,6 +42,11 @@ class UserOut(BaseModel):
     created_at: datetime
 
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+
+
 class AuthResponse(BaseModel):
     token: str
     user: UserOut
