@@ -146,8 +146,7 @@ def analyze_video(payload: AnalyzeRequest, db: Session = Depends(get_db),
     analysis.pose_detection_rate_pct = result.pose_detection_rate_pct
     analysis.movement_quality_json = json.dumps(quality)
     analysis.biomechanics_json = json.dumps(bio)
-    analysis.observations_json = json.dumps(observation_list)
-    analysis.processed_video_path = f"/api/results/video/{processed_video_filename}"
+    analysis.processed_video_path = f"/api/uploads/{video.stored_filename}"
     video.processing_status = "completed"
     db.commit()
     db.refresh(analysis)

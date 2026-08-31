@@ -20,12 +20,10 @@ async function api(path, options = {}) {
     headers,
   });
 
-  if (res.status === 401) {
+  if (res.status === 401 && path === '/api/auth/me') {
     localStorage.removeItem('sir_token');
     localStorage.removeItem('sir_auth');
     localStorage.removeItem('sir_user');
-    window.location.reload();
-    throw new Error('Session expired. Please log in again.');
   }
 
   if (!res.ok) {
