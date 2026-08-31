@@ -129,7 +129,10 @@ def generate_pdf_report(athlete: dict, analysis: dict, output_path: str, risk: d
         ],
         [
             Paragraph("<b>Prior Injury History:</b>", body), Paragraph(str(athlete.get("injury_history") or "None documented"), body),
-            Paragraph("<b>Assessment Date:</b>", body), Paragraph(datetime.now().strftime("%B %d, %Y - %H:%M"), body),
+            Paragraph("<b>Assessment Date:</b>", body), Paragraph(
+                (analysis.get("created_at") if isinstance(analysis.get("created_at"), str) else datetime.now().strftime("%B %d, %Y • %I:%M %p"))[:26], 
+                body
+            ),
         ]
     ]
     t_athlete = Table(athlete_data, colWidths=[3.6 * cm, 5.5 * cm, 3.6 * cm, 5.5 * cm])

@@ -468,21 +468,22 @@ function AuthScreen({ onSuccess }) {
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
 
-  const [googleModal, setGoogleModal] = useState(false);
-  const [googleEmail, setGoogleEmail] = useState('');
-  const [googleName, setGoogleName] = useState('');
+  // Social OAuth Provider State
+  const [oauthModal, setOauthModal] = useState(null); // 'google' | 'apple' | 'microsoft'
+  const [oauthEmail, setOauthEmail] = useState('');
+  const [oauthName, setOauthName] = useState('');
 
-  // Dynamically load recently signed-in Google account from browser
-  const [recentGoogleUser, setRecentGoogleUser] = useState(() => {
+  // Dynamically load recently signed-in Social account from browser
+  const [recentSocialUser, setRecentSocialUser] = useState(() => {
     try {
-      const stored = localStorage.getItem('sir_recent_google_account');
+      const stored = localStorage.getItem('sir_recent_social_account');
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
     }
   });
 
-  const [useCustomInput, setUseCustomInput] = useState(() => !recentGoogleUser);
+  const [useCustomInput, setUseCustomInput] = useState(() => !recentSocialUser);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -513,7 +514,7 @@ function AuthScreen({ onSuccess }) {
 
   const handleOAuthLogin = async (provider, email, name, userRole = 'coach') => {
     if (!email || !email.includes('@')) {
-      return setError('Please provide a valid Google email address.');
+      return setError(`Please provide a valid ${provider} email address.`);
     }
     setBusy(true);
     setError('');
@@ -530,15 +531,16 @@ function AuthScreen({ onSuccess }) {
       });
       if (!res.token) throw new Error('No authentication token received.');
 
-      // Save as the dynamically recent Google account
-      localStorage.setItem('sir_recent_google_account', JSON.stringify({
+      // Save as the dynamically recent Social account
+      localStorage.setItem('sir_recent_social_account', JSON.stringify({
+        provider: provider,
         email: email.trim().toLowerCase(),
         name: res.user?.name || name || email.split('@')[0],
         role: res.user?.role || userRole,
         avatarInitial: (res.user?.name || email)[0].toUpperCase(),
       }));
 
-      setGoogleModal(false);
+      setOauthModal(null);
       onSuccess(res.token, res.user);
     } catch (err) {
       setError(err.message || `${provider} authentication failed.`);
@@ -614,12 +616,13 @@ function AuthScreen({ onSuccess }) {
           </div>
         )}
 
-        {/* Google Continue Button */}
-        <div className="socials">
+        {/* Social Logins (Google, Apple, Microsoft) */}
+        <div className="socials" style={{ display: 'grid', gap: '8px' }}>
+          {/* Google Sign In */}
           <button 
             type="button" 
             className="googleBtn" 
-            onClick={() => { setGoogleModal(true); setError(''); }}
+            onClick={() => { setOauthModal('Google'); setError(''); }}
           >
             <svg width="20" height="20" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -629,43 +632,26 @@ function AuthScreen({ onSuccess }) {
             </svg>
             <span>Continue with Google</span>
           </button>
-        </div>
 
-        {/* 1-Click Role-Based Demo Quick Access */}
-        <div style={{ marginTop: '16px', background: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
-          <small style={{ fontWeight: 700, color: '#0f2942', display: 'block', marginBottom: '8px', fontSize: '11.5px' }}>
-            ⚡ 1-Click Role-Based Quick Access:
-          </small>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <button 
-              type="button" 
-              onClick={() => handleOAuthLogin('Google', 'coach@sportsinjury.ai', 'Coach Rivera', 'coach')} 
-              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-            >
-              👨‍🏫 Coach
-            </button>
-            <button 
-              type="button" 
-              onClick={() => handleOAuthLogin('Google', 'athlete@sportsinjury.ai', 'Jordan Athlete', 'athlete')} 
-              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-            >
-              🏃 Athlete
-            </button>
-            <button 
-              type="button" 
-              onClick={() => handleOAuthLogin('Google', 'physio@sportsinjury.ai', 'Dr. Sarah Physio', 'physiotherapist')} 
-              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-            >
-              🩺 Physiotherapist
-            </button>
-            <button 
-              type="button" 
-              onClick={() => handleOAuthLogin('Google', 'admin@sportsinjury.ai', 'Admin User', 'admin')} 
-              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-            >
-              🛡️ Admin
-            </button>
-          </div>
+          {/* Apple Sign In */}
+          <button 
+            type="button" 
+            className="googleBtn" 
+            onClick={() => { setOauthModal('Apple'); setError(''); }}
+          >
+            <span style={{ fontSize: '18px', lineHeight: 1 }}></span>
+            <span>Continue with Apple ID</span>
+          </button>
+
+          {/* Microsoft Sign In */}
+          <button 
+            type="button" 
+            className="googleBtn" 
+            onClick={() => { setOauthModal('Microsoft'); setError(''); }}
+          >
+            <span style={{ color: '#00a4ef', fontSize: '16px' }}>▦</span>
+            <span>Continue with Microsoft 365</span>
+          </button>
         </div>
 
         <div className="divider">
@@ -725,36 +711,48 @@ function AuthScreen({ onSuccess }) {
         </p>
       </div>
 
-      {/* Dynamic Google OAuth Account Chooser Modal */}
-      {googleModal && (
-        <div className="oauthModalOverlay" onClick={() => setGoogleModal(false)}>
+      {/* Dynamic OAuth Account Chooser Modal (Google, Apple, Microsoft) */}
+      {oauthModal && (
+        <div className="oauthModalOverlay" onClick={() => setOauthModal(null)}>
           <div className="oauthModalCard" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
-              <svg width="42" height="42" viewBox="0 0 48 48">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-              </svg>
+              {oauthModal === 'Google' && (
+                <svg width="42" height="42" viewBox="0 0 48 48">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+              )}
+              {oauthModal === 'Apple' && (
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#000', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '24px' }}>
+                  
+                </div>
+              )}
+              {oauthModal === 'Microsoft' && (
+                <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: '#00a4ef', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '22px' }}>
+                  ▦
+                </div>
+              )}
             </div>
-            <h3>Choose a Google Account</h3>
+            <h3>Sign in with {oauthModal}</h3>
             <p>to continue to Sports Injury Intelligence</p>
 
-            {recentGoogleUser && !useCustomInput ? (
+            {recentSocialUser && !useCustomInput ? (
               <div>
                 <button
                   type="button"
                   className="oauthAccountOption"
                   disabled={busy}
-                  onClick={() => handleOAuthLogin('Google', recentGoogleUser.email, recentGoogleUser.name, recentGoogleUser.role || role)}
+                  onClick={() => handleOAuthLogin(oauthModal, recentSocialUser.email, recentSocialUser.name, recentSocialUser.role || role)}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #10b981, #06b6d4)', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 800, fontSize: '15px' }}>
-                      {recentGoogleUser.avatarInitial || recentGoogleUser.name?.[0] || 'G'}
+                      {recentSocialUser.avatarInitial || recentSocialUser.name?.[0] || 'U'}
                     </div>
                     <div>
-                      <b style={{ fontSize: '13px', color: '#0f172a', display: 'block' }}>{recentGoogleUser.name}</b>
-                      <span style={{ fontSize: '11.5px', color: '#64748b' }}>{recentGoogleUser.email}</span>
+                      <b style={{ fontSize: '13px', color: '#0f172a', display: 'block' }}>{recentSocialUser.name}</b>
+                      <span style={{ fontSize: '11.5px', color: '#64748b' }}>{recentSocialUser.email}</span>
                     </div>
                   </div>
                   <span style={{ fontSize: '11px', color: '#059669', fontWeight: 700, background: '#ecfdf5', padding: '3px 8px', borderRadius: '9999px' }}>
@@ -773,28 +771,28 @@ function AuthScreen({ onSuccess }) {
                       +
                     </div>
                     <div>
-                      <b style={{ fontSize: '13px', color: '#0f172a', display: 'block' }}>Use another Google account</b>
-                      <span style={{ fontSize: '11px', color: '#64748b' }}>Sign in with any Gmail or Google Workspace</span>
+                      <b style={{ fontSize: '13px', color: '#0f172a', display: 'block' }}>Use another account</b>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Sign in with any {oauthModal} email</span>
                     </div>
                   </div>
                 </button>
               </div>
             ) : (
-              <form onSubmit={(e) => { e.preventDefault(); handleOAuthLogin('Google', googleEmail, googleName, role); }} style={{ textAlign: 'left' }}>
+              <form onSubmit={(e) => { e.preventDefault(); handleOAuthLogin(oauthModal, oauthEmail, oauthName, role); }} style={{ textAlign: 'left' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
-                  Email or phone
+                  {oauthModal} Email Address
                 </label>
                 <input
                   required
                   type="email"
-                  value={googleEmail}
-                  onChange={(e) => setGoogleEmail(e.target.value)}
-                  placeholder="Enter your Google email"
+                  value={oauthEmail}
+                  onChange={(e) => setOauthEmail(e.target.value)}
+                  placeholder={`Enter your ${oauthModal} email`}
                   style={{ width: '100%', height: '46px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 12px', fontSize: '13.5px', marginBottom: '14px', boxSizing: 'border-box' }}
                 />
 
                 <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
-                  Account Role:
+                  Select Operating Role:
                 </label>
                 <select
                   value={role}
@@ -809,7 +807,7 @@ function AuthScreen({ onSuccess }) {
                 </select>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  {recentGoogleUser && (
+                  {recentSocialUser && (
                     <button
                       type="button"
                       onClick={() => setUseCustomInput(false)}
@@ -821,17 +819,17 @@ function AuthScreen({ onSuccess }) {
                   <button
                     type="submit"
                     className="primary"
-                    disabled={busy || !googleEmail}
+                    disabled={busy || !oauthEmail}
                     style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '8px', marginLeft: 'auto' }}
                   >
-                    {busy ? 'Signing in…' : 'Sign in with Google'}
+                    {busy ? 'Signing in…' : `Sign in with ${oauthModal}`}
                   </button>
                 </div>
               </form>
             )}
 
             <div style={{ marginTop: '24px', paddingTop: '14px', borderTop: '1px solid #f1f5f9', fontSize: '11px', color: '#94a3b8', textAlign: 'left', lineHeight: 1.4 }}>
-              To continue, Google will share your name, email address, and profile picture with Sports Injury Intelligence.
+              To continue, {oauthModal} will share your verified name and email address with Sports Injury Intelligence.
             </div>
           </div>
         </div>
@@ -920,7 +918,6 @@ function Card({ title, value, icon }) {
 
 function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
   const [search, setSearch] = useState('');
-  const [sportFilter, setSportFilter] = useState('ALL');
   const [form, setForm] = useState({
     name: '',
     sport: '',
@@ -933,11 +930,9 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
   });
 
   const filteredAthletes = athletes.filter((a) => {
-    const matchesSearch = (a.name || '').toLowerCase().includes(search.toLowerCase()) ||
-                          (a.sport || '').toLowerCase().includes(search.toLowerCase()) ||
-                          (a.position || '').toLowerCase().includes(search.toLowerCase());
-    const matchesSport = sportFilter === 'ALL' || (a.sport || '').toLowerCase() === sportFilter.toLowerCase();
-    return matchesSearch && matchesSport;
+    return (a.name || '').toLowerCase().includes(search.toLowerCase()) ||
+           (a.sport || '').toLowerCase().includes(search.toLowerCase()) ||
+           (a.position || '').toLowerCase().includes(search.toLowerCase());
   });
 
   const exportCSV = () => {
@@ -1098,14 +1093,14 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
           </button>
         </div>
 
-        {/* Search and Sport Filter Controls */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+        {/* Search Input */}
+        <div style={{ marginBottom: '14px' }}>
           <input
             type="text"
             placeholder="🔍 Search athlete by name or sport…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12.5px' }}
+            style={{ width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
           />
         </div>
 
@@ -1143,7 +1138,7 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
             ))}
           </tbody>
         </table>
-        {!filteredAthletes.length && <Empty text="No athletes match your search or filter." />}
+        {!filteredAthletes.length && <Empty text="No athletes match your search." />}
       </section>
     </div>
   );
@@ -1499,24 +1494,30 @@ function AnalysisTable({ rows }) {
           <th>Pose Det.</th>
           <th>Quality</th>
           <th>Status</th>
-          <th>Date</th>
+          <th>Screening Time</th>
         </tr>
       </thead>
       <tbody>
-        {rows.map((r) => (
-          <tr key={r.analysis_id || r.id}>
-            <td>#{(r.analysis_id || r.id).slice(0, 8)}</td>
-            <td><b>{r.activity}</b></td>
-            <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : '—'}</td>
-            <td>{r.movement_quality?.score ? `${r.movement_quality.score}%` : (r.movement_quality?.classification || 'Good')}</td>
-            <td>
-              <span className={`badge ${r.status === 'completed' ? 'low' : r.status === 'failed' ? 'high' : 'medium'}`}>
-                {r.status}
-              </span>
-            </td>
-            <td>{new Date(r.created_at).toLocaleDateString()}</td>
-          </tr>
-        ))}
+        {rows.map((r) => {
+          const formattedTime = r.created_at
+            ? new Date(r.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+            : new Date().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+
+          return (
+            <tr key={r.analysis_id || r.id}>
+              <td>#{(r.analysis_id || r.id).slice(0, 8)}</td>
+              <td><b>{r.activity}</b></td>
+              <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : '—'}</td>
+              <td>{r.movement_quality?.score ? `${r.movement_quality.score}%` : (r.movement_quality?.classification || 'Good')}</td>
+              <td>
+                <span className={`badge ${r.status === 'completed' ? 'low' : r.status === 'failed' ? 'high' : 'medium'}`}>
+                  {r.status}
+                </span>
+              </td>
+              <td style={{ fontSize: '12px', color: '#64748b' }}>{formattedTime}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -1546,6 +1547,10 @@ function Reports({ summary }) {
     }
   };
 
+  const formattedTime = latest?.created_at
+    ? new Date(latest.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+    : new Date().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+
   return (
     <section className="panel report">
       <h2>Clinical & Coaching Reports (Human Understandable)</h2>
@@ -1558,7 +1563,7 @@ function Reports({ summary }) {
         <div style={{ marginTop: '20px', background: '#f8fafc', padding: '22px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <h3>Latest Assessment: #{latest.analysis_id.slice(0, 8)} ({latest.activity.toUpperCase()})</h3>
           <p style={{ margin: '6px 0 16px', color: '#64748b' }}>
-            Pose Detection: <b>{latest.pose_detection_rate_pct}%</b> • Date: {new Date(latest.created_at).toLocaleString()}
+            Pose Detection: <b>{latest.pose_detection_rate_pct}%</b> • Assessment Time: <b>{formattedTime}</b>
           </p>
           <button className="primary" onClick={() => downloadPdf(latest.analysis_id)}>
             📥 Download Complete Assessment Report (PDF)
