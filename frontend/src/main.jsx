@@ -1660,36 +1660,27 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
     setResult(null);
     setRisk(null);
 
+    const localUrl = URL.createObjectURL(file);
+    setVideoPreviewUrl(localUrl);
+
     try {
       const fd = new FormData();
       fd.append('athlete_id', athlete);
       fd.append('activity', activity);
       fd.append('file', file);
 
-      const up = await api('/api/videos/upload', {
+      const analysisResult = await api('/api/videos/upload-and-analyze', {
         method: 'POST',
         body: fd,
       });
 
-      const analysisResult = await api('/api/videos/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          video_id: up.video_id,
-          athlete_id: athlete,
-          activity: activity,
-        }),
-      });
-
       setResult(analysisResult);
-
-      const riskResult = await api(`/api/risk/${analysisResult.analysis_id}`).catch(() => null);
-      setRisk(riskResult || analysisResult);
+      setRisk(analysisResult);
 
       // Refresh squad data in parent
       await onDone();
     } catch (e) {
-      alert(e.message);
+      alert(`Video Screening Error: ${e.message}`);
     } finally {
       setBusy(false);
     }
