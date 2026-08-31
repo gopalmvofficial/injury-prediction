@@ -34,6 +34,12 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user: User = De
     athlete_ids_subq = db.query(AthleteModel.id).filter(AthleteModel.user_id == current_user.id)
     athlete_id_list = [row[0] for row in athlete_ids_subq.all()]
 
+    if not athlete_id_list:
+        from app.routes.athletes import list_athletes
+        list_athletes(db, current_user)
+        athlete_ids_subq = db.query(AthleteModel.id).filter(AthleteModel.user_id == current_user.id)
+        athlete_id_list = [row[0] for row in athlete_ids_subq.all()]
+
     total_athletes = len(athlete_id_list)
 
     total_videos = (

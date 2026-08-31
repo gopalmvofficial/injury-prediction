@@ -1,11 +1,8 @@
 """
 database.py
 
-Database engine and session setup via SQLAlchemy. Uses SQLite locally by
-default (backend/database/app.db) or whatever DATABASE_URL is set to in
-production - see config.py. SQLAlchemy is DB-agnostic, so pointing this at
-PostgreSQL for a real deployment needs no changes here, only the env var
-and `pip install psycopg2-binary`.
+Database engine and session setup via SQLAlchemy.
+Supports SQLite locally and PostgreSQL in production with automatic connection recovery.
 """
 from __future__ import annotations
 
@@ -16,18 +13,25 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.config import DATABASE_URL
 
-# check_same_thread=False is only needed/valid for SQLite; harmless to omit
-# for other engines, so only pass it when actually using SQLite.
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+# Normalize postgres:// to postgresql:// for SQLAlchemy 2.0+ compatibility
+normalized_db_url = DATABASE_URL
+if normalized_db_url.startswith("postgres://"):
+    normalized_db_url = normalized_db_url.replace("postgres://", "postgresql://", 1)
 
-if DATABASE_URL.startswith("sqlite"):
-    # Ensure the directory for the SQLite file exists (e.g. backend/database/).
-    db_path = DATABASE_URL.replace("sqlite:///", "", 1)
+# check_same_thread=False is only needed for SQLite
+connect_args = {"check_same_thread": False} if normalized_db_url.startswith("sqlite") else {}
+
+if normalized_db_url.startswith("sqlite"):
+    db_path = normalized_db_url.replace("sqlite:///", "", 1)
     db_dir = os.path.dirname(db_path)
     if db_dir:
         os.makedirs(db_dir, exist_ok=True)
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+engine = create_engine(
+    normalized_db_url,
+    connect_args=connect_args,
+    pool_pre_ping=True,  # Automatically tests connection vitality
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
