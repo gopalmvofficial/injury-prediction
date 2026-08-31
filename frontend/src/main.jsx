@@ -84,6 +84,9 @@ function App() {
   // Edit Athlete Modal State
   const [editingAthlete, setEditingAthlete] = useState(null);
 
+  // In-App Video Player Modal
+  const [videoModalUrl, setVideoModalUrl] = useState(null);
+
   const loadData = async () => {
     try {
       const [sum, aths, h] = await Promise.all([
@@ -96,8 +99,10 @@ function App() {
       setSummary(sum);
       setAthletes(aths);
       setHealth(h);
+      return sum;
     } catch (e) {
       setToast(e.message);
+      return null;
     }
   };
 
@@ -273,15 +278,49 @@ function App() {
           />
         )}
         {page === 'Video Analysis' && (
-          <VideoAnalysis athletes={athletes} onDone={loadData} onNav={nav} />
+          <VideoAnalysis
+            athletes={athletes}
+            onDone={loadData}
+            onNav={nav}
+            onPlayVideo={(url) => setVideoModalUrl(url)}
+          />
         )}
         {page === 'Kinematics Lab' && (
           <KinematicsLab />
         )}
-        {page === 'Results' && <Results summary={summary} />}
+        {page === 'Results' && (
+          <Results
+            summary={summary}
+            onPlayVideo={(url) => setVideoModalUrl(url)}
+          />
+        )}
         {page === 'Reports' && <Reports summary={summary} />}
 
         {toast && <div className="toast">{toast}</div>}
+
+        {/* Video Player Modal */}
+        {videoModalUrl && (
+          <div className="oauthModalOverlay" onClick={() => setVideoModalUrl(null)}>
+            <div className="oauthModalCard" style={{ width: 'min(700px, 95vw)', padding: '20px' }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <b style={{ fontSize: '15px', color: '#0f172a' }}>▶ Movement Screening Video Playback</b>
+                <button
+                  type="button"
+                  onClick={() => setVideoModalUrl(null)}
+                  style={{ border: 'none', background: 'transparent', fontSize: '18px', cursor: 'pointer', color: '#64748b' }}
+                >
+                  ✕
+                </button>
+              </div>
+              <video
+                src={videoModalUrl}
+                controls
+                autoPlay
+                style={{ width: '100%', maxHeight: '420px', borderRadius: '10px', background: '#000' }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Edit User Profile Modal */}
         {profileModal && (
@@ -603,7 +642,7 @@ function AuthScreen({ onSuccess }) {
             : 'Register to manage athlete profiles and movement analyses.'}
         </p>
 
-        {/* Role Selector Tabs (Athlete / Coach / Physio / Scientist / Admin) */}
+        {/* Role Selector Tabs */}
         {mode === 'register' && (
           <div style={{ marginBottom: '18px' }}>
             <label style={{ fontSize: '11.5px', fontWeight: 800, color: '#334155', display: 'block', marginBottom: '6px' }}>
@@ -639,9 +678,8 @@ function AuthScreen({ onSuccess }) {
           </div>
         )}
 
-        {/* Social Logins (Google, Apple, Microsoft) */}
+        {/* Social Logins */}
         <div className="socials" style={{ display: 'grid', gap: '8px' }}>
-          {/* Google Sign In */}
           <button 
             type="button" 
             className="googleBtn" 
@@ -656,7 +694,6 @@ function AuthScreen({ onSuccess }) {
             <span>Continue with Google</span>
           </button>
 
-          {/* Apple Sign In */}
           <button 
             type="button" 
             className="googleBtn" 
@@ -666,7 +703,6 @@ function AuthScreen({ onSuccess }) {
             <span>Continue with Apple ID</span>
           </button>
 
-          {/* Microsoft Sign In */}
           <button 
             type="button" 
             className="googleBtn" 
@@ -734,7 +770,6 @@ function AuthScreen({ onSuccess }) {
         </p>
       </div>
 
-      {/* Dynamic OAuth Account Chooser Modal (Google, Apple, Microsoft) */}
       {oauthModal && (
         <div className="oauthModalOverlay" onClick={() => setOauthModal(null)}>
           <div className="oauthModalCard" onClick={(e) => e.stopPropagation()}>
@@ -850,10 +885,6 @@ function AuthScreen({ onSuccess }) {
                 </div>
               </form>
             )}
-
-            <div style={{ marginTop: '24px', paddingTop: '14px', borderTop: '1px solid #f1f5f9', fontSize: '11px', color: '#94a3b8', textAlign: 'left', lineHeight: 1.4 }}>
-              To continue, {oauthModal} will share your verified name and email address with Sports Injury Intelligence.
-            </div>
           </div>
         </div>
       )}
@@ -866,8 +897,6 @@ function Dashboard({ summary, athletes, onNav, userRole }) {
   const totalVideos = summary?.total_videos ?? 0;
   const highRisk = summary?.high_risk_athletes ?? 0;
   const recentAnalyses = summary?.recent_analyses ?? [];
-
-  // Readiness Score Calculation (0 - 100%)
   const readinessScore = highRisk > 0 ? Math.max(50, 88 - highRisk * 12) : 92;
 
   return (
@@ -889,7 +918,6 @@ function Dashboard({ summary, athletes, onNav, userRole }) {
         </div>
       </section>
 
-      {/* Athlete Readiness & High-Tech KPI Cards */}
       <div className="cards">
         <Card title="Registered Athletes" value={totalAthletes} icon="♙" />
         <Card title="Videos Analyzed" value={totalVideos} icon="◉" />
@@ -950,15 +978,11 @@ function KinematicsLab() {
   const [trunkLean, setTrunkLean] = useState(15);
   const [animating, setAnimating] = useState(false);
 
-  // "What-If" Sandbox State
   const [trainingLoad, setTrainingLoad] = useState('Moderate');
   const [injuryHistory, setInjuryHistory] = useState('None');
   const [valgusAngle, setValgusAngle] = useState(8);
-
-  // Selected Joint Info for Anatomical Heatmap
   const [selectedJoint, setSelectedJoint] = useState('knee');
 
-  // Dynamic Risk Calculation
   let sandboxScore = 20;
   if (trainingLoad === 'High') sandboxScore += 18;
   if (trainingLoad === 'Extreme') sandboxScore += 35;
@@ -1000,7 +1024,6 @@ function KinematicsLab() {
 
     ctx.clearRect(0, 0, w, h);
 
-    // Draw background grid lines
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     for (let x = 0; x < w; x += 30) {
@@ -1016,7 +1039,6 @@ function KinematicsLab() {
       ctx.stroke();
     }
 
-    // Skeletal Coordinates based on Angles
     const hipX = w * 0.45;
     const hipY = h * 0.48;
 
@@ -1027,7 +1049,6 @@ function KinematicsLab() {
     const headX = neckX - Math.sin(radTrunk) * 20;
     const headY = neckY - Math.cos(radTrunk) * 20;
 
-    // Left Leg
     const thighLen = 65;
     const radHip = (hipAngle * Math.PI) / 180;
     const kneeX = hipX + Math.sin(radHip) * thighLen;
@@ -1038,48 +1059,40 @@ function KinematicsLab() {
     const ankleX = kneeX - Math.sin(radKnee) * shinLen;
     const ankleY = kneeY + Math.cos(radKnee) * shinLen;
 
-    // Joint Colors
     const kneeColor = kneeAngle > 125 ? '#ef4444' : kneeAngle > 105 ? '#f59e0b' : '#10b981';
 
-    // Draw Skeleton Bones
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
 
-    // Spine
     ctx.strokeStyle = '#38bdf8';
     ctx.beginPath();
     ctx.moveTo(hipX, hipY);
     ctx.lineTo(neckX, neckY);
     ctx.stroke();
 
-    // Thigh
     ctx.strokeStyle = '#34d399';
     ctx.beginPath();
     ctx.moveTo(hipX, hipY);
     ctx.lineTo(kneeX, kneeY);
     ctx.stroke();
 
-    // Shin
     ctx.strokeStyle = kneeColor;
     ctx.beginPath();
     ctx.moveTo(kneeX, kneeY);
     ctx.lineTo(ankleX, ankleY);
     ctx.stroke();
 
-    // Arms
     ctx.strokeStyle = '#818cf8';
     ctx.beginPath();
     ctx.moveTo(neckX, neckY);
     ctx.lineTo(neckX + 25, neckY + 45);
     ctx.stroke();
 
-    // Head
     ctx.fillStyle = '#f8fafc';
     ctx.beginPath();
     ctx.arc(headX, headY, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    // Joint Markers
     const drawJoint = (x, y, color, label) => {
       ctx.fillStyle = color;
       ctx.beginPath();
@@ -1161,7 +1174,6 @@ function KinematicsLab() {
           </div>
         </div>
 
-        {/* Anatomical Heatmap Silhouette */}
         <div style={{ marginTop: '20px', background: '#090e17', borderRadius: '14px', padding: '16px', border: '1px solid #1e293b' }}>
           <b style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '8px' }}>🩻 Anatomical Joint Heatmap</b>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
@@ -1190,7 +1202,6 @@ function KinematicsLab() {
         </div>
       </section>
 
-      {/* "What-If" Biomechanical Risk Sandbox */}
       <section className="panel">
         <div className="panelHead">
           <h3>⚡ "What-If" Injury Risk Sandbox</h3>
@@ -1232,7 +1243,6 @@ function KinematicsLab() {
           />
         </div>
 
-        {/* Live Calculated Risk Display */}
         <div className={`result ${sandboxLevel.toLowerCase()}`} style={{ marginTop: '16px' }}>
           <span>Simulated ML Injury Risk</span>
           <strong>{sandboxLevel} RISK</strong>
@@ -1247,7 +1257,7 @@ function KinematicsLab() {
 }
 
 function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
-  const [viewMode, setViewMode] = useState('list'); // 'list' | 'matrix'
+  const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
   const [filterRisk, setFilterRisk] = useState('ALL');
   const [form, setForm] = useState({
@@ -1437,7 +1447,6 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
           </div>
         </div>
 
-        {/* Search & Medical Review Filter Controls */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
           <input
             type="text"
@@ -1496,7 +1505,6 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
             </tbody>
           </table>
         ) : (
-          /* Squad-Wide Risk & Availability Matrix */
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             {filteredAthletes.map((a) => {
               const isAlert = a.training_load === 'Extreme' || (a.injury_history && a.injury_history !== 'None');
@@ -1564,11 +1572,12 @@ function AthleteDetails({ athlete, onEdit, onBack }) {
   );
 }
 
-function VideoAnalysis({ athletes, onDone, onNav }) {
+function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
   const [mode, setMode] = useState('upload'); // 'upload' | 'webcam'
   const [athlete, setAthlete] = useState('');
   const [activity, setActivity] = useState('squatting');
   const [file, setFile] = useState(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const [risk, setRisk] = useState(null);
@@ -1601,14 +1610,14 @@ function VideoAnalysis({ athletes, onDone, onNav }) {
     setWebcamActive(false);
   };
 
-  const captureWebcamMovement = () => {
+  const captureWebcamMovement = async () => {
     setRecordingTimer(5);
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       setRecordingTimer((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
           stopWebcam();
-          runDemoScan(activity);
+          runSampleScan(activity);
           return 0;
         }
         return prev - 1;
@@ -1616,31 +1625,35 @@ function VideoAnalysis({ athletes, onDone, onNav }) {
     }, 1000);
   };
 
-  const runDemoScan = (sampleActivity) => {
+  const runSampleScan = async (sampleActivity) => {
+    if (!athlete) return alert('Select an athlete profile first.');
     setActivity(sampleActivity);
     setBusy(true);
     setResult(null);
     setRisk(null);
 
-    setTimeout(() => {
-      const mockResult = {
-        analysis_id: `ANALYSIS_${Math.random().toString(36).substring(2, 10)}`,
-        activity: sampleActivity,
-        pose_detection_rate_pct: 98.8,
-        movement_quality: { score: 86, classification: 'Good' },
-        risk_score: 22,
-        risk_level: 'LOW',
-        created_at: new Date().toISOString(),
-        recommendations: [
-          'Eccentric Squat Loading & Bilateral Hip Stabilization Drills (3x/week)',
-          'Single-leg stability landing mechanics'
-        ]
-      };
-      setResult(mockResult);
-      setRisk(mockResult);
+    try {
+      const res = await api('/api/videos/sample-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          athlete_id: athlete,
+          activity: sampleActivity,
+          video_id: 'sample'
+        }),
+      });
+
+      setResult(res);
+      const riskResult = await api(`/api/risk/${res.analysis_id}`).catch(() => null);
+      setRisk(riskResult || res);
+
+      // Immediately refresh squad data
+      await onDone();
+    } catch (err) {
+      alert(`Analysis error: ${err.message}`);
+    } finally {
       setBusy(false);
-      onDone();
-    }, 1200);
+    }
   };
 
   const submit = async () => {
@@ -1673,9 +1686,10 @@ function VideoAnalysis({ athletes, onDone, onNav }) {
       setResult(analysisResult);
 
       const riskResult = await api(`/api/risk/${analysisResult.analysis_id}`).catch(() => null);
-      setRisk(riskResult);
+      setRisk(riskResult || analysisResult);
 
-      onDone();
+      // Refresh squad data in parent
+      await onDone();
     } catch (e) {
       alert(e.message);
     } finally {
@@ -1727,7 +1741,6 @@ function VideoAnalysis({ athletes, onDone, onNav }) {
           </select>
         </div>
 
-        {/* All 8 Official Syllabus Activities */}
         <div className="field" style={{ marginTop: '12px' }}>
           <label>Supported Activity Movement</label>
           <select value={activity} onChange={(e) => setActivity(e.target.value)}>
@@ -1744,19 +1757,18 @@ function VideoAnalysis({ athletes, onDone, onNav }) {
 
         {mode === 'upload' ? (
           <>
-            {/* 1-Click Preset Movement Library */}
             <div style={{ marginTop: '14px' }}>
               <small style={{ fontWeight: 700, color: '#334155' }}>⚡ 1-Click Preset Movement Library (Instant Scan):</small>
               <div className="sampleTray">
-                <div className="sampleCard" onClick={() => runDemoScan('squatting')}>
+                <div className="sampleCard" onClick={() => runSampleScan('squatting')}>
                   <b>🏋️ Olympic Squat</b>
                   <small>Bilateral mechanics</small>
                 </div>
-                <div className="sampleCard" onClick={() => runDemoScan('sprinting')}>
+                <div className="sampleCard" onClick={() => runSampleScan('sprinting')}>
                   <b>⚡ Sprint Gait</b>
                   <small>Velocity kinematics</small>
                 </div>
-                <div className="sampleCard" onClick={() => runDemoScan('landing')}>
+                <div className="sampleCard" onClick={() => runSampleScan('landing')}>
                   <b>🦘 Drop Jump</b>
                   <small>Landing impact</small>
                 </div>
@@ -1767,15 +1779,29 @@ function VideoAnalysis({ athletes, onDone, onNav }) {
               <div>📹</div>
               <strong>{file ? file.name : 'Select or drop movement video clip'}</strong>
               <small>Supported: MP4, MOV, AVI, MKV, WebM • Optical 3D Pose Tracking</small>
-              <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files[0])} />
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const f = e.target.files[0];
+                  setFile(f);
+                  if (f) setVideoPreviewUrl(URL.createObjectURL(f));
+                }}
+              />
             </div>
+
+            {/* Inline Video Player Preview */}
+            {videoPreviewUrl && (
+              <div style={{ marginBottom: '14px', background: '#000', borderRadius: '10px', overflow: 'hidden' }}>
+                <video src={videoPreviewUrl} controls autoPlay muted style={{ width: '100%', maxHeight: '240px', display: 'block' }} />
+              </div>
+            )}
 
             <button className="primary full" disabled={busy || (!file && !result)} onClick={submit}>
               {busy ? 'Processing video & extracting 3D pose…' : 'Upload & Analyze Movement'}
             </button>
           </>
         ) : (
-          /* Live Webcam HUD Capture Box */
           <div>
             <div className="webcamBox">
               <video ref={videoRef} className="webcamVideo" autoPlay playsInline muted />
@@ -1855,7 +1881,29 @@ function VideoAnalysis({ athletes, onDone, onNav }) {
               </small>
             </div>
 
-            {/* Plain-English Multi-Category Diagnostics */}
+            {/* In-App Processed Video Playback Card */}
+            {(result.processed_video_path || videoPreviewUrl) && (
+              <div style={{ marginTop: '12px', background: '#0f172a', padding: '12px', borderRadius: '10px', color: '#fff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <b style={{ fontSize: '12.5px', color: '#34d399' }}>📹 Pose Tracking Video Playback</b>
+                  <button
+                    type="button"
+                    className="primary small"
+                    onClick={() => onPlayVideo(videoPreviewUrl || `${API_BASE_URL}${result.processed_video_path}`)}
+                    style={{ padding: '4px 10px', fontSize: '11px' }}
+                  >
+                    ⛶ Fullscreen Player
+                  </button>
+                </div>
+                <video
+                  src={videoPreviewUrl || `${API_BASE_URL}${result.processed_video_path}`}
+                  controls
+                  style={{ width: '100%', maxHeight: '180px', borderRadius: '8px', background: '#000' }}
+                />
+              </div>
+            )}
+
+            {/* Specific Injury Vulnerability Breakdown */}
             <div style={{ marginTop: '14px', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <b style={{ fontSize: '13px', color: '#0f2942' }}>🤖 Specific Injury Vulnerability Breakdown</b>
@@ -1874,6 +1922,15 @@ function VideoAnalysis({ athletes, onDone, onNav }) {
                   <b>📋 Prescribed Corrective Exercise:</b> {(risk?.recommendations || result.recommendations)[0]}
                 </div>
               )}
+
+              <button
+                type="button"
+                className="btnSecondary"
+                style={{ width: '100%', marginTop: '12px', background: '#fff', color: '#059669', borderColor: '#10b981' }}
+                onClick={() => onNav('Results')}
+              >
+                📊 View Full Roster History in Results Tab →
+              </button>
             </div>
           </div>
         )}
@@ -1882,7 +1939,7 @@ function VideoAnalysis({ athletes, onDone, onNav }) {
   );
 }
 
-function Results({ summary }) {
+function Results({ summary, onPlayVideo }) {
   const rows = summary?.recent_analyses ?? [];
   const [selected, setSelected] = useState(null);
   const [compareA, setCompareA] = useState(null);
@@ -1920,7 +1977,6 @@ function Results({ summary }) {
         <span className="count">{rows.length} assessments</span>
       </div>
 
-      {/* Before & After Comparison Controls */}
       {rows.length >= 2 && (
         <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '14px', marginBottom: '18px' }}>
           <b style={{ fontSize: '13px', color: '#065f46', display: 'block', marginBottom: '8px' }}>
@@ -2011,15 +2067,17 @@ function Results({ summary }) {
                   </td>
                   <td>
                     {r.processed_video_path ? (
-                      <a 
-                        href={`${API_BASE_URL}${r.processed_video_path}`} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ color: '#059669', fontWeight: 700 }}
+                      <button
+                        type="button"
+                        className="btnSecondary"
+                        style={{ padding: '4px 8px', fontSize: '11px', color: '#059669', fontWeight: 700 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPlayVideo(`${API_BASE_URL}${r.processed_video_path}`);
+                        }}
                       >
                         ▶ Watch Video
-                      </a>
+                      </button>
                     ) : '—'}
                   </td>
                   <td>
@@ -2032,7 +2090,6 @@ function Results({ summary }) {
                   </td>
                 </tr>
 
-                {/* Expanded Detailed Breakdown & Corrective Exercise Cards */}
                 {isSelected && (
                   <tr>
                     <td colSpan="8" style={{ background: '#f8fafc', padding: '16px', borderLeft: '4px solid #10b981' }}>
