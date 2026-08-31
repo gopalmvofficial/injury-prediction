@@ -1,11 +1,11 @@
 """
 risk_prediction.py
 
-Milestone 3 Supervised Machine Learning & Predictive Analytics Engine.
-Integrates trained Machine Learning models trained on:
-1. `sports_multimodal_data.csv` (5,430 samples) -> Kinematic Risk Probability Classifier
-2. `Project-Injury-Dataset.csv` (9,600 samples) -> Multi-Category Specific Injury & Rehab Prescriptor
-3. `collegiate_athlete_injury_dataset.csv` (200 samples) -> ACL Specific Risk Regressor
+Supervised Machine Learning & Sports Injury Predictive Analytics Engine.
+Integrates trained Machine Learning models (Random Forest, XGBoost & Scikit-Learn):
+1. Kinematic Risk Probability Classifier (ROM, Symmetry, Trunk Lean, Fatigue)
+2. Multi-Category Specific Injury Risk & Rehabilitation Prescriptor
+3. Continuous ACL Ligament Risk Regressor
 """
 from __future__ import annotations
 
