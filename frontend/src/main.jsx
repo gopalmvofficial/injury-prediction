@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:8000'
-    : 'https://injury-prediction-backend.onrender.com');
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return window.__verified_api_base || 'http://localhost:8000';
+  }
+  return 'https://injury-prediction-backend.onrender.com';
+};
 
 const api = async (url, opts = {}) => {
   const headers = { ...(opts.headers || {}) };
@@ -21,13 +23,50 @@ const api = async (url, opts = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const r = await fetch(`${API_BASE_URL}${url}`, {
-    ...opts,
-    headers
-  });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.detail || 'Request failed');
-  return data;
+  const baseUrl = getApiBaseUrl();
+  try {
+    const r = await fetch(`${baseUrl}${url}`, {
+      ...opts,
+      headers
+    });
+    
+    if (baseUrl.includes('localhost')) {
+      window.__verified_api_base = baseUrl;
+    }
+    
+    const data = await r.json().catch(() => ({}));
+    if (r.status === 401 || r.status === 403) {
+      localStorage.removeItem('injurySenseAuth');
+      if (window.handleUnauthorized) {
+        window.handleUnauthorized();
+      }
+    }
+    if (!r.ok) throw new Error(data.detail || 'Request failed');
+    return data;
+  } catch (err) {
+    if (baseUrl === 'http://localhost:8000') {
+      try {
+        const fallbackUrl = 'http://localhost:9999';
+        const r = await fetch(`${fallbackUrl}${url}`, {
+          ...opts,
+          headers
+        });
+        window.__verified_api_base = fallbackUrl;
+        const data = await r.json().catch(() => ({}));
+        if (r.status === 401 || r.status === 403) {
+          localStorage.removeItem('injurySenseAuth');
+          if (window.handleUnauthorized) {
+            window.handleUnauthorized();
+          }
+        }
+        if (!r.ok) throw new Error(data.detail || 'Request failed');
+        return data;
+      } catch (fallbackErr) {
+        throw err;
+      }
+    }
+    throw err;
+  }
 };
 
 const Icon = ({ name, size = 18 }) => {
@@ -327,8 +366,22 @@ function App() {
       setHealth(h);
     } catch (e) {
       setToast(e.message);
+      if (e.message.includes('Unauthorized') || e.message.includes('401') || e.message.includes('Credentials') || e.message.includes('Not authenticated')) {
+        localStorage.removeItem('injurySenseAuth');
+        setAuthenticated(false);
+      }
     }
   };
+
+  useEffect(() => {
+    window.handleUnauthorized = () => {
+      localStorage.removeItem('injurySenseAuth');
+      setAuthenticated(false);
+    };
+    return () => {
+      window.handleUnauthorized = null;
+    };
+  }, []);
 
   useEffect(() => { if (authenticated) load(); }, [authenticated]);
   useEffect(() => {
