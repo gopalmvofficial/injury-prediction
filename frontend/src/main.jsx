@@ -163,7 +163,24 @@ function App() {
             <p>Sports Injury Risk Detection and Prevention System</p>
           </div>
           <div className="headerActions">
-            {currentUser && <span style={{ fontSize: '13px', color: '#475569', fontWeight: 600 }}>👤 {currentUser.name}</span>}
+            {currentUser && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', color: '#0f172a', fontWeight: 700 }}>👤 {currentUser.name}</span>
+                <span style={{
+                  fontSize: '10px',
+                  textTransform: 'uppercase',
+                  fontWeight: 800,
+                  letterSpacing: '0.5px',
+                  background: currentUser.role === 'admin' ? '#fef2f2' : currentUser.role === 'athlete' ? '#f0fdfa' : currentUser.role === 'physiotherapist' ? '#fdf4ff' : '#eff6ff',
+                  color: currentUser.role === 'admin' ? '#dc2626' : currentUser.role === 'athlete' ? '#0d9488' : currentUser.role === 'physiotherapist' ? '#a855f7' : '#2563eb',
+                  border: '1px solid currentColor',
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                }}>
+                  {currentUser.role || 'COACH'}
+                </span>
+              </div>
+            )}
             <div className="online">
               <i></i> Engine Online
             </div>
@@ -174,7 +191,7 @@ function App() {
         </header>
 
         {page === 'Dashboard' && (
-          <Dashboard summary={summary} athletes={athletes} onNav={nav} />
+          <Dashboard summary={summary} athletes={athletes} onNav={nav} userRole={currentUser?.role} />
         )}
         {page === 'Athletes' && (
           <Athletes
@@ -203,6 +220,7 @@ function App() {
 
 function AuthScreen({ onSuccess }) {
   const [mode, setMode] = useState('login');
+  const [role, setRole] = useState('coach');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -221,7 +239,7 @@ function AuthScreen({ onSuccess }) {
       const payload =
         mode === 'login'
           ? { email: form.email, password: form.password }
-          : { name: form.name, email: form.email, password: form.password };
+          : { name: form.name, email: form.email, password: form.password, role };
 
       const res = await api(endpoint, {
         method: 'POST',
@@ -238,7 +256,7 @@ function AuthScreen({ onSuccess }) {
     }
   };
 
-  const handleOAuthLogin = async (provider, email, name) => {
+  const handleOAuthLogin = async (provider, email, name, userRole = 'coach') => {
     if (!email) return setError('Please provide a valid email address.');
     setBusy(true);
     setError('');
@@ -250,6 +268,7 @@ function AuthScreen({ onSuccess }) {
           provider: provider.toLowerCase(),
           email: email,
           name: name || email.split('@')[0],
+          role: userRole,
         }),
       });
       if (!res.token) throw new Error('No authentication token received.');
@@ -282,9 +301,10 @@ function AuthScreen({ onSuccess }) {
           Quantify athlete kinematics, detect abnormal joint loading patterns, and leverage predictive machine learning for proactive injury prevention.
         </p>
         <div className="authPoints">
+          <span>✓ Role-based portals for Coaches, Athletes, Physios & Admins</span>
           <span>✓ 33 3D skeletal landmark tracking with Google MediaPipe</span>
           <span>✓ Real-time joint angle, ROM, and bilateral symmetry math</span>
-          <span>✓ Machine Learning multi-category injury risk predictions</span>
+          <span>✓ Supervised Machine Learning multi-category injury risk predictions</span>
         </div>
       </div>
 
@@ -295,9 +315,45 @@ function AuthScreen({ onSuccess }) {
         <h2>{mode === 'login' ? 'Welcome back' : 'Create an Account'}</h2>
         <p className="authSub">
           {mode === 'login'
-            ? 'Sign in to access your athlete screening dashboard.'
-            : 'Register to manage athlete profiles and movement analyses.'}
+            ? 'Sign in to access your role-specific dashboard.'
+            : 'Register to manage athletes, screenings, and rehabilitation.'}
         </p>
+
+        {/* Role Selector Tabs (Athlete / Coach / Physio / Scientist / Admin) */}
+        {mode === 'register' && (
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ fontSize: '11.5px', fontWeight: 800, color: '#334155', display: 'block', marginBottom: '6px' }}>
+              Select Account Role:
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+              {[
+                ['coach', '👨‍🏫 Coach'],
+                ['athlete', '🏃 Athlete'],
+                ['physiotherapist', '🩺 Physio'],
+                ['sports_scientist', '🔬 Scientist'],
+                ['admin', '🛡️ Admin'],
+              ].map(([rKey, rLabel]) => (
+                <button
+                  key={rKey}
+                  type="button"
+                  onClick={() => setRole(rKey)}
+                  style={{
+                    padding: '8px 4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    borderRadius: '6px',
+                    border: role === rKey ? '2px solid #0d9488' : '1px solid #cbd5e1',
+                    background: role === rKey ? '#f0fdfa' : '#fff',
+                    color: role === rKey ? '#0f766e' : '#475569',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {rLabel}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Social / OAuth Logins */}
         <div className="socials">
@@ -312,7 +368,7 @@ function AuthScreen({ onSuccess }) {
           </button>
         </div>
 
-        {/* 1-Click Role-Based Quick Demo Access */}
+        {/* 1-Click Role-Based Quick Access */}
         <div style={{ marginTop: '14px', background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
           <small style={{ fontWeight: 700, color: '#0f2942', display: 'block', marginBottom: '8px', fontSize: '11.5px' }}>
             ⚡ 1-Click Role-Based Quick Access:
@@ -320,31 +376,31 @@ function AuthScreen({ onSuccess }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button 
               type="button" 
-              onClick={() => handleOAuthLogin('Google', 'headcoach@sportsinjury.ai', 'Coach Alex Rivera')} 
+              onClick={() => handleOAuthLogin('Google', 'headcoach@sportsinjury.ai', 'Coach Alex Rivera', 'coach')} 
               style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
-              👨‍🏫 Head Coach
+              👨‍🏫 Coach
             </button>
             <button 
               type="button" 
-              onClick={() => handleOAuthLogin('Google', 'physio@sportsinjury.ai', 'Dr. Sarah Chen, PT')} 
+              onClick={() => handleOAuthLogin('Google', 'athlete@sportsinjury.ai', 'Jordan Miller (Athlete)', 'athlete')} 
+              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+            >
+              🏃 Athlete
+            </button>
+            <button 
+              type="button" 
+              onClick={() => handleOAuthLogin('Google', 'physio@sportsinjury.ai', 'Dr. Sarah Chen, PT', 'physiotherapist')} 
               style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
               🩺 Physiotherapist
             </button>
             <button 
               type="button" 
-              onClick={() => handleOAuthLogin('Google', 'scientist@sportsinjury.ai', 'Dr. Marcus Vance')} 
+              onClick={() => handleOAuthLogin('Google', 'admin@sportsinjury.ai', 'System Administrator', 'admin')} 
               style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
             >
-              🔬 Sports Scientist
-            </button>
-            <button 
-              type="button" 
-              onClick={() => handleOAuthLogin('Google', 'athlete@sportsinjury.ai', 'Jordan Miller (Athlete)')} 
-              style={{ fontSize: '11.5px', padding: '7px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-            >
-              🏃 Pro Athlete
+              🛡️ Admin
             </button>
           </div>
         </div>
@@ -368,7 +424,7 @@ function AuthScreen({ onSuccess }) {
               <button 
                 type="button" 
                 className="primary small" 
-                onClick={() => handleOAuthLogin(oauthModal, oauthEmail, oauthName)}
+                onClick={() => handleOAuthLogin(oauthModal, oauthEmail, oauthName, role)}
                 disabled={busy}
                 style={{ flex: 1, padding: '8px', fontSize: '12px' }}
               >
@@ -399,7 +455,7 @@ function AuthScreen({ onSuccess }) {
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Coach / Athlete Name"
+                placeholder="User Full Name"
               />
             </label>
           )}
@@ -410,7 +466,7 @@ function AuthScreen({ onSuccess }) {
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="you@sportsteam.com"
+              placeholder="you@domain.com"
             />
           </label>
           <label>
@@ -445,7 +501,7 @@ function AuthScreen({ onSuccess }) {
   );
 }
 
-function Dashboard({ summary, athletes, onNav }) {
+function Dashboard({ summary, athletes, onNav, userRole }) {
   const totalAthletes = summary?.total_athletes ?? athletes.length;
   const totalVideos = summary?.total_videos ?? 0;
   const highRisk = summary?.high_risk_athletes ?? 0;
