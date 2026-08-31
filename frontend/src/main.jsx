@@ -224,8 +224,11 @@ function AuthScreen({ onSuccess }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
-  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
+
+  const [googleModal, setGoogleModal] = useState(false);
+  const [googleEmail, setGoogleEmail] = useState('');
+  const [googleName, setGoogleName] = useState('');
+  const [useCustomInput, setUseCustomInput] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -255,6 +258,9 @@ function AuthScreen({ onSuccess }) {
   };
 
   const handleOAuthLogin = async (provider, email, name, userRole = 'coach') => {
+    if (!email || !email.includes('@')) {
+      return setError('Please provide a valid Google email address.');
+    }
     setBusy(true);
     setError('');
     try {
@@ -269,17 +275,13 @@ function AuthScreen({ onSuccess }) {
         }),
       });
       if (!res.token) throw new Error('No authentication token received.');
+      setGoogleModal(false);
       onSuccess(res.token, res.user);
     } catch (err) {
       setError(err.message || `${provider} authentication failed.`);
     } finally {
       setBusy(false);
     }
-  };
-
-  // Direct 1-Click Google Login
-  const handleDirectGoogleLogin = () => {
-    handleOAuthLogin('Google', 'athlete.sports@gmail.com', 'Google Athlete User', role || 'coach');
   };
 
   return (
@@ -336,9 +338,9 @@ function AuthScreen({ onSuccess }) {
                     fontSize: '11px',
                     fontWeight: 700,
                     borderRadius: '6px',
-                    border: role === rKey ? '2px solid #0d9488' : '1px solid #cbd5e1',
-                    background: role === rKey ? '#f0fdfa' : '#fff',
-                    color: role === rKey ? '#0f766e' : '#475569',
+                    border: role === rKey ? '2px solid #0ea5e9' : '1px solid #cbd5e1',
+                    background: role === rKey ? '#f0f9ff' : '#fff',
+                    color: role === rKey ? '#0284c7' : '#475569',
                     cursor: 'pointer',
                   }}
                 >
@@ -349,13 +351,12 @@ function AuthScreen({ onSuccess }) {
           </div>
         )}
 
-        {/* Direct Google 1-Click Sign-In */}
+        {/* Google Continue Button */}
         <div className="socials">
           <button 
             type="button" 
             className="googleBtn" 
-            onClick={handleDirectGoogleLogin}
-            disabled={busy}
+            onClick={() => { setGoogleModal(true); setUseCustomInput(false); setError(''); }}
           >
             <svg width="20" height="20" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -363,48 +364,12 @@ function AuthScreen({ onSuccess }) {
               <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
               <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
             </svg>
-            <span>{busy ? 'Signing in with Google…' : 'Continue with Google Account'}</span>
+            <span>Continue with Google</span>
           </button>
         </div>
-
-        {/* Custom Google Email Option Toggle */}
-        <div style={{ textAlign: 'center', marginTop: '8px' }}>
-          <button 
-            type="button" 
-            onClick={() => setShowEmailPrompt(!showEmailPrompt)}
-            style={{ border: 'none', background: 'transparent', fontSize: '11px', color: '#0d9488', fontWeight: 600, cursor: 'pointer' }}
-          >
-            {showEmailPrompt ? '▲ Hide custom Gmail' : '▼ Sign in with custom Gmail address'}
-          </button>
-        </div>
-
-        {showEmailPrompt && (
-          <div style={{ marginTop: '10px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-            <label style={{ fontSize: '11px', display: 'block', marginBottom: '4px', fontWeight: 700, color: '#334155' }}>
-              Your Google Email:
-            </label>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <input 
-                type="email" 
-                value={customGoogleEmail} 
-                onChange={(e) => setCustomGoogleEmail(e.target.value)} 
-                placeholder="you@gmail.com"
-                style={{ flex: 1, padding: '6px 10px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-              />
-              <button 
-                type="button" 
-                className="primary small"
-                disabled={busy || !customGoogleEmail}
-                onClick={() => handleOAuthLogin('Google', customGoogleEmail, customGoogleEmail.split('@')[0], role)}
-              >
-                Sign In
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* 1-Click Role-Based Quick Access */}
-        <div style={{ marginTop: '14px', background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
+        <div style={{ marginTop: '16px', background: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
           <small style={{ fontWeight: 700, color: '#0f2942', display: 'block', marginBottom: '8px', fontSize: '11.5px' }}>
             ⚡ 1-Click Role-Based Quick Access:
           </small>
@@ -496,6 +461,116 @@ function AuthScreen({ onSuccess }) {
           </button>
         </p>
       </div>
+
+      {/* Google OAuth Account Selection Modal (Matches Modern Google Account Chooser) */}
+      {googleModal && (
+        <div className="oauthModalOverlay" onClick={() => setGoogleModal(false)}>
+          <div className="oauthModalCard" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
+              <svg width="40" height="40" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              </svg>
+            </div>
+            <h3>Choose an account</h3>
+            <p>to continue to Sports Injury Intelligence</p>
+
+            {!useCustomInput ? (
+              <div>
+                {/* One-Click Detected Google Profile Option */}
+                <button
+                  type="button"
+                  className="oauthAccountOption"
+                  disabled={busy}
+                  onClick={() => handleOAuthLogin('Google', 'athlete.sports@gmail.com', 'Google User', role || 'coach')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#0284c7', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 800, fontSize: '14px' }}>
+                      G
+                    </div>
+                    <div>
+                      <b style={{ fontSize: '13px', color: '#0f172a', display: 'block' }}>Primary Google Account</b>
+                      <span style={{ fontSize: '11.5px', color: '#64748b' }}>athlete.sports@gmail.com</span>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '11px', color: '#0284c7', fontWeight: 700 }}>Continue →</span>
+                </button>
+
+                {/* Enter Custom Google Email Option */}
+                <button
+                  type="button"
+                  className="oauthAccountOption"
+                  style={{ borderStyle: 'dashed' }}
+                  onClick={() => setUseCustomInput(true)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f1f5f9', color: '#64748b', display: 'grid', placeItems: 'center', fontSize: '16px' }}>
+                      +
+                    </div>
+                    <div>
+                      <b style={{ fontSize: '13px', color: '#0f172a', display: 'block' }}>Use another Google account</b>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Sign in with any personal Gmail or Workspace</span>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); handleOAuthLogin('Google', googleEmail, googleName, role); }} style={{ textAlign: 'left' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+                  Email or phone
+                </label>
+                <input
+                  required
+                  type="email"
+                  value={googleEmail}
+                  onChange={(e) => setGoogleEmail(e.target.value)}
+                  placeholder="Enter your Gmail address"
+                  style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 12px', fontSize: '13.5px', marginBottom: '14px', boxSizing: 'border-box' }}
+                />
+
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+                  Account Role:
+                </label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 10px', fontSize: '13px', marginBottom: '18px', background: '#fff', boxSizing: 'border-box' }}
+                >
+                  <option value="coach">👨‍🏫 Coach (Team Roster & Squad Risk)</option>
+                  <option value="athlete">🏃 Athlete (Personal Movement Screening)</option>
+                  <option value="physiotherapist">🩺 Physiotherapist (Rehabilitation)</option>
+                  <option value="sports_scientist">🔬 Sports Scientist (Kinematic Modeling)</option>
+                  <option value="admin">🛡️ Administrator (System Access)</option>
+                </select>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => setUseCustomInput(false)}
+                    style={{ border: 'none', background: 'transparent', color: '#0284c7', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="submit"
+                    className="primary"
+                    disabled={busy || !googleEmail}
+                    style={{ padding: '9px 20px', fontSize: '12.5px', borderRadius: '8px' }}
+                  >
+                    {busy ? 'Signing in…' : 'Next'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div style={{ marginTop: '24px', paddingTop: '14px', borderTop: '1px solid #f1f5f9', fontSize: '11px', color: '#94a3b8', textAlign: 'left', lineHeight: 1.4 }}>
+              To continue, Google will share your name, email address, and profile picture with Sports Injury Intelligence.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -904,7 +979,7 @@ function VideoAnalysis({ athletes, onDone }) {
             <div style={{ marginTop: '14px', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <b style={{ fontSize: '13px', color: '#0f2942' }}>🤖 Specific Injury Category Diagnostics</b>
-                <span style={{ fontSize: '11px', background: '#0f766e', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>Trained ML Model</span>
+                <span style={{ fontSize: '11px', background: '#0284c7', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>Trained ML Model</span>
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12.5px' }}>
@@ -915,7 +990,7 @@ function VideoAnalysis({ athletes, onDone }) {
               </div>
 
               {(risk?.recommendations || result.recommendations) && (risk?.recommendations?.length > 0 || result.recommendations?.length > 0) && (
-                <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #cbd5e1', fontSize: '12px', color: '#0f766e' }}>
+                <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #cbd5e1', fontSize: '12px', color: '#0284c7' }}>
                   <b>📋 AI Prescribed Program:</b> {(risk?.recommendations || result.recommendations)[0]}
                 </div>
               )}
@@ -957,7 +1032,7 @@ function Results({ summary }) {
       <div className="panelHead">
         <div>
           <h3>Movement Screening Results & History</h3>
-          <small style={{ color: '#0f766e', fontWeight: 600 }}>Trained Supervised Models: XGBoost & Random Forest (ROC-AUC: 0.807)</small>
+          <small style={{ color: '#0284c7', fontWeight: 600 }}>Trained Supervised Models: XGBoost & Random Forest (ROC-AUC: 0.807)</small>
         </div>
         <span className="count">{rows.length} assessments</span>
       </div>
@@ -1009,7 +1084,7 @@ function Results({ summary }) {
                         target="_blank" 
                         rel="noreferrer" 
                         onClick={(e) => e.stopPropagation()}
-                        style={{ color: '#0f766e', fontWeight: 700 }}
+                        style={{ color: '#0284c7', fontWeight: 700 }}
                       >
                         ▶ Watch Video
                       </a>
@@ -1028,7 +1103,7 @@ function Results({ summary }) {
                 {/* Expanded Detailed Breakdown */}
                 {isSelected && (
                   <tr>
-                    <td colSpan="8" style={{ background: '#f8fafc', padding: '16px', borderLeft: '4px solid #0d9488' }}>
+                    <td colSpan="8" style={{ background: '#f8fafc', padding: '16px', borderLeft: '4px solid #0ea5e9' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
                         <div>
                           <b style={{ color: '#0f2942', fontSize: '13px' }}>🤖 Specific Injury Category Diagnostics:</b>
@@ -1050,7 +1125,7 @@ function Results({ summary }) {
 
                         <div>
                           <b style={{ color: '#0f2942', fontSize: '13px' }}>📋 AI-Prescribed Corrective Rehabilitation:</b>
-                          <div style={{ marginTop: '10px', fontSize: '12px', color: '#0f766e', background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <div style={{ marginTop: '10px', fontSize: '12px', color: '#0284c7', background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                             • <b>Program:</b> {r.recommendations?.[0] || 'Targeted Physiotherapy & Bilateral Symmetry Drills'}
                             <br />
                             • <b>Expected Recovery:</b> 4–6 weeks supervised physical conditioning.
