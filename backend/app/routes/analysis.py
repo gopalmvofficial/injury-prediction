@@ -41,7 +41,22 @@ router = APIRouter(prefix="/api", tags=["analysis"])
 from app.config import RESULTS_DIR
 
 
-def _analysis_to_schema(a: MovementAnalysisModel) -> AnalysisResult:
+def _analysis_to_schema(a: MovementAnalysisModel, db: Optional[Session] = None) -> AnalysisResult:
+    risk_score = None
+    risk_level = None
+    recs = []
+
+    if db is not None:
+        r_rec = db.query(RiskResultModel).filter(RiskResultModel.analysis_id == a.id).first()
+        if r_rec:
+            risk_score = r_rec.risk_score
+            risk_level = r_rec.risk_level
+            if r_rec.recommendations_json:
+                try:
+                    recs = json.loads(r_rec.recommendations_json)
+                except Exception:
+                    recs = []
+
     return AnalysisResult(
         analysis_id=a.id,
         athlete_id=a.athlete_id,
@@ -56,6 +71,9 @@ def _analysis_to_schema(a: MovementAnalysisModel) -> AnalysisResult:
         biomechanics=json.loads(a.biomechanics_json) if a.biomechanics_json else None,
         observations=json.loads(a.observations_json) if a.observations_json else [],
         processed_video_path=a.processed_video_path,
+        risk_score=risk_score,
+        risk_level=risk_level,
+        recommendations=recs,
         error=a.error,
     )
 
@@ -164,7 +182,7 @@ def analyze_video(payload: AnalyzeRequest, db: Session = Depends(get_db),
     db.add(risk_record)
     db.commit()
 
-    return _analysis_to_schema(analysis)
+    return _analysis_to_schema(analysis, db)
 
 
 @router.get("/analysis/{analysis_id}", response_model=AnalysisResult)
@@ -178,7 +196,7 @@ def get_analysis(analysis_id: str, db: Session = Depends(get_db),
     )
     if not analysis:
         raise HTTPException(status_code=404, detail=f"Analysis '{analysis_id}' not found.")
-    return _analysis_to_schema(analysis)
+    return _analysis_to_schema(analysis, db)
 
 
 @router.get("/athletes/{athlete_id}/analyses", response_model=list[AnalysisResult])
