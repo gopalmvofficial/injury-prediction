@@ -387,6 +387,22 @@ header p {
   width: 100%;
 }
 
+.btnSecondary {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+.btnSecondary:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
 /* Metric Cards */
 .cards {
   display: grid;
@@ -674,6 +690,110 @@ header p {
   cursor: pointer;
 }
 
+/* Demo Tray Cards */
+.sampleTray {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sampleCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sampleCard:hover {
+  background: #ecfdf5;
+  border-color: #10b981;
+  transform: translateY(-2px);
+}
+
+.sampleCard b {
+  display: block;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.sampleCard small {
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+/* Interactive Canvas Box */
+.canvasBox {
+  background: #090e17;
+  border-radius: 16px;
+  padding: 16px;
+  color: #fff;
+  border: 1px solid #1e293b;
+  position: relative;
+  overflow: hidden;
+}
+
+.canvasBox canvas {
+  width: 100%;
+  height: 240px;
+  background: radial-gradient(circle at center, #0f1c30 0%, #070a12 100%);
+  border-radius: 12px;
+  display: block;
+}
+
+/* Slider Controls */
+.sliderControl {
+  margin: 10px 0;
+}
+
+.sliderControl label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #cbd5e1;
+  margin-bottom: 4px;
+}
+
+.sliderControl input[type="range"] {
+  width: 100%;
+  accent-color: #10b981;
+}
+
+/* Voice Briefing Button */
+.voiceBtn {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.voiceBtn:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  transform: translateY(-1px);
+}
+
+.voiceBtn.speaking {
+  background: #ef4444;
+  animation: pulseVoice 1.5s infinite;
+}
+
+@keyframes pulseVoice {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
 /* Results Display */
 .result {
   margin-top: 18px;
@@ -929,7 +1049,7 @@ header p {
   cursor: pointer;
 }
 
-/* Google OAuth Modal Overlay */
+/* OAuth Modal Overlay */
 .oauthModalOverlay {
   position: fixed;
   inset: 0;
