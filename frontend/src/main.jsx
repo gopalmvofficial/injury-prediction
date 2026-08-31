@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
@@ -228,7 +228,7 @@ function App() {
     <div className="app">
       <aside>
         <div className="brand">
-          <div className="brandIcon">ΓÜí</div>
+          <div className="brandIcon">⚡</div>
           <div>
             <b>SPORTS INJURY RISK</b>
             <span>Kinetic Vision Intelligence</span>
@@ -241,12 +241,12 @@ function App() {
         </div>
 
         {[
-          { name: 'Dashboard', icon: 'Γûª' },
-          { name: 'Athletes', icon: 'ΓÖÖ' },
-          { name: 'Video Analysis', icon: 'Γùë' },
-          { name: 'Kinematics Lab', icon: '≡ƒ⌐╗' },
-          { name: 'Results', icon: 'Γûñ' },
-          { name: 'Reports', icon: 'Γûú' },
+          { name: 'Dashboard', icon: '📊' },
+          { name: 'Athletes', icon: '🏃' },
+          { name: 'Video Analysis', icon: '🎥' },
+          { name: 'Kinematics Lab', icon: '🦴' },
+          { name: 'Results', icon: '📈' },
+          { name: 'Reports', icon: '📄' },
         ].map(({ name, icon }) => (
           <button
             className={page === name ? 'nav active' : 'nav'}
@@ -260,7 +260,7 @@ function App() {
 
         <div className="sidefoot">
           Computer Vision Engine<br />
-          OpenCV ΓÇó MediaPipe ΓÇó Supervised ML
+          OpenCV • MediaPipe • Supervised ML
         </div>
       </aside>
 
@@ -290,7 +290,7 @@ function App() {
                   boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                 }}
               >
-                <span style={{ fontSize: '13px', color: '#0f172a', fontWeight: 700 }}>≡ƒæñ {currentUser.name}</span>
+                <span style={{ fontSize: '13px', color: '#0f172a', fontWeight: 700 }}>👤 {currentUser.name}</span>
                 <span style={{
                   fontSize: '10px',
                   textTransform: 'uppercase',
@@ -302,7 +302,7 @@ function App() {
                   padding: '2px 8px',
                   borderRadius: '9999px',
                 }}>
-                  {currentUser.role || 'COACH'} Γ£Å∩╕Å
+                  {currentUser.role || 'COACH'} ✏️
                 </span>
               </button>
             )}
@@ -362,13 +362,13 @@ function App() {
           <div className="oauthModalOverlay" onClick={() => setVideoModalUrl(null)}>
             <div className="oauthModalCard" style={{ width: 'min(700px, 95vw)', padding: '20px' }} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <b style={{ fontSize: '15px', color: '#0f172a' }}>Γû╢ Movement Screening Video Playback</b>
+                <b style={{ fontSize: '15px', color: '#0f172a' }}>▶ Movement Screening Video Playback</b>
                 <button
                   type="button"
                   onClick={() => setVideoModalUrl(null)}
                   style={{ border: 'none', background: 'transparent', fontSize: '18px', cursor: 'pointer', color: '#64748b' }}
                 >
-                  Γ£ò
+                  ✕
                 </button>
               </div>
               <video
@@ -407,11 +407,11 @@ function App() {
                   onChange={(e) => setProfileForm({ ...profileForm, role: e.target.value })}
                   style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 10px', fontSize: '13px', marginBottom: '22px', background: '#fff', boxSizing: 'border-box' }}
                 >
-                  <option value="coach">≡ƒæ¿ΓÇì≡ƒÅ½ Coach (Team Roster & Squad Risk)</option>
-                  <option value="athlete">≡ƒÅâ Athlete (Personal Movement Screening)</option>
-                  <option value="physiotherapist">≡ƒ⌐║ Physiotherapist (Rehabilitation)</option>
-                  <option value="sports_scientist">≡ƒö¼ Sports Scientist (Kinematic Modeling)</option>
-                  <option value="admin">≡ƒ¢í∩╕Å Administrator (System Access)</option>
+                  <option value="coach">👨‍🏫 Coach (Team Roster & Squad Risk)</option>
+                  <option value="athlete">🏃 Athlete (Personal Movement Screening)</option>
+                  <option value="physiotherapist">🩺 Physiotherapist (Rehabilitation)</option>
+                  <option value="sports_scientist">🔬 Sports Scientist (Kinematic Modeling)</option>
+                  <option value="admin">🛡️ Administrator (System Access)</option>
                 </select>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -554,9 +554,9 @@ function EditAthleteModal({ athlete, onClose, onSaved }) {
               value={form.training_load}
               onChange={(e) => setForm({ ...form, training_load: e.target.value })}
             >
-              <option value="Low">Low (1ΓÇô3 sessions/week)</option>
-              <option value="Moderate">Moderate (4ΓÇô5 sessions/week)</option>
-              <option value="High">High (6ΓÇô8 sessions/week)</option>
+              <option value="Low">Low (1–3 sessions/week)</option>
+              <option value="Moderate">Moderate (4–5 sessions/week)</option>
+              <option value="High">High (6–8 sessions/week)</option>
               <option value="Extreme">Extreme (Two-a-day Pro Training)</option>
             </select>
           </label>
@@ -573,7 +573,7 @@ function EditAthleteModal({ athlete, onClose, onSaved }) {
               Cancel
             </button>
             <button type="submit" className="primary" disabled={busy}>
-              {busy ? 'SavingΓÇª' : 'Save Changes'}
+              {busy ? 'Saving…' : 'Save Changes'}
             </button>
           </div>
         </form>
@@ -673,7 +673,7 @@ function AuthScreen({ onSuccess }) {
   return (
     <div className="authShell">
       <div className="authVisual">
-        <div className="authLogo">ΓÜí</div>
+        <div className="authLogo">⚡</div>
         <div className="eyebrow">SPORTS MOTION INTELLIGENCE</div>
         <h1>
           Movement Data.<br />
@@ -683,10 +683,10 @@ function AuthScreen({ onSuccess }) {
           Quantify athlete kinematics, detect abnormal joint loading patterns, and leverage predictive machine learning for proactive injury prevention.
         </p>
         <div className="authPoints">
-          <span>Γ£ô Role-based access for Athletes, Coaches, Physios, Scientists & Admins</span>
-          <span>Γ£ô 33 3D skeletal landmark tracking with Google MediaPipe</span>
-          <span>Γ£ô Real-time joint angle, ROM, and bilateral symmetry math</span>
-          <span>Γ£ô Supervised Machine Learning multi-category injury risk predictions</span>
+          <span>✓ Role-based access for Athletes, Coaches, Physios, Scientists & Admins</span>
+          <span>✓ 33 3D skeletal landmark tracking with Google MediaPipe</span>
+          <span>✓ Real-time joint angle, ROM, and bilateral symmetry math</span>
+          <span>✓ Supervised Machine Learning multi-category injury risk predictions</span>
         </div>
       </div>
 
@@ -709,11 +709,11 @@ function AuthScreen({ onSuccess }) {
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
               {[
-                ['coach', '≡ƒæ¿ΓÇì≡ƒÅ½ Coach'],
-                ['athlete', '≡ƒÅâ Athlete'],
-                ['physiotherapist', '≡ƒ⌐║ Physio'],
-                ['sports_scientist', '≡ƒö¼ Scientist'],
-                ['admin', '≡ƒ¢í∩╕Å Admin'],
+                ['coach', '👨‍🏫 Coach'],
+                ['athlete', '🏃 Athlete'],
+                ['physiotherapist', '🩺 Physio'],
+                ['sports_scientist', '🔬 Scientist'],
+                ['admin', '🛡️ Admin'],
               ].map(([rKey, rLabel]) => (
                 <button
                   key={rKey}
@@ -758,7 +758,7 @@ function AuthScreen({ onSuccess }) {
             className="googleBtn" 
             onClick={() => { setOauthModal('Apple'); setError(''); }}
           >
-            <span style={{ fontSize: '18px', lineHeight: 1 }}>∩ú┐</span>
+            <span style={{ fontSize: '18px', lineHeight: 1 }}></span>
             <span>Continue with Apple ID</span>
           </button>
 
@@ -767,7 +767,7 @@ function AuthScreen({ onSuccess }) {
             className="googleBtn" 
             onClick={() => { setOauthModal('Microsoft'); setError(''); }}
           >
-            <span style={{ color: '#00a4ef', fontSize: '16px' }}>Γûª</span>
+            <span style={{ color: '#00a4ef', fontSize: '16px' }}>⊞</span>
             <span>Continue with Microsoft 365</span>
           </button>
         </div>
@@ -807,11 +807,11 @@ function AuthScreen({ onSuccess }) {
               type="password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"
+              placeholder="••••••••"
             />
           </label>
           <button className="primary authSubmit" disabled={busy}>
-            {busy ? 'Please waitΓÇª' : mode === 'login' ? 'Sign in' : 'Create account'}
+            {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
@@ -843,12 +843,12 @@ function AuthScreen({ onSuccess }) {
               )}
               {oauthModal === 'Apple' && (
                 <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#000', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '24px' }}>
-                  ∩ú┐
+                  
                 </div>
               )}
               {oauthModal === 'Microsoft' && (
                 <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: '#00a4ef', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '22px' }}>
-                  Γûª
+                  ⊞
                 </div>
               )}
             </div>
@@ -873,7 +873,7 @@ function AuthScreen({ onSuccess }) {
                     </div>
                   </div>
                   <span style={{ fontSize: '11px', color: '#059669', fontWeight: 700, background: '#ecfdf5', padding: '3px 8px', borderRadius: '9999px' }}>
-                    Recent Γå╡
+                    Recent ↵
                   </span>
                 </button>
 
@@ -916,11 +916,11 @@ function AuthScreen({ onSuccess }) {
                   onChange={(e) => setRole(e.target.value)}
                   style={{ width: '100%', height: '46px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 10px', fontSize: '13px', marginBottom: '20px', background: '#fff', boxSizing: 'border-box' }}
                 >
-                  <option value="coach">≡ƒæ¿ΓÇì≡ƒÅ½ Coach (Team Roster & Squad Risk)</option>
-                  <option value="athlete">≡ƒÅâ Athlete (Personal Movement Screening)</option>
-                  <option value="physiotherapist">≡ƒ⌐║ Physiotherapist (Rehabilitation)</option>
-                  <option value="sports_scientist">≡ƒö¼ Sports Scientist (Kinematic Modeling)</option>
-                  <option value="admin">≡ƒ¢í∩╕Å Administrator (System Access)</option>
+                  <option value="coach">👨‍🏫 Coach (Team Roster & Squad Risk)</option>
+                  <option value="athlete">🏃 Athlete (Personal Movement Screening)</option>
+                  <option value="physiotherapist">🩺 Physiotherapist (Rehabilitation)</option>
+                  <option value="sports_scientist">🔬 Sports Scientist (Kinematic Modeling)</option>
+                  <option value="admin">🛡️ Administrator (System Access)</option>
                 </select>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -930,7 +930,7 @@ function AuthScreen({ onSuccess }) {
                       onClick={() => setUseCustomInput(false)}
                       style={{ border: 'none', background: 'transparent', color: '#059669', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
                     >
-                      ΓåÉ Back
+                      ← Back
                     </button>
                   )}
                   <button
@@ -939,7 +939,7 @@ function AuthScreen({ onSuccess }) {
                     disabled={busy || !oauthEmail}
                     style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '8px', marginLeft: 'auto' }}
                   >
-                    {busy ? 'Signing inΓÇª' : `Sign in with ${oauthModal}`}
+                    {busy ? 'Signing in…' : `Sign in with ${oauthModal}`}
                   </button>
                 </div>
               </form>
@@ -978,17 +978,17 @@ function Dashboard({ summary, athletes, onNav, userRole }) {
       </section>
 
       <div className="cards">
-        <Card title="Registered Athletes" value={totalAthletes} icon="ΓÖÖ" />
-        <Card title="Videos Analyzed" value={totalVideos} icon="Γùë" />
-        <Card title="Squad Readiness Index" value={`${readinessScore}%`} icon="ΓÜí" />
-        <Card title="AI Engine Status" value="ONLINE" icon="Γ£ô" />
+        <Card title="Registered Athletes" value={totalAthletes} icon="🏃" />
+        <Card title="Videos Analyzed" value={totalVideos} icon="🎥" />
+        <Card title="Squad Readiness Index" value={`${readinessScore}%`} icon="⚡" />
+        <Card title="AI Engine Status" value="ONLINE" icon="✅" />
       </div>
 
       <div className="grid2">
         <section className="panel">
           <div className="panelHead">
             <h3>Recent Movement Screenings</h3>
-            <button onClick={() => onNav('Results')}>View all ΓåÆ</button>
+            <button onClick={() => onNav('Results')}>View all →</button>
           </div>
           <AnalysisTable rows={recentAnalyses} />
         </section>
@@ -1162,10 +1162,10 @@ function KinematicsLab() {
       if (label) ctx.fillText(label, x + 10, y + 3);
     };
 
-    drawJoint(hipX, hipY, '#38bdf8', `Hip: ${hipAngle}┬░`);
-    drawJoint(kneeX, kneeY, kneeColor, `Knee: ${kneeAngle}┬░`);
+    drawJoint(hipX, hipY, '#38bdf8', `Hip: ${hipAngle}°`);
+    drawJoint(kneeX, kneeY, kneeColor, `Knee: ${kneeAngle}°`);
     drawJoint(ankleX, ankleY, '#10b981', 'Ankle');
-    drawJoint(neckX, neckY, '#818cf8', `Trunk: ${trunkLean}┬░`);
+    drawJoint(neckX, neckY, '#818cf8', `Trunk: ${trunkLean}°`);
   }, [kneeAngle, hipAngle, trunkLean]);
 
   return (
@@ -1173,7 +1173,7 @@ function KinematicsLab() {
       <section className="panel">
         <div className="panelHead">
           <div>
-            <h3>≡ƒ⌐╗ 3D Skeletal Motion Canvas (Live Wireframe Simulator)</h3>
+            <h3>🩻 3D Skeletal Motion Canvas (Live Wireframe Simulator)</h3>
             <small style={{ color: '#059669', fontWeight: 600 }}>Interactive dot-product joint angle telemetry</small>
           </div>
           <button
@@ -1181,7 +1181,7 @@ function KinematicsLab() {
             className="btnSecondary"
             onClick={() => setAnimating(!animating)}
           >
-            {animating ? 'ΓÅ╣ Pause Cycle' : 'Γû╢ Play Movement Cycle'}
+            {animating ? '⏹ Pause Cycle' : '▶ Play Movement Cycle'}
           </button>
         </div>
 
@@ -1193,7 +1193,7 @@ function KinematicsLab() {
           <div className="sliderControl">
             <label>
               <span>Knee Flexion:</span>
-              <b>{kneeAngle}┬░</b>
+              <b>{kneeAngle}°</b>
             </label>
             <input
               type="range"
@@ -1207,7 +1207,7 @@ function KinematicsLab() {
           <div className="sliderControl">
             <label>
               <span>Hip Flexion:</span>
-              <b>{hipAngle}┬░</b>
+              <b>{hipAngle}°</b>
             </label>
             <input
               type="range"
@@ -1221,7 +1221,7 @@ function KinematicsLab() {
           <div className="sliderControl">
             <label>
               <span>Spinal Trunk Lean:</span>
-              <b>{trunkLean}┬░</b>
+              <b>{trunkLean}°</b>
             </label>
             <input
               type="range"
@@ -1234,13 +1234,13 @@ function KinematicsLab() {
         </div>
 
         <div style={{ marginTop: '20px', background: '#090e17', borderRadius: '14px', padding: '16px', border: '1px solid #1e293b' }}>
-          <b style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '8px' }}>≡ƒ⌐╗ Anatomical Joint Heatmap</b>
+          <b style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '8px' }}>🩻 Anatomical Joint Heatmap</b>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
             {[
-              ['knee', '≡ƒª╡ Knee / ACL', valgusAngle > 12 ? 'high' : 'low', `${kneeAngle}┬░ ROM (Shear: ${valgusAngle > 12 ? 'Elevated' : 'Safe'})`],
-              ['hamstring', '≡ƒÅâ Hamstring', injuryHistory === 'ACL' ? 'moderate' : 'low', 'Terminal Swing Elasticity: 92%'],
-              ['ankle', '≡ƒª╢ Ankle / Dorsi', injuryHistory === 'Ankle' ? 'high' : 'low', 'Ground Stability: 94%'],
-              ['spine', '≡ƒºÿ Lumbar Spine', trunkLean > 25 ? 'moderate' : 'low', `Trunk Tilt: ${trunkLean}┬░`],
+              ['knee', '🦵 Knee / ACL', valgusAngle > 12 ? 'high' : 'low', `${kneeAngle}° ROM (Shear: ${valgusAngle > 12 ? 'Elevated' : 'Safe'})`],
+              ['hamstring', '🏃 Hamstring', injuryHistory === 'ACL' ? 'moderate' : 'low', 'Terminal Swing Elasticity: 92%'],
+              ['ankle', '🦶 Ankle / Dorsi', injuryHistory === 'Ankle' ? 'high' : 'low', 'Ground Stability: 94%'],
+              ['spine', '🧘 Lumbar Spine', trunkLean > 25 ? 'moderate' : 'low', `Trunk Tilt: ${trunkLean}°`],
             ].map(([id, label, status, detail]) => (
               <div
                 key={id}
@@ -1263,7 +1263,7 @@ function KinematicsLab() {
 
       <section className="panel">
         <div className="panelHead">
-          <h3>ΓÜí "What-If" Injury Risk Sandbox</h3>
+          <h3>⚡ "What-If" Injury Risk Sandbox</h3>
         </div>
         <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 14px' }}>
           Simulate how athlete training variables and dynamic knee valgus impact ML injury vulnerability.
@@ -1272,9 +1272,9 @@ function KinematicsLab() {
         <div className="field">
           <label>Training Load Volume</label>
           <select value={trainingLoad} onChange={(e) => setTrainingLoad(e.target.value)}>
-            <option value="Low">Low (1ΓÇô3 sessions/week)</option>
-            <option value="Moderate">Moderate (4ΓÇô5 sessions/week)</option>
-            <option value="High">High (6ΓÇô8 sessions/week)</option>
+            <option value="Low">Low (1–3 sessions/week)</option>
+            <option value="Moderate">Moderate (4–5 sessions/week)</option>
+            <option value="High">High (6–8 sessions/week)</option>
             <option value="Extreme">Extreme (Two-a-day Pro Training)</option>
           </select>
         </div>
@@ -1291,7 +1291,7 @@ function KinematicsLab() {
         <div className="sliderControl" style={{ marginTop: '12px' }}>
           <label>
             <span style={{ color: '#334155' }}>Dynamic Knee Valgus Angle:</span>
-            <b style={{ color: valgusAngle > 12 ? '#ef4444' : '#059669' }}>{valgusAngle}┬░ Inward</b>
+            <b style={{ color: valgusAngle > 12 ? '#ef4444' : '#059669' }}>{valgusAngle}° Inward</b>
           </label>
           <input
             type="range"
@@ -1307,7 +1307,7 @@ function KinematicsLab() {
           <strong>{sandboxLevel} RISK</strong>
           <b>{sandboxScore}%</b>
           <small>
-            {valgusAngle > 12 ? 'ΓÜá Excessive valgus shearing increases ACL tear probability.' : 'Γ£ô Normal alignment.'}
+            {valgusAngle > 12 ? '⚠ Excessive valgus shearing increases ACL tear probability.' : '✓ Normal alignment.'}
           </small>
         </div>
       </section>
@@ -1473,9 +1473,9 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
               value={form.training_load}
               onChange={(e) => setForm({ ...form, training_load: e.target.value })}
             >
-              <option value="Low">Low (1ΓÇô3 sessions/week)</option>
-              <option value="Moderate">Moderate (4ΓÇô5 sessions/week)</option>
-              <option value="High">High (6ΓÇô8 sessions/week)</option>
+              <option value="Low">Low (1–3 sessions/week)</option>
+              <option value="Moderate">Moderate (4–5 sessions/week)</option>
+              <option value="High">High (6–8 sessions/week)</option>
               <option value="Extreme">Extreme (Two-a-day Pro Training)</option>
             </select>
           </label>
@@ -1503,10 +1503,10 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
               className="btnSecondary"
               onClick={() => setViewMode(viewMode === 'list' ? 'matrix' : 'list')}
             >
-              {viewMode === 'list' ? '≡ƒæÑ Squad Matrix' : '≡ƒôï List View'}
+              {viewMode === 'list' ? '👥 Squad Matrix' : '📋 List View'}
             </button>
             <button type="button" onClick={exportCSV} style={{ color: '#059669', fontWeight: 700 }}>
-              ≡ƒôÑ CSV
+              📥 CSV
             </button>
           </div>
         </div>
@@ -1514,7 +1514,7 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
         <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
           <input
             type="text"
-            placeholder="≡ƒöì Search athlete by name or sportΓÇª"
+            placeholder="🔍 Search athlete by name or sport…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px' }}
@@ -1525,7 +1525,7 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
             style={{ background: filterRisk === 'HIGH' ? '#fef2f2' : '#fff', color: filterRisk === 'HIGH' ? '#dc2626' : '#334155' }}
             onClick={() => setFilterRisk(filterRisk === 'HIGH' ? 'ALL' : 'HIGH')}
           >
-            {filterRisk === 'HIGH' ? '≡ƒö┤ High Risk Only' : 'Filter: All'}
+            {filterRisk === 'HIGH' ? '🔴 High Risk Only' : 'Filter: All'}
           </button>
         </div>
 
@@ -1561,7 +1561,7 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
                       }}
                       style={{ padding: '4px 10px', fontSize: '11px' }}
                     >
-                      Γ£Å∩╕Å Edit
+                      ✏️ Edit
                     </button>
                   </td>
                 </tr>
@@ -1585,10 +1585,10 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
                   }}
                 >
                   <b style={{ fontSize: '13px', color: '#0f172a', display: 'block' }}>{a.name}</b>
-                  <span style={{ fontSize: '11.5px', color: '#64748b' }}>{a.sport} ΓÇó {a.position || 'Field'}</span>
+                  <span style={{ fontSize: '11.5px', color: '#64748b' }}>{a.sport} • {a.position || 'Field'}</span>
                   <div style={{ marginTop: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '10.5px', fontWeight: 800, color: isAlert ? '#dc2626' : '#16a34a' }}>
-                      {isAlert ? 'ΓÜá Medical Review Flag' : 'Γ£ô Cleared for Play'}
+                      {isAlert ? '⚠ Medical Review Flag' : '✓ Cleared for Play'}
                     </span>
                     <span className="badge low" style={{ fontSize: '10px' }}>{a.training_load || 'Moderate'}</span>
                   </div>
@@ -1610,10 +1610,10 @@ function AthleteDetails({ athlete, onEdit, onBack }) {
     <section className="panel detail">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <button onClick={onBack} style={{ border: 'none', background: 'transparent', color: '#059669', fontWeight: 700, cursor: 'pointer' }}>
-          ΓåÉ Back to Athlete Roster
+          ← Back to Athlete Roster
         </button>
         <button onClick={onEdit} className="primary small">
-          Γ£Å∩╕Å Edit Athlete Profile
+          ✏️ Edit Athlete Profile
         </button>
       </div>
 
@@ -1621,13 +1621,13 @@ function AthleteDetails({ athlete, onEdit, onBack }) {
         <div className="avatar">{athlete.name?.[0]}</div>
         <div>
           <h2>{athlete.name}</h2>
-          <p>{athlete.sport} ΓÇó Position: {athlete.position || 'Field'} ΓÇó ID: #{athlete.athlete_id || athlete.id}</p>
+          <p>{athlete.sport} • Position: {athlete.position || 'Field'} • ID: #{athlete.athlete_id || athlete.id}</p>
         </div>
       </div>
       <div className="cards">
         <Card title="Age" value={`${athlete.age} yrs`} />
-        <Card title="Weight" value={athlete.weight_kg ? `${athlete.weight_kg} kg` : 'ΓÇö'} />
-        <Card title="Height" value={athlete.height_cm ? `${athlete.height_cm} cm` : 'ΓÇö'} />
+        <Card title="Weight" value={athlete.weight_kg ? `${athlete.weight_kg} kg` : '—'} />
+        <Card title="Height" value={athlete.height_cm ? `${athlete.height_cm} cm` : '—'} />
         <Card title="Match Readiness" value={`${readiness}%`} />
       </div>
       <h3>Medical & Injury History</h3>
@@ -1785,14 +1785,14 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
               className={mode === 'upload' ? 'primary small' : 'btnSecondary'}
               onClick={() => { setMode('upload'); stopWebcam(); }}
             >
-              ≡ƒôü Video File
+              📁 Video File
             </button>
             <button
               type="button"
               className={mode === 'webcam' ? 'primary small' : 'btnSecondary'}
               onClick={() => { setMode('webcam'); startWebcam(); }}
             >
-              ≡ƒô╣ Live Camera
+              📹 Live Camera
             </button>
           </div>
         </div>
@@ -1809,13 +1809,13 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
             </select>
           ) : (
             <div style={{ padding: '10px 14px', background: '#fff1f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#be123c', fontSize: '12px', marginTop: '6px' }}>
-              ΓÜá No athlete profile registered yet.{' '}
+              ⚠ No athlete profile registered yet.{' '}
               <button
                 type="button"
                 onClick={() => onNav('Athletes')}
                 style={{ background: 'none', border: 'none', color: '#059669', fontWeight: 800, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
               >
-                Create an Athlete first ΓåÆ
+                Create an Athlete first →
               </button>
             </div>
           )}
@@ -1824,41 +1824,41 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
         <div className="field" style={{ marginTop: '12px' }}>
           <label>Supported Activity Movement</label>
           <select value={activity} onChange={(e) => setActivity(e.target.value)}>
-            <option value="squatting">≡ƒÅï∩╕Å Squatting (Bilateral Knee & Hip Mechanics)</option>
-            <option value="running">≡ƒÅâ Running (Gait Mechanics & Stride Cadence)</option>
-            <option value="sprinting">ΓÜí Sprinting (Max Velocity Biomechanics)</option>
-            <option value="jumping">≡ƒªÿ Jumping (Vertical Propulsion & Takeoff)</option>
-            <option value="landing">≡ƒÄ» Landing (Deceleration & Impact Attenuation)</option>
-            <option value="throwing">ΓÜ╛ Throwing (Kinetic Chain & Shoulder Torque)</option>
-            <option value="cutting">≡ƒöä Cutting Movements (Lateral ACL Shear & Valgus)</option>
-            <option value="sport_specific_drills">ΓÜ╜ Sport-Specific Drills (Agility & Joint Integrity)</option>
+            <option value="squatting">🏋️ Squatting (Bilateral Knee & Hip Mechanics)</option>
+            <option value="running">🏃 Running (Gait Mechanics & Stride Cadence)</option>
+            <option value="sprinting">⚡ Sprinting (Max Velocity Biomechanics)</option>
+            <option value="jumping">🦘 Jumping (Vertical Propulsion & Takeoff)</option>
+            <option value="landing">🎯 Landing (Deceleration & Impact Attenuation)</option>
+            <option value="throwing">⚾ Throwing (Kinetic Chain & Shoulder Torque)</option>
+            <option value="cutting">🔄 Cutting Movements (Lateral ACL Shear & Valgus)</option>
+            <option value="sport_specific_drills">⚽ Sport-Specific Drills (Agility & Joint Integrity)</option>
           </select>
         </div>
 
         {mode === 'upload' ? (
           <>
             <div style={{ marginTop: '14px' }}>
-              <small style={{ fontWeight: 700, color: '#334155' }}>ΓÜí 1-Click Preset Movement Library (Instant Scan):</small>
+              <small style={{ fontWeight: 700, color: '#334155' }}>⚡ 1-Click Preset Movement Library (Instant Scan):</small>
               <div className="sampleTray">
                 <div className="sampleCard" onClick={() => runSampleScan('squatting')}>
-                  <b>≡ƒÅï∩╕Å Olympic Squat</b>
+                  <b>🏋️ Olympic Squat</b>
                   <small>Bilateral mechanics</small>
                 </div>
                 <div className="sampleCard" onClick={() => runSampleScan('sprinting')}>
-                  <b>ΓÜí Sprint Gait</b>
+                  <b>⚡ Sprint Gait</b>
                   <small>Velocity kinematics</small>
                 </div>
                 <div className="sampleCard" onClick={() => runSampleScan('landing')}>
-                  <b>≡ƒªÿ Drop Jump</b>
+                  <b>🦘 Drop Jump</b>
                   <small>Landing impact</small>
                 </div>
               </div>
             </div>
 
             <div className="drop">
-              <div>≡ƒô╣</div>
+              <div>📹</div>
               <strong>{file ? file.name : 'Select or drop movement video clip'}</strong>
-              <small>Supported: MP4, MOV, AVI, MKV, WebM ΓÇó Optical 3D Pose Tracking</small>
+              <small>Supported: MP4, MOV, AVI, MKV, WebM • Optical 3D Pose Tracking</small>
               <input
                 type="file"
                 accept="video/*"
@@ -1878,7 +1878,7 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
             )}
 
             <button className="primary full" disabled={busy || (!file && !result)} onClick={submit}>
-              {busy ? 'Processing video & extracting 3D poseΓÇª' : 'Upload & Analyze Movement'}
+              {busy ? 'Processing video & extracting 3D pose…' : 'Upload & Analyze Movement'}
             </button>
           </>
         ) : (
@@ -1887,8 +1887,8 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
               <video ref={videoRef} className="webcamVideo" autoPlay playsInline muted />
               <div className="webcamHud">
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10b981', fontSize: '11px', fontWeight: 800 }}>
-                  <span>ΓùÅ LIVE OPTICAL STREAM</span>
-                  <span>FPS: 30 ΓÇó CONFIDENCE: 98.4%</span>
+                  <span>● LIVE OPTICAL STREAM</span>
+                  <span>FPS: 30 • CONFIDENCE: 98.4%</span>
                 </div>
                 <div className="hudCrosshair" />
                 <div style={{ textAlign: 'center', color: '#fff', fontSize: '12px', fontWeight: 700 }}>
@@ -1903,7 +1903,7 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
               disabled={recordingTimer > 0 || busy}
               onClick={captureWebcamMovement}
             >
-              {recordingTimer > 0 ? `Recording Movement (${recordingTimer}s)ΓÇª` : '≡ƒö┤ Capture & Analyze 5-Second Drill'}
+              {recordingTimer > 0 ? `Recording Movement (${recordingTimer}s)…` : '🔴 Capture & Analyze 5-Second Drill'}
             </button>
           </div>
         )}
@@ -1927,7 +1927,7 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
                 }
               }}
             >
-              {speaking ? 'ΓÅ╣ Stop Audio' : '≡ƒöè AI Voice Coach'}
+              {speaking ? '⏹ Stop Audio' : '🔊 AI Voice Coach'}
             </button>
           )}
         </div>
@@ -1957,7 +1957,7 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
               <strong>{risk?.risk_level || result.risk_level || 'LOW'} RISK</strong>
               <b>{risk?.risk_score ?? result.risk_score ?? 25}%</b>
               <small>
-                Movement Quality: {result.movement_quality?.score ? `${result.movement_quality.score}/100 (${result.movement_quality?.classification || 'Good'})` : 'Good'} ΓÇó Tracking: {result.pose_detection_rate_pct}%
+                Movement Quality: {result.movement_quality?.score ? `${result.movement_quality.score}/100 (${result.movement_quality?.classification || 'Good'})` : 'Good'} • Tracking: {result.pose_detection_rate_pct}%
               </small>
             </div>
 
@@ -1965,14 +1965,14 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
             {(result.processed_video_path || videoPreviewUrl) && (
               <div style={{ marginTop: '12px', background: '#0f172a', padding: '12px', borderRadius: '10px', color: '#fff' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <b style={{ fontSize: '12.5px', color: '#34d399' }}>≡ƒô╣ Pose Tracking Video Playback</b>
+                  <b style={{ fontSize: '12.5px', color: '#34d399' }}>📹 Pose Tracking Video Playback</b>
                   <button
                     type="button"
                     className="primary small"
                     onClick={() => onPlayVideo(videoPreviewUrl || `${API_BASE_URL}${result.processed_video_path}`)}
                     style={{ padding: '4px 10px', fontSize: '11px' }}
                   >
-                    Γ¢╢ Fullscreen Player
+                    ⛶ Fullscreen Player
                   </button>
                 </div>
                 <video
@@ -1986,20 +1986,20 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
             {/* Specific Injury Vulnerability Breakdown */}
             <div style={{ marginTop: '14px', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <b style={{ fontSize: '13px', color: '#0f2942' }}>≡ƒñû Specific Injury Vulnerability Breakdown</b>
+                <b style={{ fontSize: '13px', color: '#0f2942' }}>🤖 Specific Injury Vulnerability Breakdown</b>
                 <span style={{ fontSize: '11px', background: '#10b981', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>Trained ML Model</span>
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12.5px' }}>
-                <div>ΓÇó <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.1)))}%</div>
-                <div>ΓÇó <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.9)))}%</div>
-                <div>ΓÇó <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.05)))}%</div>
-                <div>ΓÇó <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.85)))}%</div>
+                <div>• <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.1)))}%</div>
+                <div>• <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.9)))}%</div>
+                <div>• <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.05)))}%</div>
+                <div>• <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.85)))}%</div>
               </div>
 
               {(risk?.recommendations || result.recommendations) && (risk?.recommendations?.length > 0 || result.recommendations?.length > 0) && (
                 <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #cbd5e1', fontSize: '12px', color: '#059669' }}>
-                  <b>≡ƒôï Prescribed Corrective Exercise:</b> {(risk?.recommendations || result.recommendations)[0]}
+                  <b>📋 Prescribed Corrective Exercise:</b> {(risk?.recommendations || result.recommendations)[0]}
                 </div>
               )}
 
@@ -2009,7 +2009,7 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
                 style={{ width: '100%', marginTop: '12px', background: '#fff', color: '#059669', borderColor: '#10b981' }}
                 onClick={() => onNav('Results')}
               >
-                ≡ƒôè View Full Roster History in Results Tab ΓåÆ
+                📊 View Full Roster History in Results Tab →
               </button>
             </div>
           </div>
@@ -2060,7 +2060,7 @@ function Results({ summary, onPlayVideo }) {
       {rows.length >= 2 && (
         <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '14px', marginBottom: '18px' }}>
           <b style={{ fontSize: '13px', color: '#065f46', display: 'block', marginBottom: '8px' }}>
-            ΓÜû∩╕Å Before & After Recovery Comparison Mode:
+            ⚖️ Before & After Recovery Comparison Mode:
           </b>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
@@ -2099,7 +2099,7 @@ function Results({ summary, onPlayVideo }) {
           </div>
 
           <div style={{ marginTop: '10px', background: '#fff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-            <span>≡ƒÄë <b>Recovery Progress:</b> +18.4% improvement in bilateral limb symmetry & 24% lower ACL risk</span>
+            <span>🎉 <b>Recovery Progress:</b> +18.4% improvement in bilateral limb symmetry & 24% lower ACL risk</span>
             <span style={{ background: '#ecfdf5', color: '#059669', padding: '3px 8px', borderRadius: '6px', fontWeight: 800 }}>Positive Adaptation</span>
           </div>
         </div>
@@ -2133,11 +2133,11 @@ function Results({ summary, onPlayVideo }) {
                 >
                   <td><b>#{(r.analysis_id || r.id).slice(0, 8)}</b></td>
                   <td><b>{r.activity}</b></td>
-                  <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : 'ΓÇö'}</td>
+                  <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : '—'}</td>
                   <td><b>{qualityScore}</b></td>
                   <td>
                     <span className={`badge ${riskLevel.toLowerCase()}`}>
-                      ≡ƒñû {riskLevel} ({riskScore}%)
+                      🤖 {riskLevel} ({riskScore}%)
                     </span>
                   </td>
                   <td>
@@ -2156,16 +2156,16 @@ function Results({ summary, onPlayVideo }) {
                           onPlayVideo(`${API_BASE_URL}${r.processed_video_path}`);
                         }}
                       >
-                        Γû╢ Watch Video
+                        ▶ Watch Video
                       </button>
-                    ) : 'ΓÇö'}
+                    ) : '—'}
                   </td>
                   <td>
                     <button 
                       className="primary small"
                       onClick={(e) => { e.stopPropagation(); downloadPdf(r.analysis_id || r.id); }}
                     >
-                      ≡ƒôÑ PDF
+                      📥 PDF
                     </button>
                   </td>
                 </tr>
@@ -2176,7 +2176,7 @@ function Results({ summary, onPlayVideo }) {
                       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <b style={{ color: '#0f2942', fontSize: '13px' }}>≡ƒñû Plain-English Injury Risk Assessment:</b>
+                            <b style={{ color: '#0f2942', fontSize: '13px' }}>🤖 Plain-English Injury Risk Assessment:</b>
                             <button
                               type="button"
                               className="voiceBtn"
@@ -2186,42 +2186,42 @@ function Results({ summary, onPlayVideo }) {
                                 speakBriefing(t, setSpeaking);
                               }}
                             >
-                              ≡ƒöè Listen
+                              🔊 Listen
                             </button>
                           </div>
 
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px', fontSize: '12px' }}>
                             <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                              ≡ƒª╡ <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round(riskScore * 1.1)))}%
+                              🦵 <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round(riskScore * 1.1)))}%
                               <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Knee valgus collapse & rotation</small>
                             </div>
                             <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                              ≡ƒÅâ <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round(riskScore * 0.9)))}%
+                              🏃 <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round(riskScore * 0.9)))}%
                               <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Terminal swing hip overstretch</small>
                             </div>
                             <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                              ≡ƒª╢ <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round(riskScore * 1.05)))}%
+                              🦶 <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round(riskScore * 1.05)))}%
                               <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Lateral ground contact instability</small>
                             </div>
                             <div style={{ background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                              ≡ƒºÿ <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round(riskScore * 0.85)))}%
+                              🧘 <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round(riskScore * 0.85)))}%
                               <small style={{ display: 'block', color: '#64748b', marginTop: '2px' }}>Spinal trunk tilt compensation</small>
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <b style={{ color: '#0f2942', fontSize: '13px' }}>≡ƒôï Prescribed Exercise Demonstration Cards:</b>
+                          <b style={{ color: '#0f2942', fontSize: '13px' }}>📋 Prescribed Exercise Demonstration Cards:</b>
                           <div className="exerciseGrid">
                             <div className="exerciseCard">
-                              <b>≡ƒÅï∩╕Å Eccentric Spanish Squats</b>
+                              <b>🏋️ Eccentric Spanish Squats</b>
                               <p>Patellar tendon & quad load control</p>
-                              <span className="exerciseBadge">3 sets ├ù 8 reps (3s tempo)</span>
+                              <span className="exerciseBadge">3 sets × 8 reps (3s tempo)</span>
                             </div>
                             <div className="exerciseCard">
-                              <b>≡ƒªÿ Single-Leg Soft Landing</b>
+                              <b>🦘 Single-Leg Soft Landing</b>
                               <p>ACL valgus shear reduction</p>
-                              <span className="exerciseBadge">3 sets ├ù 6 reps / leg</span>
+                              <span className="exerciseBadge">3 sets × 6 reps / leg</span>
                             </div>
                           </div>
                         </div>
@@ -2265,7 +2265,7 @@ function AnalysisTable({ rows }) {
             <tr key={r.analysis_id || r.id}>
               <td>#{(r.analysis_id || r.id).slice(0, 8)}</td>
               <td><b>{r.activity}</b></td>
-              <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : 'ΓÇö'}</td>
+              <td>{r.pose_detection_rate_pct ? `${r.pose_detection_rate_pct}%` : '—'}</td>
               <td>{r.movement_quality?.score ? `${r.movement_quality.score}%` : (r.movement_quality?.classification || 'Good')}</td>
               <td>
                 <span className={`badge ${r.status === 'completed' ? 'low' : r.status === 'failed' ? 'high' : 'medium'}`}>
@@ -2331,7 +2331,7 @@ function Reports({ summary }) {
       {/* PDF Clinic Branding Customizer (Empty by default for manual entry) */}
       <div style={{ marginTop: '16px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
         <b style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '4px' }}>
-          ≡ƒÅÑ PDF Clinic & Examiner Branding (Optional / Custom Entry):
+          🏥 PDF Clinic & Examiner Branding (Optional / Custom Entry):
         </b>
         <p style={{ fontSize: '11.5px', color: '#64748b', margin: '0 0 12px' }}>
           Enter your facility and examiner name below. They will be printed directly onto your generated clinical PDF assessment.
@@ -2380,14 +2380,14 @@ function Reports({ summary }) {
                 }
               }}
             >
-              {speaking ? 'ΓÅ╣ Stop Audio' : '≡ƒöè Listen to Audio Briefing'}
+              {speaking ? '⏹ Stop Audio' : '🔊 Listen to Audio Briefing'}
             </button>
           </div>
           <p style={{ margin: '6px 0 16px', color: '#64748b' }}>
-            Pose Detection: <b>{latest.pose_detection_rate_pct}%</b> ΓÇó Assessment Time: <b>{formattedTime}</b>
+            Pose Detection: <b>{latest.pose_detection_rate_pct}%</b> • Assessment Time: <b>{formattedTime}</b>
           </p>
           <button className="primary" onClick={() => downloadPdf(latest.analysis_id)}>
-            ≡ƒôÑ Download Complete Assessment Report (PDF)
+            📥 Download Complete Assessment Report (PDF)
           </button>
         </div>
       ) : (
