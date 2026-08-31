@@ -70,6 +70,25 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
     )
 
 
+@router.post("/oauth-login", response_model=AuthResponse)
+def oauth_login(payload: OAuthLoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        # Auto-create user from Google / Social OAuth profile
+        display_name = payload.name.strip() if payload.name and payload.name.strip() else payload.email.split("@")[0].title()
+        password_hash, salt = hash_password(f"oauth_{payload.provider}_{payload.email}_key")
+        user = User(name=display_name, email=payload.email, password_hash=password_hash, password_salt=salt)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    token = create_session(db, user.id)
+    return AuthResponse(
+        token=token,
+        user=UserOut(user_id=user.id, name=user.name, email=user.email, created_at=user.created_at),
+    )
+
+
 @router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
     return UserOut(

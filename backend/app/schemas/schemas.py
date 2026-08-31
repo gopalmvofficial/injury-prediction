@@ -25,6 +25,13 @@ class UserLogin(BaseModel):
     password: str
 
 
+class OAuthLoginRequest(BaseModel):
+    provider: str = "google"
+    email: EmailStr
+    name: str
+    avatar_url: Optional[str] = None
+
+
 class UserOut(BaseModel):
     user_id: str
     name: str
