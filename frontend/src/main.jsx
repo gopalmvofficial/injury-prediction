@@ -1463,9 +1463,6 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
         )}
       </div>
 
-      {/* Squad Biomechanical Leaderboard & Hall of Fame */}
-      <SquadLeaderboard athletes={athletes} />
-
       {/* Interactive Biomechanical Heatmap & Squad Risk Matrix */}
       <BiomechanicalBodyHeatmap />
       <SquadRiskMatrix athletes={athletes} />
@@ -3983,58 +3980,7 @@ function DrPoseChatbotModal() {
   );
 }
 
-function SquadLeaderboard({ athletes = [] }) {
-  const leaderboardData = [
-    { rank: 1, trophy: '🥇', name: 'Jordan Miller', sport: 'Football', score: 96, risk: '12% (LOW)', symmetry: '98%', badge: '🦵 Iron Knees' },
-    { rank: 2, trophy: '🥈', name: 'Alex Rivera', sport: 'Basketball', score: 92, risk: '18% (LOW)', symmetry: '95%', badge: '⚡ 7-Day Safe Streak' },
-    { rank: 3, trophy: '🥉', name: 'Sam Chen', sport: 'Tennis', score: 88, risk: '24% (LOW)', symmetry: '91%', badge: '🤸 Mobility Titan' },
-    { rank: 4, trophy: '⭐', name: 'Marcus Vance', sport: 'Track & Field', score: 84, risk: '34% (MODERATE)', symmetry: '88%', badge: '🛡️ Core Shield' },
-  ];
 
-  return (
-    <div className="panel" style={{ marginBottom: '22px' }}>
-      <div className="panelHead">
-        <div>
-          <h3>🏆 Squad Biomechanical Leaderboard & Hall of Fame</h3>
-          <small style={{ color: 'var(--text-muted)' }}>Top squad athletes ranked by Movement Quality (0-100), Bilateral Symmetry %, and Low Risk Scores.</small>
-        </div>
-
-        <span className="count" style={{ background: '#fef08a', color: '#713f12', border: '1px solid #fde047' }}>
-          HALL OF FAME 🥇
-        </span>
-      </div>
-
-      <div style={{ overflowX: 'auto' }}>
-        <table>
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Athlete Name</th>
-              <th>Sport</th>
-              <th>Movement Score</th>
-              <th>Symmetry %</th>
-              <th>Risk Rating</th>
-              <th>Achievement Badge</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboardData.map((row) => (
-              <tr key={row.rank}>
-                <td style={{ fontSize: '18px', fontWeight: 800 }}>{row.trophy} #{row.rank}</td>
-                <td><strong style={{ color: 'var(--text-dark)' }}>{row.name}</strong></td>
-                <td style={{ color: 'var(--text-muted)' }}>{row.sport}</td>
-                <td><b style={{ color: '#059669', fontSize: '14px' }}>{row.score} / 100</b></td>
-                <td><b style={{ color: 'var(--accent-primary)' }}>{row.symmetry}</b></td>
-                <td><span className="badge low">{row.risk}</span></td>
-                <td><span style={{ background: 'var(--accent-primary-light)', color: 'var(--accent-primary)', padding: '4px 10px', borderRadius: '9999px', fontSize: '11.5px', fontWeight: 800 }}>{row.badge}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
 
 function WhatIfWorkoutSimulator() {
   const [hours, setHours] = useState(14);
