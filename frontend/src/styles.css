@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
 
 :root {
   --font-heading: 'Plus Jakarta Sans', sans-serif;
@@ -582,5 +582,135 @@ header p { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
 [data-font-style="mono"] {
   --font-heading: 'JetBrains Mono', monospace !important;
   --font-body: 'JetBrains Mono', monospace !important;
+}
+
+/* ─── CROSS-BROWSER STANDARDIZATION & SAFARI COMPATIBILITY ─── */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar across Chrome, Safari, Edge, Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) var(--bg-card-subtle);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-card-subtle);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary-dark);
+}
+
+/* Safari Glassmorphism Support */
+[data-card-style="glass"] .kpiCard,
+[data-card-style="glass"] .card,
+[data-card-style="glass"] .panel,
+[data-card-style="glass"] .athleteCard,
+.brandIcon,
+.heroGraphic,
+.nav.active {
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+
+/* ─── ULTRA-WIDE DESKTOP & SCREEN RESPONSIVENESS ───────────────────────── */
+@media (min-width: 1800px) {
+  main {
+    max-width: 1600px;
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 1200px) {
+  .cards, .kpiGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .grid2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 960px) {
+  .app {
+    flex-direction: column !important;
+  }
+  aside {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 18px 20px !important;
+  }
+  .brand {
+    margin-bottom: 14px !important;
+  }
+  aside .sidefoot, aside .engineBadge {
+    display: none !important;
+  }
+  main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 20px 16px !important;
+  }
+  header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .headerActions {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+  .hero {
+    flex-direction: column !important;
+    padding: 24px 20px !important;
+    text-align: center !important;
+  }
+  .heroGraphic {
+    margin-top: 18px !important;
+  }
+  .hero p {
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .cards, .kpiGrid, .athleteRosterGrid {
+    grid-template-columns: 1fr !important;
+  }
+  .form {
+    grid-template-columns: 1fr !important;
+  }
+  .form label:nth-last-of-type(1) {
+    grid-column: 1 !important;
+  }
+  .result {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+  }
+  table {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+  }
 }
 
