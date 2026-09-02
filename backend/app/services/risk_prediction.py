@@ -249,7 +249,7 @@ def compute_risk(
         "risk_score": final_score,
         "risk_level": risk_level,
         "is_machine_learning_predicted": is_ml_inferred,
-        "ml_model_roc_auc": 0.8070,
+        "ml_model_roc_auc": round(float(_KINEMATIC_MODEL.get("roc_auc", 0.8070)), 4) if (_KINEMATIC_MODEL and isinstance(_KINEMATIC_MODEL, dict) and "roc_auc" in _KINEMATIC_MODEL) else 0.8070,
         "injury_categories": cat_preds["injury_categories"],
         "recommended_rehabilitation": cat_preds["recommended_rehabilitation"],
         "estimated_recovery_weeks": cat_preds["estimated_recovery_weeks"],
