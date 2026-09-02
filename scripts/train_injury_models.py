@@ -33,7 +33,9 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 
 def train_kinematic_risk_model():
     """Model 1: Trains a Kinematic Binary Injury Risk Classifier on 5,430 samples."""
-    csv_path = os.path.join(DATASETS_DIR, "sports_multimodal_data (2).csv")
+    csv_path = os.path.join(DATASETS_DIR, "sports_multimodal_data.csv")
+    if not os.path.exists(csv_path):
+        csv_path = os.path.join(DATASETS_DIR, "sports_multimodal_data (2).csv")
     print("\n" + "="*70)
     print(f"[MODEL 1] Training Kinematic Injury Risk Classifier from:\n{csv_path}")
     print("="*70)
@@ -74,7 +76,9 @@ def train_kinematic_risk_model():
 
 def train_multi_injury_and_rehab_models():
     """Models 2 & 3: Trains Multi-Class Specific Injury Classifier & Rehab Program Prescriptor on 9,600 samples."""
-    csv_path = os.path.join(DATASETS_DIR, "Project-Injury-Dataset (1).csv")
+    csv_path = os.path.join(DATASETS_DIR, "Project-Injury-Dataset.csv")
+    if not os.path.exists(csv_path):
+        csv_path = os.path.join(DATASETS_DIR, "Project-Injury-Dataset (1).csv")
     print("\n" + "="*70)
     print(f"[MODELS 2 & 3] Training Specific Injury & Rehab Models from:\n{csv_path}")
     print("="*70)
@@ -134,7 +138,9 @@ def train_multi_injury_and_rehab_models():
 
 def train_acl_regressor_model():
     """Model 4: Trains Continuous ACL Risk Regressor on collegiate athlete dataset."""
-    csv_path = os.path.join(DATASETS_DIR, "collegiate_athlete_injury_dataset (1).csv")
+    csv_path = os.path.join(DATASETS_DIR, "collegiate_athlete_injury_dataset.csv")
+    if not os.path.exists(csv_path):
+        csv_path = os.path.join(DATASETS_DIR, "collegiate_athlete_injury_dataset (1).csv")
     print("\n" + "="*70)
     print(f"[MODEL 4] Training ACL Continuous Risk Regressor from:\n{csv_path}")
     print("="*70)
