@@ -1547,9 +1547,6 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
         </button>
       </div>
 
-      {/* AI Match Fortune & Biomechanical Prophecy */}
-      <AiCrystalBallProphecy />
-
       {/* Athlete Risk Roster */}
       <div className="panel" style={{marginBottom:'22px'}}>
         <div className="panelHead">
