@@ -185,6 +185,21 @@ function App() {
   const [toast, setToast] = useState('');
   const [selectedAthlete, setSelectedAthlete] = useState(null);
 
+  // Lifted Video Analysis State (Persisted across tab switches)
+  const [analysisState, setAnalysisState] = useState({
+    mode: 'upload',
+    athlete: '',
+    activity: 'squatting',
+    file: null,
+    videoPreviewUrl: null,
+    busy: false,
+    progressStage: '',
+    progressPercent: 0,
+    result: null,
+    risk: null,
+  });
+
+
   // Dynamic Customizations State
   const [theme, setTheme] = useState(() => localStorage.getItem('motioniq_theme') || 'vibrant');
   const [iconPack, setIconPack] = useState(() => localStorage.getItem('motioniq_icon_pack') || 'emoji');
@@ -644,6 +659,8 @@ function App() {
             onDone={loadData}
             onNav={nav}
             onPlayVideo={(url) => setVideoModalUrl(url)}
+            analysisState={analysisState}
+            setAnalysisState={setAnalysisState}
           />
         )}
         {page === 'Kinematics Lab' && (
@@ -770,6 +787,39 @@ function App() {
         )}
         {/* Floating AI Chatbot Advisor */}
         <DrPoseChatbotModal />
+
+        {/* Persistent Floating Video Analysis Status Banner */}
+        {analysisState.busy && page !== 'Video Analysis' && (
+          <div
+            onClick={() => setPage('Video Analysis')}
+            style={{
+              position: 'fixed',
+              bottom: '24px',
+              right: '24px',
+              zIndex: 9999,
+              background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+              color: '#fff',
+              padding: '12px 18px',
+              borderRadius: '12px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+              border: '1px solid #6366f1',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <div style={{ fontSize: '22px' }} className="animatedSpinner">🌀</div>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: '#a5b4fc' }}>
+                Video Analysis In Progress ({analysisState.progressPercent}%)
+              </div>
+              <div style={{ fontSize: '11px', color: '#e0e7ff', marginTop: '2px' }}>
+                {analysisState.progressStage} • <span style={{ textDecoration: 'underline', fontWeight: 700 }}>Click to return</span>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
@@ -2765,21 +2815,58 @@ function AthleteDetails({ athlete, onEdit, onBack }) {
   );
 }
 
-function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
-  const [mode, setMode] = useState('upload'); // 'upload' | 'webcam'
-  const [athlete, setAthlete] = useState('');
-  const [activity, setActivity] = useState('squatting');
-  const [file, setFile] = useState(null);
-  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState(null);
-  const [risk, setRisk] = useState(null);
+function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, setAnalysisState }) {
+  const mode = analysisState?.mode || 'upload';
+  const setMode = (m) => setAnalysisState?.((prev) => ({ ...prev, mode: m }));
+
+  const athlete = analysisState?.athlete || '';
+  const setAthlete = (a) => setAnalysisState?.((prev) => ({ ...prev, athlete: a }));
+
+  const activity = analysisState?.activity || 'squatting';
+  const setActivity = (act) => setAnalysisState?.((prev) => ({ ...prev, activity: act }));
+
+  const file = analysisState?.file || null;
+  const videoPreviewUrl = analysisState?.videoPreviewUrl || null;
+  const busy = Boolean(analysisState?.busy);
+  const result = analysisState?.result || null;
+  const risk = analysisState?.risk || null;
+
   const [speaking, setSpeaking] = useState(false);
 
   // Webcam Capture State
   const videoRef = useRef(null);
   const [webcamActive, setWebcamActive] = useState(false);
   const [recordingTimer, setRecordingTimer] = useState(0);
+
+  const ANALYSIS_STAGES = [
+    { stage: 'Step 1/6: Uploading Video File...', pct: 15 },
+    { stage: 'Step 2/6: Extracting Video Frames @ 60 FPS...', pct: 35 },
+    { stage: 'Step 3/6: MediaPipe 33 Landmark Tracking & Pose Skeleton...', pct: 55 },
+    { stage: 'Step 4/6: Computing Biomechanical Joint Angles & Kinetic Vectors...', pct: 72 },
+    { stage: 'Step 5/6: Executing XGBoost ML Risk Classification Engine...', pct: 88 },
+    { stage: 'Step 6/6: Generating Clinical Assessment & PDF Report...', pct: 95 },
+  ];
+
+  const startProgressInterval = () => {
+    let stageIdx = 0;
+    setAnalysisState?.((prev) => ({
+      ...prev,
+      busy: true,
+      result: null,
+      risk: null,
+      progressStage: ANALYSIS_STAGES[0].stage,
+      progressPercent: ANALYSIS_STAGES[0].pct,
+    }));
+
+    return setInterval(() => {
+      stageIdx = Math.min(stageIdx + 1, ANALYSIS_STAGES.length - 1);
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        progressStage: ANALYSIS_STAGES[stageIdx].stage,
+        progressPercent: ANALYSIS_STAGES[stageIdx].pct,
+      }));
+    }, 1200);
+  };
 
   const startWebcam = async () => {
     try {
@@ -2821,9 +2908,8 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
   const runSampleScan = async (sampleActivity) => {
     if (!athlete) return alert('Select an athlete profile first.');
     setActivity(sampleActivity);
-    setBusy(true);
-    setResult(null);
-    setRisk(null);
+
+    const stageTimer = startProgressInterval();
 
     try {
       const res = await api('/api/videos/sample-scan', {
@@ -2836,9 +2922,15 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
         }),
       });
 
-      setResult(res);
       const riskResult = await api(`/api/risk/${res.analysis_id}`).catch(() => null);
-      setRisk(riskResult || res);
+
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        result: res,
+        risk: riskResult || res,
+        progressStage: 'Complete!',
+        progressPercent: 100,
+      }));
 
       try {
         const cachedAnalysesStr = localStorage.getItem('sir_cached_analyses');
@@ -2851,18 +2943,23 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
     } catch (err) {
       alert(`Analysis error: ${err.message}`);
     } finally {
-      setBusy(false);
+      clearInterval(stageTimer);
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        busy: false,
+      }));
     }
   };
 
   const submit = async () => {
     if (!athlete || !file) return alert('Select an athlete and a video file.');
-    setBusy(true);
-    setResult(null);
-    setRisk(null);
 
-    const localUrl = URL.createObjectURL(file);
-    setVideoPreviewUrl(localUrl);
+    let localUrl = videoPreviewUrl;
+    if (!localUrl && file) {
+      localUrl = URL.createObjectURL(file);
+    }
+
+    const stageTimer = startProgressInterval();
 
     try {
       const fd = new FormData();
@@ -2875,8 +2972,14 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
         body: fd,
       });
 
-      setResult(analysisResult);
-      setRisk(analysisResult);
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        result: analysisResult,
+        risk: analysisResult,
+        videoPreviewUrl: localUrl,
+        progressStage: 'Complete!',
+        progressPercent: 100,
+      }));
 
       try {
         const cachedAnalysesStr = localStorage.getItem('sir_cached_analyses');
@@ -2889,7 +2992,11 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
     } catch (e) {
       alert(`Video Screening Error: ${e.message}`);
     } finally {
-      setBusy(false);
+      clearInterval(stageTimer);
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        busy: false,
+      }));
     }
   };
 
@@ -2996,8 +3103,14 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
                 accept="video/*"
                 onChange={(e) => {
                   const f = e.target.files[0];
-                  setFile(f);
-                  if (f) setVideoPreviewUrl(URL.createObjectURL(f));
+                  if (f) {
+                    const previewUrl = URL.createObjectURL(f);
+                    setAnalysisState?.((prev) => ({
+                      ...prev,
+                      file: f,
+                      videoPreviewUrl: previewUrl,
+                    }));
+                  }
                 }}
               />
             </div>
@@ -3010,8 +3123,27 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
             )}
 
             <button className="primary full" disabled={busy || (!file && !result)} onClick={submit}>
-              {busy ? 'Processing video & extracting 3D pose…' : 'Upload & Analyze Movement'}
+              {busy ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <span className="animatedSpinner">🌀</span>
+                  <span>{analysisState?.progressStage || 'Processing video & extracting 3D pose...'} ({analysisState?.progressPercent || 0}%)</span>
+                </span>
+              ) : (
+                'Upload & Analyze Movement'
+              )}
             </button>
+            {busy && (
+              <div style={{ marginTop: '10px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', overflow: 'hidden', height: '8px' }}>
+                <div
+                  style={{
+                    width: `${analysisState?.progressPercent || 0}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #10b981, #06b6d4)',
+                    transition: 'width 0.4s ease-in-out',
+                  }}
+                />
+              </div>
+            )}
           </>
         ) : (
           <div>

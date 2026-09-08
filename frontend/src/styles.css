@@ -707,10 +707,17 @@ body {
     grid-template-columns: 1fr !important;
     text-align: center !important;
   }
-  table {
-    display: block !important;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-  }
 }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animatedSpinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+
 
