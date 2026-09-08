@@ -2,8 +2,15 @@
   "name": "sports-injury-risk-detection-root",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build",
-    "dev": "cd frontend && npm run dev"
+    "build": "cd frontend && npm run build"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "latest",
+    "vite": "latest"
   }
 }
