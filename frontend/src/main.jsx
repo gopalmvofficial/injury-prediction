@@ -40,7 +40,7 @@ async function api(path, options = {}) {
   return res.json();
 }
 
-let soundMuted = false;
+let soundMuted = true;
 
 function toggleSoundMute() {
   soundMuted = !soundMuted;
@@ -359,6 +359,57 @@ function App() {
     setPage(p);
   };
 
+  const userRole = currentUser?.role || 'coach';
+  const isAthleteRole = userRole === 'athlete';
+  const userEmail = (currentUser?.email || '').toLowerCase().trim();
+  const userName = (currentUser?.name || '').toLowerCase().trim();
+
+  // Role-Based Athlete & Coach Data Isolation
+  const userAthletes = React.useMemo(() => {
+    if (isAthleteRole) {
+      // Athlete role only sees their own performance profile
+      const matched = (athletes || []).filter(a =>
+        (a.name || '').toLowerCase().trim() === userName ||
+        (a.email || '').toLowerCase().trim() === userEmail
+      );
+      if (matched.length > 0) return matched;
+      // Virtual athlete entry for this logged-in athlete user
+      return [{
+        id: currentUser?.id || 101,
+        name: currentUser?.name || 'Athlete Profile',
+        sport: 'Athletics',
+        position: 'Athlete',
+        age: 22,
+        height_cm: 180,
+        weight_kg: 75,
+        injury_history: 'None',
+        training_load: 'Moderate',
+        user_email: userEmail
+      }];
+    }
+    return athletes || [];
+  }, [athletes, currentUser, isAthleteRole, userEmail, userName]);
+
+  const userSummary = React.useMemo(() => {
+    if (!summary) return summary;
+    if (isAthleteRole) {
+      const myAnalyses = (summary.recent_analyses || []).filter(an =>
+        (an.athlete_name || '').toLowerCase().trim() === userName ||
+        (an.user_email || '').toLowerCase().trim() === userEmail
+      );
+      const highRisk = myAnalyses.filter(a => a.risk_level === 'HIGH' || a.risk_level === 'CRITICAL').length;
+      return {
+        ...summary,
+        total_athletes: userAthletes.length,
+        total_analyses: myAnalyses.length,
+        high_risk_athletes: highRisk,
+        recent_athletes: userAthletes,
+        recent_analyses: myAnalyses
+      };
+    }
+    return summary;
+  }, [summary, userAthletes, isAthleteRole, userEmail, userName]);
+
   return (
     <div className="app">
       <aside>
@@ -457,15 +508,6 @@ function App() {
                 </span>
               )}
             </button>
-
-            {/* Arcade SFX Mute/Unmute Button */}
-            <button
-              onClick={handleToggleMute}
-              title={isMuted ? "Unmute Arcade SFX" : "Mute Arcade SFX"}
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-purple)', borderRadius: '9999px', padding: '6px 12px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', color: 'var(--text-dark)' }}
-            >
-              {isMuted ? '🔇 SFX OFF' : '🔊 SFX ON'}
-            </button>
             {currentUser && (
               <button
                 type="button"
@@ -522,17 +564,18 @@ function App() {
         </div>
 
         {page === 'Dashboard' && (
-          <Dashboard summary={summary} athletes={athletes} onNav={nav} userRole={currentUser?.role} layoutMode={dashboardLayout} />
+          <Dashboard summary={userSummary} athletes={userAthletes} onNav={nav} userRole={currentUser?.role} layoutMode={dashboardLayout} />
         )}
         {page === 'Athletes' && (
           <Athletes
-            athletes={athletes}
+            athletes={userAthletes}
             onRefresh={loadData}
             onSelect={(a) => {
               setSelectedAthlete(a);
               setPage('Athlete Details');
             }}
             onEditAthlete={(a) => setEditingAthlete(a)}
+            userRole={currentUser?.role}
           />
         )}
         {page === 'Athlete Details' && selectedAthlete && (
@@ -544,7 +587,7 @@ function App() {
         )}
         {page === 'Video Analysis' && (
           <VideoAnalysis
-            athletes={athletes}
+            athletes={userAthletes}
             onDone={loadData}
             onNav={nav}
             onPlayVideo={(url) => setVideoModalUrl(url)}
@@ -555,11 +598,11 @@ function App() {
         )}
         {page === 'Results' && (
           <Results
-            summary={summary}
+            summary={userSummary}
             onPlayVideo={(url) => setVideoModalUrl(url)}
           />
         )}
-        {page === 'Reports' && <Reports summary={summary} />}
+        {page === 'Reports' && <Reports summary={userSummary} />}
         {page === 'Settings' && (
           <Settings
             currentUser={currentUser}
@@ -638,17 +681,9 @@ function App() {
                 <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
                   Account Role
                 </label>
-                <select
-                  value={profileForm.role}
-                  onChange={(e) => setProfileForm({ ...profileForm, role: e.target.value })}
-                  style={{ width: '100%', height: '44px', border: '1px solid #ddd6fe', borderRadius: '10px', padding: '0 12px', fontSize: '13px', marginBottom: '24px', background: '#fff', boxSizing: 'border-box', outline: 'none' }}
-                >
-                  <option value="coach">👨‍🏫 Coach (Team Roster & Squad Risk)</option>
-                  <option value="athlete">🏃 Athlete (Personal Movement Screening)</option>
-                  <option value="physiotherapist">🩺 Physiotherapist (Rehabilitation)</option>
-                  <option value="sports_scientist">🔬 Sports Scientist (Kinematic Modeling)</option>
-                  <option value="admin">🛡️ Administrator (System Access)</option>
-                </select>
+                <div style={{ background: '#faf9ff', border: '1px solid #ddd6fe', borderRadius: '10px', padding: '12px 14px', fontSize: '13px', marginBottom: '24px', color: '#4c1d95', fontWeight: 700 }}>
+                  {profileForm.role === 'athlete' ? '🏃 Athlete (Personal Movement Screening Profile)' : '👨‍🏫 Coach (Team Roster & Squad Risk Management)'}
+                </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <button
@@ -945,13 +980,10 @@ function AuthScreen({ onSuccess }) {
             <label style={{ fontSize: '11.5px', fontWeight: 800, color: '#334155', display: 'block', marginBottom: '6px' }}>
               Select Account Role:
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
               {[
                 ['coach', '👨‍🏫 Coach'],
                 ['athlete', '🏃 Athlete'],
-                ['physiotherapist', '🩺 Physio'],
-                ['sports_scientist', '🔬 Scientist'],
-                ['admin', '🛡️ Admin'],
               ].map(([rKey, rLabel]) => (
                 <button
                   key={rKey}
@@ -1156,9 +1188,6 @@ function AuthScreen({ onSuccess }) {
                 >
                   <option value="coach">👨‍🏫 Coach (Team Roster & Squad Risk)</option>
                   <option value="athlete">🏃 Athlete (Personal Movement Screening)</option>
-                  <option value="physiotherapist">🩺 Physiotherapist (Rehabilitation)</option>
-                  <option value="sports_scientist">🔬 Sports Scientist (Kinematic Modeling)</option>
-                  <option value="admin">🛡️ Administrator (System Access)</option>
                 </select>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -3791,42 +3820,7 @@ function Settings({
   );
 }
 
-function AiCrystalBallProphecy() {
-  const prophecies = [
-    "🔮 AI Prophecy: 96% Chance of Match Victory! Your squad's knee alignment is tighter than a snare drum.",
-    "🔮 AI Prophecy: 88% Clean Performance Score! Zero ACL stress detected across all starting defenders.",
-    "🔮 AI Prophecy: 92% Synergy Rating! Hamstring stiffness reduced by 14% this week.",
-    "🔮 AI Prophecy: 99% Flamingo Stance Precision! squad balance is legendary.",
-  ];
 
-  const [prophecy, setProphecy] = useState(prophecies[0]);
-
-  const shakeBall = () => {
-    const next = prophecies[Math.floor(Math.random() * prophecies.length)];
-    setProphecy(next);
-    triggerConfetti();
-  };
-
-  return (
-    <div className="panel" style={{ background: 'linear-gradient(135deg, #312e81, #4c1d95)', color: '#fff', marginBottom: '22px', border: '1px solid #7c3aed' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ fontSize: '32px' }}>🔮</div>
-          <div>
-            <strong style={{ fontSize: '15px', display: 'block', color: '#fef08a' }}>AI Match Fortune & Biomechanical Prophecy</strong>
-            <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#e0e7ff' }}>{prophecy}</p>
-          </div>
-        </div>
-        <button
-          onClick={shakeBall}
-          style={{ background: '#fef08a', color: '#312e81', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: 800, fontSize: '12.5px', cursor: 'pointer', flexShrink: 0 }}
-        >
-          🔮 Shake Crystal Ball
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function BossFightArcade({ kneeAngle, trunkLean, valgusAngle }) {
   const boss1Beaten = valgusAngle < 8;
