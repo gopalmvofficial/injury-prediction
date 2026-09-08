@@ -4269,5 +4269,45 @@ function Empty({ text }) {
   return <div className="empty">{text}</div>;
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('MotionIQ React App Error:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '40px 20px', textAlign: 'center', fontFamily: 'sans-serif', background: '#f8fafc', minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+          <div style={{ maxWidth: '480px', background: '#fff', padding: '32px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>⚡</div>
+            <h2 style={{ color: '#1e1b4b', margin: '0 0 8px' }}>MotionIQ Application Recovery</h2>
+            <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '20px' }}>
+              Something unexpected happened while rendering. Click below to clear cache and reload.
+            </p>
+            <button
+              onClick={() => { try { localStorage.clear(); } catch {} window.location.reload(); }}
+              style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              🔄 Reset Cache & Reload App
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const root = createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
+
