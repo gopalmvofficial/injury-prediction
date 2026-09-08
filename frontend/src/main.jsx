@@ -1602,9 +1602,8 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
         )}
       </div>
 
-      {/* Interactive Biomechanical Heatmap & Squad Risk Matrix */}
+      {/* Interactive Biomechanical Heatmap */}
       <BiomechanicalBodyHeatmap />
-      <SquadRiskMatrix athletes={athletes} />
 
       {/* Recent Screenings + Pipeline */}
       <div className="grid2">
@@ -1630,8 +1629,8 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
             <div className="step" key={n}>
               <b>{n}</b>
               <div>
-                <strong>{t}</strong>
-                <small>{s}</small>
+                <strong style={{ display: 'block', marginBottom: '3px', color: 'var(--text-dark)' }}>{t}</strong>
+                <small style={{ display: 'block', color: 'var(--text-muted)' }}>{s}</small>
               </div>
             </div>
           ))}
@@ -1836,86 +1835,7 @@ function BiomechanicalBodyHeatmap() {
   );
 }
 
-function SquadRiskMatrix({ athletes = [] }) {
-  const [filterPos, setFilterPos] = useState('All');
 
-  const positions = ['All', 'Attacker', 'Midfielder', 'Defender', 'Goalkeeper'];
-
-  // Mock plot data for squad scatter matrix
-  const squadData = [
-    { name: 'Jordan Miller', pos: 'Attacker', load: 'High (8.4 km/wk)', risk: 82, level: 'HIGH' },
-    { name: 'Alex Rivera', pos: 'Defender', load: 'Extreme (10.2 km/wk)', risk: 65, level: 'MODERATE' },
-    { name: 'Sam Chen', pos: 'Midfielder', load: 'Moderate (6.1 km/wk)', risk: 24, level: 'LOW' },
-    { name: 'Marcus Vance', pos: 'Attacker', load: 'High (7.8 km/wk)', risk: 38, level: 'MODERATE' },
-    { name: 'Elena Rostova', pos: 'Defender', load: 'Low (3.5 km/wk)', risk: 14, level: 'LOW' },
-    { name: 'David Kim', pos: 'Goalkeeper', load: 'Low (2.8 km/wk)', risk: 10, level: 'LOW' },
-  ];
-
-  const filtered = filterPos === 'All' ? squadData : squadData.filter(d => d.pos.toLowerCase().includes(filterPos.toLowerCase()));
-
-  return (
-    <div className="panel" style={{ marginBottom: '22px' }}>
-      <div className="panelHead">
-        <div>
-          <h3>🏆 Squad Injury Risk & Training Load Matrix</h3>
-          <small style={{ color: 'var(--text-muted)' }}>Interactive scatter matrix mapping Training Load vs ML Risk Score %</small>
-        </div>
-
-        {/* Position Filter Pills */}
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {positions.map((p) => (
-            <button
-              key={p}
-              onClick={() => setFilterPos(p)}
-              style={{
-                background: filterPos === p ? 'var(--accent-primary)' : 'var(--bg-card-subtle)',
-                color: filterPos === p ? '#fff' : 'var(--text-dark)',
-                border: '1px solid var(--border-purple)',
-                padding: '4px 10px', borderRadius: '9999px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer'
-              }}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
-        {filtered.map((item) => {
-          const isHigh = item.level === 'HIGH';
-          const isMod = item.level === 'MODERATE';
-          const badgeBg = isHigh ? '#fef2f2' : isMod ? '#fffbeb' : '#ecfdf5';
-          const badgeColor = isHigh ? '#dc2626' : isMod ? '#d97706' : '#059669';
-          return (
-            <div
-              key={item.name}
-              style={{
-                background: 'var(--bg-card-subtle)',
-                border: '1px solid var(--border-purple)',
-                borderRadius: '12px',
-                padding: '14px',
-                display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <div>
-                <strong style={{ fontSize: '13.5px', color: 'var(--text-dark)', display: 'block' }}>{item.name}</strong>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.pos} • Load: {item.load}</span>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ background: badgeBg, color: badgeColor, fontSize: '11px', fontWeight: 800, padding: '3px 8px', borderRadius: '9999px', display: 'inline-block', marginBottom: '3px' }}>
-                  {item.risk}% RISK
-                </span>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>{item.level}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 function KinematicsLab() {
   const canvasRef = useRef(null);
@@ -3022,26 +2942,7 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
       <section className="panel">
         <div className="panelHead">
           <h3>Sports Movement Screening</h3>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              type="button"
-              className={mode === 'upload' ? 'primary small' : 'btnSecondary'}
-              onClick={() => { setMode('upload'); stopWebcam(); }}
-            >
-              📁 Video File
-            </button>
-            <button
-              type="button"
-              className={mode === 'webcam' ? 'primary small' : 'btnSecondary'}
-              onClick={() => { setMode('webcam'); startWebcam(); }}
-            >
-              📹 Live Camera
-            </button>
-          </div>
         </div>
-
-        {/* Biometric AR Scanner Overlay */}
-        <ArBiometricVideoScanner />
 
         <div className="field">
           <label>Selected Athlete Profile</label>
@@ -3071,111 +2972,64 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
           <label>Supported Activity Movement</label>
           <select value={activity} onChange={(e) => setActivity(e.target.value)}>
             <option value="squatting">🏋️ Squatting (Bilateral Knee & Hip Mechanics)</option>
-            <option value="running">🏃 Running (Gait Mechanics & Stride Cadence)</option>
-            <option value="sprinting">⚡ Sprinting (Max Velocity Biomechanics)</option>
-            <option value="jumping">🦘 Jumping (Vertical Propulsion & Takeoff)</option>
+            <option value="running">🏃 Running & Gait Cadence (Track & Endurance)</option>
+            <option value="sprinting">⚡ Sprinting & Max Velocity Mechanics</option>
+            <option value="jumping">🦘 Jumping (Vertical Propulsion & Landing)</option>
             <option value="landing">🎯 Landing (Deceleration & Impact Attenuation)</option>
-            <option value="throwing">⚾ Throwing (Kinetic Chain & Shoulder Torque)</option>
+            <option value="throwing">⚾ Throwing & Kinetic Torque (Baseball, Tennis, Cricket)</option>
             <option value="cutting">🔄 Cutting Movements (Lateral ACL Shear & Valgus)</option>
             <option value="sport_specific_drills">⚽ Sport-Specific Drills (Agility & Joint Integrity)</option>
           </select>
         </div>
 
-        {mode === 'upload' ? (
-          <>
-            <div style={{ marginTop: '14px' }}>
-              <small style={{ fontWeight: 700, color: '#334155' }}>⚡ 1-Click Preset Movement Library (Instant Scan):</small>
-              <div className="sampleTray">
-                <div className="sampleCard" onClick={() => runSampleScan('squatting')}>
-                  <b>🏋️ Olympic Squat</b>
-                  <small>Bilateral mechanics</small>
-                </div>
-                <div className="sampleCard" onClick={() => runSampleScan('sprinting')}>
-                  <b>⚡ Sprint Gait</b>
-                  <small>Velocity kinematics</small>
-                </div>
-                <div className="sampleCard" onClick={() => runSampleScan('landing')}>
-                  <b>🦘 Drop Jump</b>
-                  <small>Landing impact</small>
-                </div>
-              </div>
-            </div>
+        <div className="drop" style={{ marginTop: '14px' }}>
+          <div>📹</div>
+          <strong>{file ? file.name : 'Select or drop movement video clip'}</strong>
+          <small>Supported: MP4, MOV, AVI, MKV, WebM • Optical 3D Pose Tracking</small>
+          <input
+            type="file"
+            accept="video/*"
+            onChange={(e) => {
+              const f = e.target.files[0];
+              if (f) {
+                const previewUrl = URL.createObjectURL(f);
+                setAnalysisState?.((prev) => ({
+                  ...prev,
+                  file: f,
+                  videoPreviewUrl: previewUrl,
+                }));
+              }
+            }}
+          />
+        </div>
 
-            <div className="drop">
-              <div>📹</div>
-              <strong>{file ? file.name : 'Select or drop movement video clip'}</strong>
-              <small>Supported: MP4, MOV, AVI, MKV, WebM • Optical 3D Pose Tracking</small>
-              <input
-                type="file"
-                accept="video/*"
-                onChange={(e) => {
-                  const f = e.target.files[0];
-                  if (f) {
-                    const previewUrl = URL.createObjectURL(f);
-                    setAnalysisState?.((prev) => ({
-                      ...prev,
-                      file: f,
-                      videoPreviewUrl: previewUrl,
-                    }));
-                  }
-                }}
-              />
-            </div>
+        {/* Inline Video Player Preview */}
+        {videoPreviewUrl && (
+          <div style={{ marginBottom: '14px', background: '#000', borderRadius: '10px', overflow: 'hidden' }}>
+            <video src={videoPreviewUrl} controls autoPlay muted style={{ width: '100%', maxHeight: '240px', display: 'block' }} />
+          </div>
+        )}
 
-            {/* Inline Video Player Preview */}
-            {videoPreviewUrl && (
-              <div style={{ marginBottom: '14px', background: '#000', borderRadius: '10px', overflow: 'hidden' }}>
-                <video src={videoPreviewUrl} controls autoPlay muted style={{ width: '100%', maxHeight: '240px', display: 'block' }} />
-              </div>
-            )}
-
-            <button className="primary full" disabled={busy || (!file && !result)} onClick={submit}>
-              {busy ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <span className="animatedSpinner">🌀</span>
-                  <span>{analysisState?.progressStage || 'Processing video & extracting 3D pose...'} ({analysisState?.progressPercent || 0}%)</span>
-                </span>
-              ) : (
-                'Upload & Analyze Movement'
-              )}
-            </button>
-            {busy && (
-              <div style={{ marginTop: '10px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', overflow: 'hidden', height: '8px' }}>
-                <div
-                  style={{
-                    width: `${analysisState?.progressPercent || 0}%`,
-                    height: '100%',
-                    background: 'linear-gradient(90deg, #10b981, #06b6d4)',
-                    transition: 'width 0.4s ease-in-out',
-                  }}
-                />
-              </div>
-            )}
-          </>
-        ) : (
-          <div>
-            <div className="webcamBox">
-              <video ref={videoRef} className="webcamVideo" autoPlay playsInline muted />
-              <div className="webcamHud">
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10b981', fontSize: '11px', fontWeight: 800 }}>
-                  <span>● LIVE OPTICAL STREAM</span>
-                  <span>FPS: 30 • CONFIDENCE: 98.4%</span>
-                </div>
-                <div className="hudCrosshair" />
-                <div style={{ textAlign: 'center', color: '#fff', fontSize: '12px', fontWeight: 700 }}>
-                  {recordingTimer > 0 ? `Recording Movement: ${recordingTimer}s remaining` : 'Stand in frame & align posture'}
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="primary full"
-              disabled={recordingTimer > 0 || busy}
-              onClick={captureWebcamMovement}
-            >
-              {recordingTimer > 0 ? `Recording Movement (${recordingTimer}s)…` : '🔴 Capture & Analyze 5-Second Drill'}
-            </button>
+        <button className="primary full" disabled={busy || (!file && !result)} onClick={submit}>
+          {busy ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <span className="animatedSpinner">🌀</span>
+              <span>{analysisState?.progressStage || 'Processing video & extracting 3D pose...'} ({analysisState?.progressPercent || 0}%)</span>
+            </span>
+          ) : (
+            'Upload & Analyze Movement'
+          )}
+        </button>
+        {busy && (
+          <div style={{ marginTop: '10px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', overflow: 'hidden', height: '8px' }}>
+            <div
+              style={{
+                width: `${analysisState?.progressPercent || 0}%`,
+                height: '100%',
+                background: 'linear-gradient(90deg, #10b981, #06b6d4)',
+                transition: 'width 0.4s ease-in-out',
+              }}
+            />
           </div>
         )}
       </section>
@@ -3215,8 +3069,8 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
           <div className="pipeline" key={x}>
             <span>{i + 1}</span>
             <div>
-              <b>{x}</b>
-              <small>{result && i < 6 ? 'Completed' : 'Ready'}</small>
+              <b style={{ display: 'block', color: 'var(--text-dark)', marginBottom: '3px' }}>{x}</b>
+              <small style={{ display: 'block', color: 'var(--text-muted)' }}>{result && i < 6 ? 'Completed' : 'Ready'}</small>
             </div>
           </div>
         ))}
@@ -4250,27 +4104,7 @@ function WhatIfWorkoutSimulator() {
   );
 }
 
-function ArBiometricVideoScanner() {
-  return (
-    <div style={{ position: 'relative', width: '100%', height: '180px', background: '#090d16', borderRadius: '14px', border: '1px solid #10b981', overflow: 'hidden', display: 'grid', placeItems: 'center', margin: '14px 0' }}>
-      {/* Sci-Fi Corner Reticles */}
-      <div style={{ position: 'absolute', top: '10px', left: '10px', width: '20px', height: '20px', borderTop: '3px solid #10b981', borderLeft: '3px solid #10b981' }} />
-      <div style={{ position: 'absolute', top: '10px', right: '10px', width: '20px', height: '20px', borderTop: '3px solid #10b981', borderRight: '3px solid #10b981' }} />
-      <div style={{ position: 'absolute', bottom: '10px', left: '10px', width: '20px', height: '20px', borderBottom: '3px solid #10b981', borderLeft: '3px solid #10b981' }} />
-      <div style={{ position: 'absolute', bottom: '10px', right: '10px', width: '20px', height: '20px', borderBottom: '3px solid #10b981', borderRight: '3px solid #10b981' }} />
 
-      {/* Center Target Crosshair */}
-      <div style={{ width: '60px', height: '60px', border: '1px dashed #10b981', borderRadius: '50%', display: 'grid', placeItems: 'center' }}>
-        <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
-      </div>
-
-      {/* Status Overlay */}
-      <div style={{ position: 'absolute', bottom: '12px', left: '14px', fontSize: '11px', color: '#10b981', fontWeight: 800, letterSpacing: '1px' }}>
-        SCANNING BIOMECHANICS • 60 FPS • 33 LANDMARKS LOCKED ✓
-      </div>
-    </div>
-  );
-}
 
 function Empty({ text }) {
   return <div className="empty">{text}</div>;
