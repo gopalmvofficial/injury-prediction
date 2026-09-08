@@ -366,11 +366,9 @@ function App() {
 
   // Role-Based Athlete & Coach Data Isolation
   const userAthletes = React.useMemo(() => {
-    if (!athletes || athletes.length === 0) return [];
-
     if (isAthleteRole) {
       // Athlete role sees ONLY their own profile
-      const matched = athletes.filter(a =>
+      const matched = (athletes || []).filter(a =>
         (a.name || '').toLowerCase().trim() === userName ||
         (a.email || '').toLowerCase().trim() === userEmail ||
         (a.user_email || '').toLowerCase().trim() === userEmail
@@ -389,17 +387,29 @@ function App() {
         user_email: userEmail
       }];
     } else {
-      // Coach role: segment roster per coach email so different coaches see their own distinct athletes
-      const myCoachAthletes = athletes.filter((a, idx) => {
-        if (a.coach_email && a.coach_email.toLowerCase().trim() === userEmail) return true;
-        if (a.user_id && a.user_id === currentUser?.id) return true;
-        if (a.coach_email && a.coach_email.toLowerCase().trim() !== userEmail) return false;
-        
-        // Partition sample roster deterministically based on coach email char code sum
-        const charSum = userEmail.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-        return (idx % 2) === (charSum % 2);
-      });
-      return myCoachAthletes.length > 0 ? myCoachAthletes : athletes.slice(0, 2);
+      // Coach role: Filter strictly by coach_email for this specific coach
+      let coachCustomAthletes = [];
+      try {
+        const storedCustom = localStorage.getItem(`sir_coach_athletes_${userEmail}`);
+        if (storedCustom) coachCustomAthletes = JSON.parse(storedCustom);
+      } catch {}
+
+      const serverCoachAthletes = (athletes || []).filter(a =>
+        a.coach_email && a.coach_email.toLowerCase().trim() === userEmail
+      );
+
+      const combined = [...coachCustomAthletes, ...serverCoachAthletes];
+      // Deduplicate by ID or name
+      const seen = new Set();
+      const unique = [];
+      for (const ca of combined) {
+        const key = ca.id || ca.name;
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(ca);
+        }
+      }
+      return unique;
     }
   }, [athletes, currentUser, isAthleteRole, userEmail, userName]);
 
@@ -416,16 +426,34 @@ function App() {
     });
 
     const highRiskCount = filteredAnalyses.filter(a => a.risk_level === 'HIGH' || a.risk_level === 'CRITICAL').length;
-    
+    const riskDist = { LOW: 0, MEDIUM: 0, HIGH: 0 };
+    filteredAnalyses.forEach(a => {
+      const lvl = a.risk_level === 'CRITICAL' ? 'HIGH' : (a.risk_level || 'LOW');
+      riskDist[lvl] = (riskDist[lvl] || 0) + 1;
+    });
+
     return {
-      ...summary,
       total_athletes: userAthletes.length,
+      total_videos: filteredAnalyses.length,
       total_analyses: filteredAnalyses.length,
       high_risk_athletes: highRiskCount,
+      risk_distribution: riskDist,
       recent_athletes: userAthletes,
       recent_analyses: filteredAnalyses
     };
   }, [summary, userAthletes, userEmail]);
+
+  // First-Time Coach Login Redirect Effect
+  const hasRedirectedRef = useRef(false);
+  useEffect(() => {
+    if (authenticated && currentUser && !isAthleteRole && !hasRedirectedRef.current) {
+      if (userAthletes.length === 0) {
+        hasRedirectedRef.current = true;
+        setPage('Athletes');
+        setToast('Welcome Coach! Please create your first athlete to start screening.');
+      }
+    }
+  }, [authenticated, currentUser, isAthleteRole, userAthletes.length]);
 
   return (
     <div className="app">
@@ -593,6 +621,7 @@ function App() {
             }}
             onEditAthlete={(a) => setEditingAthlete(a)}
             userRole={currentUser?.role}
+            currentUser={currentUser}
           />
         )}
         {page === 'Athlete Details' && selectedAthlete && (
@@ -2360,7 +2389,7 @@ function AthleteHeadToHead({ athletes = [] }) {
   );
 }
 
-function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
+function Athletes({ athletes, onRefresh, onSelect, onEditAthlete, userRole, currentUser }) {
   const [subTab, setSubTab] = useState('roster');
   const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
@@ -2412,6 +2441,7 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
   const submit = async (e) => {
     e.preventDefault();
     try {
+      const coachEmail = (currentUser?.email || '').toLowerCase().trim();
       const created = await api('/api/athletes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2424,12 +2454,14 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
           weight_kg: form.weight_kg ? Number(form.weight_kg) : null,
           injury_history: form.injury_history || null,
           training_load: form.training_load || 'Moderate',
+          coach_email: coachEmail,
         }),
       });
+      const tagged = { ...created, coach_email: coachEmail };
       try {
-        const cachedStr = localStorage.getItem('sir_cached_athletes');
-        const cached = cachedStr ? JSON.parse(cachedStr) : [];
-        localStorage.setItem('sir_cached_athletes', JSON.stringify([created, ...cached]));
+        const storedStr = localStorage.getItem(`sir_coach_athletes_${coachEmail}`);
+        const stored = storedStr ? JSON.parse(storedStr) : [];
+        localStorage.setItem(`sir_coach_athletes_${coachEmail}`, JSON.stringify([tagged, ...stored]));
       } catch {}
       setForm({
         name: '',
@@ -2443,7 +2475,7 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete }) {
       });
       onRefresh();
     } catch (e) {
-      alert(e.message);
+      alert(`Error creating athlete: ${e.message}`);
     }
   };
 
