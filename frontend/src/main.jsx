@@ -355,31 +355,12 @@ function App() {
     }
   };
 
-  if (!authenticated) {
-    return (
-      <AuthScreen
-        onSuccess={(token, user) => {
-          localStorage.setItem('sir_token', token);
-          localStorage.setItem('sir_auth', '1');
-          localStorage.setItem('sir_user', JSON.stringify(user));
-          setCurrentUser(user);
-          setAuthenticated(true);
-        }}
-      />
-    );
-  }
-
-  const nav = (p) => {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    setPage(p);
-  };
-
   const userRole = currentUser?.role || 'coach';
   const isAthleteRole = userRole === 'athlete';
   const userEmail = (currentUser?.email || '').toLowerCase().trim();
   const userName = (currentUser?.name || '').toLowerCase().trim();
 
-  // Role-Based Athlete & Coach Data Isolation
+  // Role-Based Athlete & Coach Data Isolation Hooks (MUST BE DECLARED BEFORE EARLY RETURN FOR REACT RULES OF HOOKS)
   const userAthletes = React.useMemo(() => {
     const safeAthletes = Array.isArray(athletes) ? athletes : [];
     if (isAthleteRole) {
@@ -486,6 +467,25 @@ function App() {
       }
     }
   }, [authenticated, currentUser, isAthleteRole, userAthletes.length, userSummary]);
+
+  if (!authenticated) {
+    return (
+      <AuthScreen
+        onSuccess={(token, user) => {
+          localStorage.setItem('sir_token', token);
+          localStorage.setItem('sir_auth', '1');
+          localStorage.setItem('sir_user', JSON.stringify(user));
+          setCurrentUser(user);
+          setAuthenticated(true);
+        }}
+      />
+    );
+  }
+
+  const nav = (p) => {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    setPage(p);
+  };
 
   return (
     <div className="app">
