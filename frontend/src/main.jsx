@@ -420,6 +420,9 @@ function App() {
     const filteredAnalyses = (summary.recent_analyses || []).filter(an => {
       const anName = (an.athlete_name || '').toLowerCase().trim();
       const anEmail = (an.user_email || an.coach_email || '').toLowerCase().trim();
+      if (isAthleteRole) {
+        return (anName === userName || anEmail === userEmail);
+      }
       if (anEmail && anEmail === userEmail) return true;
       if (athleteNames.has(anName)) return true;
       return false;
@@ -441,19 +444,23 @@ function App() {
       recent_athletes: userAthletes,
       recent_analyses: filteredAnalyses
     };
-  }, [summary, userAthletes, userEmail]);
+  }, [summary, userAthletes, isAthleteRole, userEmail, userName]);
 
-  // First-Time Coach Login Redirect Effect
+  // First-Time Login Redirect Effect (Coach -> Create Athlete, Athlete -> Upload Video)
   const hasRedirectedRef = useRef(false);
   useEffect(() => {
-    if (authenticated && currentUser && !isAthleteRole && !hasRedirectedRef.current) {
-      if (userAthletes.length === 0) {
+    if (authenticated && currentUser && !hasRedirectedRef.current) {
+      if (!isAthleteRole && userAthletes.length === 0) {
         hasRedirectedRef.current = true;
         setPage('Athletes');
-        setToast('Welcome Coach! Please create your first athlete to start screening.');
+        setToast(`Welcome Coach ${currentUser.name || ''}! Please create your first athlete to start screening.`);
+      } else if (isAthleteRole && (!userSummary || userSummary.total_analyses === 0)) {
+        hasRedirectedRef.current = true;
+        setPage('Video Analysis');
+        setToast(`Welcome ${currentUser.name || 'Athlete'}! Upload your first movement video to generate your personal assessment.`);
       }
     }
-  }, [authenticated, currentUser, isAthleteRole, userAthletes.length]);
+  }, [authenticated, currentUser, isAthleteRole, userAthletes.length, userSummary]);
 
   return (
     <div className="app">
