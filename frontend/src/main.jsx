@@ -2945,12 +2945,18 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
         </div>
 
         <div className="field">
-          <label>Selected Athlete Profile</label>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '4px' }}>
+            🏃 Select Athlete Profile (Active Presentation Roster)
+          </label>
           {athletes.length > 0 ? (
-            <select value={athlete} onChange={(e) => setAthlete(e.target.value)}>
+            <select
+              value={athlete}
+              onChange={(e) => setAthlete(e.target.value)}
+              style={{ fontWeight: 800, fontSize: '14.5px' }}
+            >
               {athletes.map((a) => (
                 <option value={a.athlete_id || a.id} key={a.athlete_id || a.id}>
-                  {a.name} ({a.sport})
+                  👤 {a.name} — {a.sport || 'Multi-Sport'} {a.position ? `(${a.position})` : ''}
                 </option>
               ))}
             </select>
@@ -2968,17 +2974,23 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
           )}
         </div>
 
-        <div className="field" style={{ marginTop: '12px' }}>
-          <label>Supported Activity Movement</label>
-          <select value={activity} onChange={(e) => setActivity(e.target.value)}>
-            <option value="squatting">🏋️ Squatting (Bilateral Knee & Hip Mechanics)</option>
-            <option value="running">🏃 Running & Gait Cadence (Track & Endurance)</option>
-            <option value="sprinting">⚡ Sprinting & Max Velocity Mechanics</option>
-            <option value="jumping">🦘 Jumping (Vertical Propulsion & Landing)</option>
-            <option value="landing">🎯 Landing (Deceleration & Impact Attenuation)</option>
-            <option value="throwing">⚾ Throwing & Kinetic Torque (Baseball, Tennis, Cricket)</option>
-            <option value="cutting">🔄 Cutting Movements (Lateral ACL Shear & Valgus)</option>
-            <option value="sport_specific_drills">⚽ Sport-Specific Drills (Agility & Joint Integrity)</option>
+        <div className="field" style={{ marginTop: '14px' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '4px' }}>
+            🎯 Supported Activity Movement (Multi-Sport Mechanics)
+          </label>
+          <select
+            value={activity}
+            onChange={(e) => setActivity(e.target.value)}
+            style={{ fontWeight: 800, fontSize: '14.5px' }}
+          >
+            <option value="squatting">🏋️ Squatting — Bilateral Knee & Hip Mechanics</option>
+            <option value="running">🏃 Running & Gait — Cadence & Stride Mechanics (Track, Soccer, Rugby)</option>
+            <option value="sprinting">⚡ Sprinting — Max Velocity Mechanics & Acceleration</option>
+            <option value="jumping">🦘 Jumping — Vertical Propulsion & Takeoff (Basketball, Volleyball)</option>
+            <option value="landing">🎯 Landing — Deceleration & Impact Attenuation</option>
+            <option value="throwing">⚾ Throwing & Kinetic Torque — Baseball, Tennis, Cricket</option>
+            <option value="cutting">🔄 Cutting & Change-of-Direction — Lateral ACL Shear & Valgus</option>
+            <option value="sport_specific_drills">⚽ Sport-Specific Drills — Agility & Joint Integrity</option>
           </select>
         </div>
 
