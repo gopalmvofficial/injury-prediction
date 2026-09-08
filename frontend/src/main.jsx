@@ -381,12 +381,15 @@ function App() {
 
   // Role-Based Athlete & Coach Data Isolation
   const userAthletes = React.useMemo(() => {
+    const safeAthletes = Array.isArray(athletes) ? athletes : [];
     if (isAthleteRole) {
       // Athlete role sees ONLY their own profile
-      const matched = (athletes || []).filter(a =>
-        (a.name || '').toLowerCase().trim() === userName ||
-        (a.email || '').toLowerCase().trim() === userEmail ||
-        (a.user_email || '').toLowerCase().trim() === userEmail
+      const matched = safeAthletes.filter(a =>
+        a && (
+          (a.name || '').toLowerCase().trim() === userName ||
+          (a.email || '').toLowerCase().trim() === userEmail ||
+          (a.user_email || '').toLowerCase().trim() === userEmail
+        )
       );
       if (matched.length > 0) return matched;
       return [{
@@ -406,11 +409,14 @@ function App() {
       let coachCustomAthletes = [];
       try {
         const storedCustom = localStorage.getItem(`sir_coach_athletes_${userEmail}`);
-        if (storedCustom) coachCustomAthletes = JSON.parse(storedCustom);
+        if (storedCustom) {
+          const parsed = JSON.parse(storedCustom);
+          if (Array.isArray(parsed)) coachCustomAthletes = parsed;
+        }
       } catch {}
 
-      const serverCoachAthletes = (athletes || []).filter(a =>
-        a.coach_email && a.coach_email.toLowerCase().trim() === userEmail
+      const serverCoachAthletes = safeAthletes.filter(a =>
+        a && a.coach_email && a.coach_email.toLowerCase().trim() === userEmail
       );
 
       const combined = [...coachCustomAthletes, ...serverCoachAthletes];
@@ -418,7 +424,8 @@ function App() {
       const seen = new Set();
       const unique = [];
       for (const ca of combined) {
-        const key = ca.id || ca.name;
+        if (!ca || typeof ca !== 'object') continue;
+        const key = ca.id || ca.athlete_id || ca.name || Math.random();
         if (!seen.has(key)) {
           seen.add(key);
           unique.push(ca);
@@ -429,10 +436,12 @@ function App() {
   }, [athletes, currentUser, isAthleteRole, userEmail, userName]);
 
   const userSummary = React.useMemo(() => {
-    if (!summary) return summary;
-    const athleteNames = new Set(userAthletes.map(a => (a.name || '').toLowerCase().trim()));
+    if (!summary || typeof summary !== 'object') return summary;
+    const athleteNames = new Set(userAthletes.map(a => (a?.name || '').toLowerCase().trim()));
+    const safeRecentAnalyses = Array.isArray(summary.recent_analyses) ? summary.recent_analyses : [];
 
-    const filteredAnalyses = (summary.recent_analyses || []).filter(an => {
+    const filteredAnalyses = safeRecentAnalyses.filter(an => {
+      if (!an) return false;
       const anName = (an.athlete_name || '').toLowerCase().trim();
       const anEmail = (an.user_email || an.coach_email || '').toLowerCase().trim();
       if (isAthleteRole) {
@@ -443,9 +452,10 @@ function App() {
       return false;
     });
 
-    const highRiskCount = filteredAnalyses.filter(a => a.risk_level === 'HIGH' || a.risk_level === 'CRITICAL').length;
+    const highRiskCount = filteredAnalyses.filter(a => a && (a.risk_level === 'HIGH' || a.risk_level === 'CRITICAL')).length;
     const riskDist = { LOW: 0, MEDIUM: 0, HIGH: 0 };
     filteredAnalyses.forEach(a => {
+      if (!a) return;
       const lvl = a.risk_level === 'CRITICAL' ? 'HIGH' : (a.risk_level || 'LOW');
       riskDist[lvl] = (riskDist[lvl] || 0) + 1;
     });
@@ -4272,30 +4282,57 @@ function Empty({ text }) {
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
     console.error('MotionIQ React App Error:', error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
       return (
         <div style={{ padding: '40px 20px', textAlign: 'center', fontFamily: 'sans-serif', background: '#f8fafc', minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
-          <div style={{ maxWidth: '480px', background: '#fff', padding: '32px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>⚡</div>
-            <h2 style={{ color: '#1e1b4b', margin: '0 0 8px' }}>MotionIQ Application Recovery</h2>
-            <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '20px' }}>
-              Something unexpected happened while rendering. Click below to clear cache and reload.
-            </p>
-            <button
-              onClick={() => { try { localStorage.clear(); } catch {} window.location.reload(); }}
-              style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
-            >
-              🔄 Reset Cache & Reload App
-            </button>
+          <div style={{ maxWidth: '580px', width: '100%', background: '#fff', padding: '32px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', textAlign: 'left' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>⚡</div>
+              <h2 style={{ color: '#1e1b4b', margin: '0 0 6px', fontSize: '20px', fontWeight: 800 }}>MotionIQ Application Recovery</h2>
+              <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 16px' }}>
+                An uncaught rendering error occurred. Click below to reset cached state and reload the application:
+              </p>
+            </div>
+
+            {this.state.error && (
+              <div style={{ padding: '12px 14px', background: '#fff1f2', border: '1px solid #fecaca', borderRadius: '10px', color: '#be123c', fontSize: '12px', fontFamily: 'monospace', marginBottom: '16px', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+                <strong>Diagnostic Error:</strong> {this.state.error.toString()}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.removeItem('sir_cached_athletes');
+                    localStorage.removeItem('sir_cached_analyses');
+                  } catch {}
+                  window.location.reload();
+                }}
+                style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+              >
+                🔄 Reset Cache & Reload
+              </button>
+              <button
+                onClick={() => {
+                  try { localStorage.clear(); } catch {}
+                  window.location.reload();
+                }}
+                style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '10px 18px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+              >
+                🚪 Full Session Reset
+              </button>
+            </div>
           </div>
         </div>
       );
