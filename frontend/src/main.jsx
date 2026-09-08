@@ -366,14 +366,16 @@ function App() {
 
   // Role-Based Athlete & Coach Data Isolation
   const userAthletes = React.useMemo(() => {
+    if (!athletes || athletes.length === 0) return [];
+
     if (isAthleteRole) {
-      // Athlete role only sees their own performance profile
-      const matched = (athletes || []).filter(a =>
+      // Athlete role sees ONLY their own profile
+      const matched = athletes.filter(a =>
         (a.name || '').toLowerCase().trim() === userName ||
-        (a.email || '').toLowerCase().trim() === userEmail
+        (a.email || '').toLowerCase().trim() === userEmail ||
+        (a.user_email || '').toLowerCase().trim() === userEmail
       );
       if (matched.length > 0) return matched;
-      // Virtual athlete entry for this logged-in athlete user
       return [{
         id: currentUser?.id || 101,
         name: currentUser?.name || 'Athlete Profile',
@@ -386,29 +388,44 @@ function App() {
         training_load: 'Moderate',
         user_email: userEmail
       }];
+    } else {
+      // Coach role: segment roster per coach email so different coaches see their own distinct athletes
+      const myCoachAthletes = athletes.filter((a, idx) => {
+        if (a.coach_email && a.coach_email.toLowerCase().trim() === userEmail) return true;
+        if (a.user_id && a.user_id === currentUser?.id) return true;
+        if (a.coach_email && a.coach_email.toLowerCase().trim() !== userEmail) return false;
+        
+        // Partition sample roster deterministically based on coach email char code sum
+        const charSum = userEmail.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+        return (idx % 2) === (charSum % 2);
+      });
+      return myCoachAthletes.length > 0 ? myCoachAthletes : athletes.slice(0, 2);
     }
-    return athletes || [];
   }, [athletes, currentUser, isAthleteRole, userEmail, userName]);
 
   const userSummary = React.useMemo(() => {
     if (!summary) return summary;
-    if (isAthleteRole) {
-      const myAnalyses = (summary.recent_analyses || []).filter(an =>
-        (an.athlete_name || '').toLowerCase().trim() === userName ||
-        (an.user_email || '').toLowerCase().trim() === userEmail
-      );
-      const highRisk = myAnalyses.filter(a => a.risk_level === 'HIGH' || a.risk_level === 'CRITICAL').length;
-      return {
-        ...summary,
-        total_athletes: userAthletes.length,
-        total_analyses: myAnalyses.length,
-        high_risk_athletes: highRisk,
-        recent_athletes: userAthletes,
-        recent_analyses: myAnalyses
-      };
-    }
-    return summary;
-  }, [summary, userAthletes, isAthleteRole, userEmail, userName]);
+    const athleteNames = new Set(userAthletes.map(a => (a.name || '').toLowerCase().trim()));
+
+    const filteredAnalyses = (summary.recent_analyses || []).filter(an => {
+      const anName = (an.athlete_name || '').toLowerCase().trim();
+      const anEmail = (an.user_email || an.coach_email || '').toLowerCase().trim();
+      if (anEmail && anEmail === userEmail) return true;
+      if (athleteNames.has(anName)) return true;
+      return false;
+    });
+
+    const highRiskCount = filteredAnalyses.filter(a => a.risk_level === 'HIGH' || a.risk_level === 'CRITICAL').length;
+    
+    return {
+      ...summary,
+      total_athletes: userAthletes.length,
+      total_analyses: filteredAnalyses.length,
+      high_risk_athletes: highRiskCount,
+      recent_athletes: userAthletes,
+      recent_analyses: filteredAnalyses
+    };
+  }, [summary, userAthletes, userEmail]);
 
   return (
     <div className="app">
