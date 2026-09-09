@@ -610,18 +610,6 @@ function App() {
               <option value="rose-gold">🌹 Rose Gold</option>
             </select>
 
-            {/* Notification Bell */}
-            <button
-              title="Notifications"
-              style={{ background: 'none', border: '1px solid #ddd6fe', borderRadius: '9999px', width: '36px', height: '36px', display: 'grid', placeItems: 'center', fontSize: '16px', position: 'relative', cursor: 'pointer' }}
-            >
-              🔔
-              {(summary?.high_risk_athletes ?? 0) > 0 && (
-                <span style={{ position: 'absolute', top: '-3px', right: '-3px', width: '16px', height: '16px', background: '#dc2626', borderRadius: '50%', fontSize: '8px', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 800 }}>
-                  {summary.high_risk_athletes}
-                </span>
-              )}
-            </button>
             {currentUser && (
               <button
                 type="button"
@@ -832,8 +820,6 @@ function App() {
             }}
           />
         )}
-        {/* Floating AI Chatbot Advisor */}
-        <DrPoseChatbotModal />
 
         {/* Persistent Floating Video Analysis Status Banner */}
         {analysisState.busy && page !== 'Video Analysis' && (
@@ -3976,108 +3962,6 @@ function BossFightArcade({ kneeAngle, trunkLean, valgusAngle }) {
     </div>
   );
 }
-
-function DrPoseChatbotModal() {
-  const [open, setOpen] = useState(false);
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState([
-    { sender: 'bot', text: "Hello Coach! I'm Dr. Pose 🩺, your AI Biomechanical Advisor. How can I help you optimize squad posture today?" }
-  ]);
-
-  const replyTo = (query) => {
-    const text = query.toLowerCase();
-    let reply = "Dr. Pose says: Ensure proper warm-up, glute medius activation, and maintain symmetrical loading!";
-    if (text.includes('valgus') || text.includes('knee')) {
-      reply = "Dr. Pose 🩺: Knee valgus occurs when the knee collapses inward during squatting or landing. Strengthen the Gluteus Medius with band walks and single-leg Romanian deadlifts!";
-    } else if (text.includes('roast') || text.includes('readiness')) {
-      reply = "Dr. Pose 🩺: Your squad readiness is looking sharper than a scalpel! But watch out for Defender #4 — his knee valgus is begging for mercy! 🪑";
-    } else if (text.includes('acl') || text.includes('injury')) {
-      reply = "Dr. Pose 🩺: ACL tears often happen during sudden deceleration with dynamic valgus. Perform Nordic hamstring curls and soft-knee jump landings daily!";
-    }
-
-    setMessages(prev => [...prev, { sender: 'user', text: query }, { sender: 'bot', text: reply }]);
-  };
-
-  const send = (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    replyTo(input);
-    setInput('');
-  };
-
-  return (
-    <>
-      {/* Floating Chat Button */}
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
-          background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff',
-          border: 'none', borderRadius: '9999px', padding: '12px 20px',
-          boxShadow: '0 8px 24px rgba(124,58,237,0.4)', fontWeight: 800, fontSize: '14px',
-          display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
-        }}
-      >
-        💬 Ask Dr. Pose (AI)
-      </button>
-
-      {/* Floating Chat Modal */}
-      {open && (
-        <div style={{ position: 'fixed', bottom: '80px', right: '24px', width: '360px', height: '480px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '18px', boxShadow: '0 20px 60px rgba(30,27,75,0.25)', zIndex: 9999, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Header */}
-          <div style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ fontSize: '20px' }}>🩺</div>
-              <div>
-                <b style={{ fontSize: '14px', display: 'block' }}>Dr. Pose AI Advisor</b>
-                <span style={{ fontSize: '10.5px', opacity: 0.85 }}>Online • Biomechanical Expert</span>
-              </div>
-            </div>
-            <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer' }}>✕</button>
-          </div>
-
-          {/* Quick Prompts */}
-          <div style={{ padding: '8px 12px', background: '#f5f3ff', borderBottom: '1px solid #ede9fe', display: 'flex', gap: '6px', overflowX: 'auto' }}>
-            <button onClick={() => replyTo('How to fix Knee Valgus?')} style={{ whiteSpace: 'nowrap', fontSize: '10.5px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '9999px', padding: '3px 10px', cursor: 'pointer', fontWeight: 700, color: '#7c3aed' }}>
-              🩹 Fix Knee Valgus
-            </button>
-            <button onClick={() => replyTo('Roast my squad readiness!')} style={{ whiteSpace: 'nowrap', fontSize: '10.5px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '9999px', padding: '3px 10px', cursor: 'pointer', fontWeight: 700, color: '#7c3aed' }}>
-              🔥 Roast Readiness
-            </button>
-            <button onClick={() => replyTo('Best ACL injury prevention drills')} style={{ whiteSpace: 'nowrap', fontSize: '10.5px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '9999px', padding: '3px 10px', cursor: 'pointer', fontWeight: 700, color: '#7c3aed' }}>
-              🦵 ACL Drills
-            </button>
-          </div>
-
-          {/* Messages Body */}
-          <div style={{ flex: 1, padding: '14px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', background: '#faf9ff' }}>
-            {messages.map((m, idx) => (
-              <div key={idx} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', maxWidth: '82%', background: m.sender === 'user' ? '#7c3aed' : '#fff', color: m.sender === 'user' ? '#fff' : '#1e1b4b', border: m.sender === 'user' ? 'none' : '1px solid #ddd6fe', borderRadius: '12px', padding: '10px 14px', fontSize: '12.5px', lineHeight: 1.4 }}>
-                {m.text}
-              </div>
-            ))}
-          </div>
-
-          {/* Footer Input */}
-          <form onSubmit={send} style={{ display: 'flex', padding: '10px', background: '#fff', borderTop: '1px solid #ede9fe' }}>
-            <input
-              type="text"
-              placeholder="Ask Dr. Pose a question…"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              style={{ flex: 1, border: '1px solid #ddd6fe', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', outline: 'none' }}
-            />
-            <button type="submit" style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', marginLeft: '6px', fontWeight: 800, cursor: 'pointer', fontSize: '12px' }}>
-              Send
-            </button>
-          </form>
-        </div>
-      )}
-    </>
-  );
-}
-
-
 
 function WhatIfWorkoutSimulator() {
   const [hours, setHours] = useState(14);
