@@ -34,6 +34,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+import os
+from fastapi.staticfiles import StaticFiles
+
+sample_videos_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "sample_videos")
+if os.path.exists(sample_videos_dir):
+    app.mount("/sample_videos", StaticFiles(directory=sample_videos_dir), name="sample_videos")
+
 
 @app.on_event("startup")
 def on_startup():

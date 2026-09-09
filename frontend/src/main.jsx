@@ -2990,6 +2990,59 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
           </select>
         </div>
 
+        {/* Downloadable Sample Exercise Clips */}
+        <div style={{ marginTop: '14px', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '12px', padding: '12px 14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#6d28d9' }}>
+              📥 Download Sample Exercise Video Clips (15 Movements)
+            </span>
+            <small style={{ fontSize: '11px', color: '#7c3aed', fontWeight: 700 }}>Optical Telemetry MP4s</small>
+          </div>
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+            {[
+              ['01_squatting.mp4', '🏋️ Squatting'],
+              ['02_lunging.mp4', '🦵 Lunges'],
+              ['03_deadlift.mp4', '🏋️‍♂️ Deadlift'],
+              ['04_running.mp4', '🏃 Running'],
+              ['05_sprinting.mp4', '⚡ Sprinting'],
+              ['06_jumping.mp4', '🦘 Jumping'],
+              ['07_landing.mp4', '🎯 Landing'],
+              ['08_cutting.mp4', '🔄 Cutting'],
+              ['09_throwing.mp4', '⚾ Throwing'],
+              ['10_upper_body_push.mp4', '💪 Press'],
+              ['11_agility_drills.mp4', '🪜 Agility'],
+              ['12_single_leg_balance.mp4', '🧘 Balance'],
+              ['13_plyometrics.mp4', '💥 Plyos'],
+              ['14_swimming_rowing.mp4', '🏊 Swimming'],
+              ['15_sport_specific_drills.mp4', '⚽ Drills'],
+            ].map(([filename, label]) => (
+              <a
+                key={filename}
+                href={`${API_BASE_URL}/sample_videos/${filename}`}
+                download={filename}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  whiteSpace: 'nowrap',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: '#4c1d95',
+                  background: '#fff',
+                  border: '1px solid #c4b5fd',
+                  borderRadius: '9999px',
+                  padding: '4px 10px',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                {label} ⬇
+              </a>
+            ))}
+          </div>
+        </div>
+
         <div className="drop" style={{ marginTop: '14px' }}>
           <div>📹</div>
           <strong>{file ? file.name : 'Select or drop movement video clip'}</strong>
