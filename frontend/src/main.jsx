@@ -15,29 +15,44 @@ async function api(path, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeoutMs = options.timeout || 30000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (res.status === 401 && path === '/api/auth/me') {
-    localStorage.removeItem('sir_token');
-    localStorage.removeItem('sir_auth');
-    localStorage.removeItem('sir_user');
-  }
+  try {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      signal: options.signal || controller.signal,
+    });
+    clearTimeout(timeoutId);
 
-  if (!res.ok) {
-    let msg = `Request failed (${res.status})`;
-    try {
-      const err = await res.json();
-      msg = err.detail || err.message || msg;
-    } catch {
-      // Non-JSON error payload
+    if (res.status === 401) {
+      localStorage.removeItem('sir_token');
+      localStorage.removeItem('sir_auth');
+      localStorage.removeItem('sir_user');
+      window.dispatchEvent(new Event('sir_unauthorized'));
     }
-    throw new Error(msg);
-  }
 
-  return res.json();
+    if (!res.ok) {
+      let msg = `Request failed (${res.status})`;
+      try {
+        const err = await res.json();
+        msg = err.detail || err.message || msg;
+      } catch {
+        // Non-JSON error payload
+      }
+      throw new Error(msg);
+    }
+
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Server response timeout. The backend is waking up or unresponsive—please try again in a few seconds.');
+    }
+    throw err;
+  }
 }
 
 let soundMuted = true;
@@ -316,7 +331,29 @@ function App() {
   };
 
   useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem('sir_token');
+      localStorage.removeItem('sir_auth');
+      localStorage.removeItem('sir_user');
+      setAuthenticated(false);
+      setCurrentUser(null);
+    };
+    window.addEventListener('sir_unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('sir_unauthorized', handleUnauthorized);
+  }, []);
+
+  useEffect(() => {
     if (authenticated) {
+      api('/api/auth/me')
+        .then((user) => {
+          if (user) {
+            setCurrentUser(user);
+            localStorage.setItem('sir_user', JSON.stringify(user));
+          }
+        })
+        .catch(() => {
+          // If token was invalid or expired, 401 handler dispatches sir_unauthorized
+        });
       loadData();
     }
   }, [authenticated]);
@@ -1161,12 +1198,13 @@ function AuthScreen({ onSuccess }) {
 
         {error && <div className="authError">{error}</div>}
 
-        <form onSubmit={submit} className="authForm">
+        <form onSubmit={submit} className="authForm" autoComplete="off">
           {mode === 'register' && (
             <label>
               Full name
               <input
                 required
+                autoComplete="name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="User Full Name"
@@ -1178,6 +1216,7 @@ function AuthScreen({ onSuccess }) {
             <input
               required
               type="email"
+              autoComplete={mode === 'register' ? 'new-email' : 'email'}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="you@domain.com"
@@ -1188,13 +1227,14 @@ function AuthScreen({ onSuccess }) {
             <input
               required
               type="password"
+              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               placeholder="••••••••"
             />
           </label>
           <button className="primary authSubmit" disabled={busy}>
-            {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
+            {busy ? 'Please wait (Connecting…)' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
@@ -1203,8 +1243,10 @@ function AuthScreen({ onSuccess }) {
           <button
             type="button"
             onClick={() => {
-              setMode(mode === 'login' ? 'register' : 'login');
+              const newMode = mode === 'login' ? 'register' : 'login';
+              setMode(newMode);
               setError('');
+              setForm({ name: '', email: '', password: '' });
             }}
           >
             {mode === 'login' ? 'Create an account' : 'Sign in'}
