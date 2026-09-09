@@ -131,16 +131,6 @@ function triggerConfetti() {
   setTimeout(() => container.remove(), 2600);
 }
 
-function getAiRoast(kneeAngle = 128, valgus = 14, risk = 82) {
-  const roasts = [
-    `🤖 AI Roast: Knee valgus at ${valgus}°? Your knees are bowing inward like a folding lawn chair on a windy beach! 🪑💨`,
-    `🤖 AI Roast: Knee flexion at ${kneeAngle}°? Bro is squatting like he dropped his phone under the sofa and is trying not to look! 📱`,
-    `🤖 AI Roast: ${risk}% Risk Score? Your joints are making more noise than a bag of potato chips in a quiet movie theater! 🍿`,
-    `🤖 AI Roast: 0% asymmetry? Your balance is so ridiculously steady even a flamingo is taking notes 🦩`,
-  ];
-  return roasts[Math.floor(Math.random() * roasts.length)];
-}
-
 const ICON_SETS = {
   emoji: {
     Dashboard: '📊',
@@ -1876,20 +1866,6 @@ function KinematicsLab() {
   const [injuryHistory, setInjuryHistory] = useState('None');
   const [valgusAngle, setValgusAngle] = useState(8);
   const [selectedJoint, setSelectedJoint] = useState('knee');
-  const [roastMsg, setRoastMsg] = useState('');
-
-  const handleRoast = () => {
-    const roast = getAiRoast(kneeAngle, valgusAngle, sandboxScore);
-    setRoastMsg(roast);
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(roast.replace('🤖 AI Roast: ', ''));
-      window.speechSynthesis.speak(u);
-    }
-    if (sandboxLevel === 'LOW') {
-      triggerConfetti();
-    }
-  };
 
   let sandboxScore = 20;
   if (trainingLoad === 'High') sandboxScore += 18;
@@ -2030,27 +2006,12 @@ function KinematicsLab() {
             <button
               type="button"
               className="btnSecondary"
-              style={{ background: '#fff1f2', color: '#e11d48', border: '1px solid #fda4af' }}
-              onClick={handleRoast}
-            >
-              🔥 Roast My Pose (AI Voice)
-            </button>
-            <button
-              type="button"
-              className="btnSecondary"
               onClick={() => setAnimating(!animating)}
             >
               {animating ? '⏹ Pause Cycle' : '▶ Play Movement Cycle'}
             </button>
           </div>
         </div>
-
-        {roastMsg && (
-          <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '12px', padding: '14px', marginTop: '16px', color: '#881337', fontWeight: 700, fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{roastMsg}</span>
-            <button onClick={() => triggerConfetti()} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }} title="Celebrate!">🎉</button>
-          </div>
-        )}
 
         <div className="canvasBox">
           <canvas ref={canvasRef} width={460} height={250} />
@@ -3012,13 +2973,20 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
             style={{ fontWeight: 800, fontSize: '14.5px' }}
           >
             <option value="squatting">🏋️ Squatting — Bilateral Knee & Hip Mechanics</option>
+            <option value="lunging">🦵 Lunging & Split Squats — Single-Leg Quad & Knee Stability</option>
+            <option value="deadlift">🏋️‍♂️ Deadlift & Hinging — Posterior Chain & Spine Biomechanics</option>
             <option value="running">🏃 Running & Gait — Cadence & Stride Mechanics (Track, Soccer, Rugby)</option>
             <option value="sprinting">⚡ Sprinting — Max Velocity Mechanics & Acceleration</option>
             <option value="jumping">🦘 Jumping — Vertical Propulsion & Takeoff (Basketball, Volleyball)</option>
             <option value="landing">🎯 Landing — Deceleration & Impact Attenuation</option>
-            <option value="throwing">⚾ Throwing & Kinetic Torque — Baseball, Tennis, Cricket</option>
             <option value="cutting">🔄 Cutting & Change-of-Direction — Lateral ACL Shear & Valgus</option>
-            <option value="sport_specific_drills">⚽ Sport-Specific Drills — Agility & Joint Integrity</option>
+            <option value="throwing">⚾ Throwing & Overhead Serving — Baseball, Tennis, Cricket, Quarterback</option>
+            <option value="upper_body_push">💪 Upper Body Press — Overhead & Bench Press Mechanics</option>
+            <option value="agility_drills">🪜 Agility Ladder & Shuttle Drills — Fast Footwork & Ankle Symmetry</option>
+            <option value="single_leg_balance">🧘 Single-Leg Balance & Y-Balance — Dynamic Postural Control</option>
+            <option value="plyometrics">💥 Plyometrics & Box Jumps — Explosive Power & Joint Absorption</option>
+            <option value="swimming_rowing">🏊 Swimming & Rowing — Full-Body Kinematic Coordination</option>
+            <option value="sport_specific_drills">⚽ Sport-Specific Drills — General Multi-Sport Mechanics</option>
           </select>
         </div>
 
