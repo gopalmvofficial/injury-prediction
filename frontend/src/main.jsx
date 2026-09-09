@@ -563,7 +563,7 @@ function App() {
         })}
 
         <div className="sidefoot">
-          MotionIQ v2.0 · Milestone 2<br />
+          Motion IQ v2.0 · Milestone 2<br />
           OpenCV · MediaPipe · Supervised ML
         </div>
       </aside>
@@ -730,8 +730,8 @@ function App() {
         )}
 
         <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #ede9fe', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '11.5px', flexWrap: 'wrap', gap: '10px' }}>
-          <span>MotionIQ Sports Risk Intelligence • MediaPipe + XGBoost</span>
-          <span>© 2025 MotionIQ Inc. • Secure Encrypted Workspace</span>
+          <span>Motion IQ Sports Risk Intelligence • MediaPipe + XGBoost</span>
+          <span>© 2025 Motion IQ Inc. • Secure Encrypted Workspace</span>
         </footer>
 
         {toast && <div className="toast">{toast}</div>}
@@ -3885,7 +3885,7 @@ function Settings({
           </div>
           <div style={{ background: '#faf9ff', padding: '14px', borderRadius: '10px', border: '1px solid #ddd6fe' }}>
             <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Application Version</div>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e1b4b', marginTop: '4px' }}>MotionIQ v2.0 (Milestone 2)</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e1b4b', marginTop: '4px' }}>Motion IQ v2.0 (Milestone 2)</div>
           </div>
         </div>
       </section>
@@ -4058,7 +4058,7 @@ class ErrorBoundary extends React.Component {
   }
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
-    console.error('MotionIQ React App Error:', error, errorInfo);
+    console.error('Motion IQ React App Error:', error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
@@ -4067,7 +4067,7 @@ class ErrorBoundary extends React.Component {
           <div style={{ maxWidth: '580px', width: '100%', background: '#fff', padding: '32px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', textAlign: 'left' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '48px', marginBottom: '8px' }}>⚡</div>
-              <h2 style={{ color: '#1e1b4b', margin: '0 0 6px', fontSize: '20px', fontWeight: 800 }}>MotionIQ Application Recovery</h2>
+              <h2 style={{ color: '#1e1b4b', margin: '0 0 6px', fontSize: '20px', fontWeight: 800 }}>Motion IQ Application Recovery</h2>
               <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 16px' }}>
                 An uncaught rendering error occurred. Click below to reset cached state and reload the application:
               </p>
