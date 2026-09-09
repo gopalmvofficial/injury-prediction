@@ -19,6 +19,8 @@ backend/data/*.db
 backend/database/*.db
 backend/uploads/*
 backend/results/*
+sample_videos/
+*.mp4
 !backend/uploads/.gitkeep
 !backend/results/.gitkeep
 !backend/database/.gitkeep
