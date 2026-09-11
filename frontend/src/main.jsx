@@ -15,29 +15,47 @@ async function api(path, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeoutMs = options.timeout || 60000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (res.status === 401 && path === '/api/auth/me') {
-    localStorage.removeItem('sir_token');
-    localStorage.removeItem('sir_auth');
-    localStorage.removeItem('sir_user');
-  }
+  try {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      signal: options.signal || controller.signal,
+    });
+    clearTimeout(timeoutId);
 
-  if (!res.ok) {
-    let msg = `Request failed (${res.status})`;
-    try {
-      const err = await res.json();
-      msg = err.detail || err.message || msg;
-    } catch {
-      // Non-JSON error payload
+    if (res.status === 401) {
+      localStorage.removeItem('sir_token');
+      localStorage.removeItem('sir_auth');
+      localStorage.removeItem('sir_user');
+      window.dispatchEvent(new Event('sir_unauthorized'));
     }
-    throw new Error(msg);
-  }
 
-  return res.json();
+    if (!res.ok) {
+      let msg = `Request failed (${res.status})`;
+      try {
+        const err = await res.json();
+        msg = err.detail || err.message || msg;
+      } catch {
+        // Non-JSON error payload
+      }
+      throw new Error(msg);
+    }
+
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Server response timeout. The backend on Render is waking up from sleep—please wait ~30 seconds and try logging in again.');
+    }
+    if (err.message === 'Failed to fetch' || (err.name === 'TypeError' && err.message.toLowerCase().includes('fetch'))) {
+      throw new Error('Connecting to server... The backend on Render is waking up from sleep—please try logging in again in 10-20 seconds.');
+    }
+    throw err;
+  }
 }
 
 let soundMuted = true;
@@ -116,16 +134,6 @@ function triggerConfetti() {
   setTimeout(() => container.remove(), 2600);
 }
 
-function getAiRoast(kneeAngle = 128, valgus = 14, risk = 82) {
-  const roasts = [
-    `🤖 AI Roast: Knee valgus at ${valgus}°? Your knees are bowing inward like a folding lawn chair on a windy beach! 🪑💨`,
-    `🤖 AI Roast: Knee flexion at ${kneeAngle}°? Bro is squatting like he dropped his phone under the sofa and is trying not to look! 📱`,
-    `🤖 AI Roast: ${risk}% Risk Score? Your joints are making more noise than a bag of potato chips in a quiet movie theater! 🍿`,
-    `🤖 AI Roast: 0% asymmetry? Your balance is so ridiculously steady even a flamingo is taking notes 🦩`,
-  ];
-  return roasts[Math.floor(Math.random() * roasts.length)];
-}
-
 const ICON_SETS = {
   emoji: {
     Dashboard: '📊',
@@ -184,6 +192,21 @@ function App() {
   const [health, setHealth] = useState(null);
   const [toast, setToast] = useState('');
   const [selectedAthlete, setSelectedAthlete] = useState(null);
+
+  // Lifted Video Analysis State (Persisted across tab switches)
+  const [analysisState, setAnalysisState] = useState({
+    mode: 'upload',
+    athlete: '',
+    activity: 'squatting',
+    file: null,
+    videoPreviewUrl: null,
+    busy: false,
+    progressStage: '',
+    progressPercent: 0,
+    result: null,
+    risk: null,
+  });
+
 
   // Dynamic Customizations State
   const [theme, setTheme] = useState(() => localStorage.getItem('motioniq_theme') || 'vibrant');
@@ -301,7 +324,29 @@ function App() {
   };
 
   useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem('sir_token');
+      localStorage.removeItem('sir_auth');
+      localStorage.removeItem('sir_user');
+      setAuthenticated(false);
+      setCurrentUser(null);
+    };
+    window.addEventListener('sir_unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('sir_unauthorized', handleUnauthorized);
+  }, []);
+
+  useEffect(() => {
     if (authenticated) {
+      api('/api/auth/me')
+        .then((user) => {
+          if (user) {
+            setCurrentUser(user);
+            localStorage.setItem('sir_user', JSON.stringify(user));
+          }
+        })
+        .catch(() => {
+          // If token was invalid or expired, 401 handler dispatches sir_unauthorized
+        });
       loadData();
     }
   }, [authenticated]);
@@ -340,38 +385,22 @@ function App() {
     }
   };
 
-  if (!authenticated) {
-    return (
-      <AuthScreen
-        onSuccess={(token, user) => {
-          localStorage.setItem('sir_token', token);
-          localStorage.setItem('sir_auth', '1');
-          localStorage.setItem('sir_user', JSON.stringify(user));
-          setCurrentUser(user);
-          setAuthenticated(true);
-        }}
-      />
-    );
-  }
-
-  const nav = (p) => {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    setPage(p);
-  };
-
   const userRole = currentUser?.role || 'coach';
   const isAthleteRole = userRole === 'athlete';
   const userEmail = (currentUser?.email || '').toLowerCase().trim();
   const userName = (currentUser?.name || '').toLowerCase().trim();
 
-  // Role-Based Athlete & Coach Data Isolation
+  // Role-Based Athlete & Coach Data Isolation Hooks (MUST BE DECLARED BEFORE EARLY RETURN FOR REACT RULES OF HOOKS)
   const userAthletes = React.useMemo(() => {
+    const safeAthletes = Array.isArray(athletes) ? athletes : [];
     if (isAthleteRole) {
       // Athlete role sees ONLY their own profile
-      const matched = (athletes || []).filter(a =>
-        (a.name || '').toLowerCase().trim() === userName ||
-        (a.email || '').toLowerCase().trim() === userEmail ||
-        (a.user_email || '').toLowerCase().trim() === userEmail
+      const matched = safeAthletes.filter(a =>
+        a && (
+          (a.name || '').toLowerCase().trim() === userName ||
+          (a.email || '').toLowerCase().trim() === userEmail ||
+          (a.user_email || '').toLowerCase().trim() === userEmail
+        )
       );
       if (matched.length > 0) return matched;
       return [{
@@ -391,11 +420,14 @@ function App() {
       let coachCustomAthletes = [];
       try {
         const storedCustom = localStorage.getItem(`sir_coach_athletes_${userEmail}`);
-        if (storedCustom) coachCustomAthletes = JSON.parse(storedCustom);
+        if (storedCustom) {
+          const parsed = JSON.parse(storedCustom);
+          if (Array.isArray(parsed)) coachCustomAthletes = parsed;
+        }
       } catch {}
 
-      const serverCoachAthletes = (athletes || []).filter(a =>
-        a.coach_email && a.coach_email.toLowerCase().trim() === userEmail
+      const serverCoachAthletes = safeAthletes.filter(a =>
+        a && a.coach_email && a.coach_email.toLowerCase().trim() === userEmail
       );
 
       const combined = [...coachCustomAthletes, ...serverCoachAthletes];
@@ -403,7 +435,8 @@ function App() {
       const seen = new Set();
       const unique = [];
       for (const ca of combined) {
-        const key = ca.id || ca.name;
+        if (!ca || typeof ca !== 'object') continue;
+        const key = ca.id || ca.athlete_id || ca.name || Math.random();
         if (!seen.has(key)) {
           seen.add(key);
           unique.push(ca);
@@ -414,10 +447,12 @@ function App() {
   }, [athletes, currentUser, isAthleteRole, userEmail, userName]);
 
   const userSummary = React.useMemo(() => {
-    if (!summary) return summary;
-    const athleteNames = new Set(userAthletes.map(a => (a.name || '').toLowerCase().trim()));
+    if (!summary || typeof summary !== 'object') return summary;
+    const athleteNames = new Set(userAthletes.map(a => (a?.name || '').toLowerCase().trim()));
+    const safeRecentAnalyses = Array.isArray(summary.recent_analyses) ? summary.recent_analyses : [];
 
-    const filteredAnalyses = (summary.recent_analyses || []).filter(an => {
+    const filteredAnalyses = safeRecentAnalyses.filter(an => {
+      if (!an) return false;
       const anName = (an.athlete_name || '').toLowerCase().trim();
       const anEmail = (an.user_email || an.coach_email || '').toLowerCase().trim();
       if (isAthleteRole) {
@@ -428,9 +463,10 @@ function App() {
       return false;
     });
 
-    const highRiskCount = filteredAnalyses.filter(a => a.risk_level === 'HIGH' || a.risk_level === 'CRITICAL').length;
+    const highRiskCount = filteredAnalyses.filter(a => a && (a.risk_level === 'HIGH' || a.risk_level === 'CRITICAL')).length;
     const riskDist = { LOW: 0, MEDIUM: 0, HIGH: 0 };
     filteredAnalyses.forEach(a => {
+      if (!a) return;
       const lvl = a.risk_level === 'CRITICAL' ? 'HIGH' : (a.risk_level || 'LOW');
       riskDist[lvl] = (riskDist[lvl] || 0) + 1;
     });
@@ -462,13 +498,32 @@ function App() {
     }
   }, [authenticated, currentUser, isAthleteRole, userAthletes.length, userSummary]);
 
+  if (!authenticated) {
+    return (
+      <AuthScreen
+        onSuccess={(token, user) => {
+          localStorage.setItem('sir_token', token);
+          localStorage.setItem('sir_auth', '1');
+          localStorage.setItem('sir_user', JSON.stringify(user));
+          setCurrentUser(user);
+          setAuthenticated(true);
+        }}
+      />
+    );
+  }
+
+  const nav = (p) => {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    setPage(p);
+  };
+
   return (
     <div className="app">
       <aside>
         <div className="brand">
           <div className="brandIcon">⚡</div>
           <div>
-            <b>Motion<span style={{color:'#c4b5fd'}}>IQ</span></b>
+            <b>Motion <span style={{color:'#c4b5fd'}}>IQ</span></b>
             <span>Sports Risk Intelligence</span>
           </div>
         </div>
@@ -501,7 +556,7 @@ function App() {
         })}
 
         <div className="sidefoot">
-          MotionIQ v2.0 · Milestone 2<br />
+          Motion IQ v2.0 · Milestone 2<br />
           OpenCV · MediaPipe · Supervised ML
         </div>
       </aside>
@@ -548,18 +603,6 @@ function App() {
               <option value="rose-gold">🌹 Rose Gold</option>
             </select>
 
-            {/* Notification Bell */}
-            <button
-              title="Notifications"
-              style={{ background: 'none', border: '1px solid #ddd6fe', borderRadius: '9999px', width: '36px', height: '36px', display: 'grid', placeItems: 'center', fontSize: '16px', position: 'relative', cursor: 'pointer' }}
-            >
-              🔔
-              {(summary?.high_risk_athletes ?? 0) > 0 && (
-                <span style={{ position: 'absolute', top: '-3px', right: '-3px', width: '16px', height: '16px', background: '#dc2626', borderRadius: '50%', fontSize: '8px', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 800 }}>
-                  {summary.high_risk_athletes}
-                </span>
-              )}
-            </button>
             {currentUser && (
               <button
                 type="button"
@@ -597,22 +640,25 @@ function App() {
           background: 'var(--bg-card)',
           border: '1px solid var(--border-purple)',
           borderRadius: '12px',
-          padding: '8px 16px',
+          padding: '10px 20px',
           marginBottom: '22px',
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center',
+          gap: '20px',
+          flexWrap: 'wrap',
           fontSize: '12px',
           color: 'var(--text-muted)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <span>⚡ <b>60 FPS</b> Real-Time Pose Stream</span>
             <span>•</span>
             <span>🧬 <b>33 MediaPipe Landmarks</b> Locked</span>
             <span>•</span>
             <span>🛡️ <b>Dual-Sync Resilient Cache</b> Active</span>
+            <span>•</span>
           </div>
-          <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>LIVE SYSTEM METRICS ✓</span>
+          <span style={{ color: 'var(--accent-primary)', fontWeight: 800, marginLeft: '32px' }}>LIVE SYSTEM METRICS ✓</span>
         </div>
 
         {page === 'Dashboard' && (
@@ -644,6 +690,8 @@ function App() {
             onDone={loadData}
             onNav={nav}
             onPlayVideo={(url) => setVideoModalUrl(url)}
+            analysisState={analysisState}
+            setAnalysisState={setAnalysisState}
           />
         )}
         {page === 'Kinematics Lab' && (
@@ -678,8 +726,8 @@ function App() {
         )}
 
         <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #ede9fe', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '11.5px', flexWrap: 'wrap', gap: '10px' }}>
-          <span>MotionIQ Sports Risk Intelligence • MediaPipe + XGBoost</span>
-          <span>© 2025 MotionIQ Inc. • Secure Encrypted Workspace</span>
+          <span>Motion IQ Sports Risk Intelligence • MediaPipe + XGBoost</span>
+          <span>© 2025 Motion IQ Inc. • Secure Encrypted Workspace</span>
         </footer>
 
         {toast && <div className="toast">{toast}</div>}
@@ -768,8 +816,39 @@ function App() {
             }}
           />
         )}
-        {/* Floating AI Chatbot Advisor */}
-        <DrPoseChatbotModal />
+
+        {/* Persistent Floating Video Analysis Status Banner */}
+        {analysisState.busy && page !== 'Video Analysis' && (
+          <div
+            onClick={() => setPage('Video Analysis')}
+            style={{
+              position: 'fixed',
+              bottom: '24px',
+              right: '24px',
+              zIndex: 9999,
+              background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+              color: '#fff',
+              padding: '12px 18px',
+              borderRadius: '12px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+              border: '1px solid #6366f1',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <div style={{ fontSize: '22px' }} className="animatedSpinner">🌀</div>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: '#a5b4fc' }}>
+                Video Analysis In Progress ({analysisState.progressPercent}%)
+              </div>
+              <div style={{ fontSize: '11px', color: '#e0e7ff', marginTop: '2px' }}>
+                {analysisState.progressStage} • <span style={{ textDecoration: 'underline', fontWeight: 700 }}>Click to return</span>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
@@ -1101,12 +1180,13 @@ function AuthScreen({ onSuccess }) {
 
         {error && <div className="authError">{error}</div>}
 
-        <form onSubmit={submit} className="authForm">
+        <form onSubmit={submit} className="authForm" autoComplete="off">
           {mode === 'register' && (
             <label>
               Full name
               <input
                 required
+                autoComplete="name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="User Full Name"
@@ -1118,6 +1198,7 @@ function AuthScreen({ onSuccess }) {
             <input
               required
               type="email"
+              autoComplete={mode === 'register' ? 'new-email' : 'email'}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="you@domain.com"
@@ -1128,13 +1209,14 @@ function AuthScreen({ onSuccess }) {
             <input
               required
               type="password"
+              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               placeholder="••••••••"
             />
           </label>
           <button className="primary authSubmit" disabled={busy}>
-            {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
+            {busy ? 'Please wait (Connecting…)' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
@@ -1143,8 +1225,10 @@ function AuthScreen({ onSuccess }) {
           <button
             type="button"
             onClick={() => {
-              setMode(mode === 'login' ? 'register' : 'login');
+              const newMode = mode === 'login' ? 'register' : 'login';
+              setMode(newMode);
               setError('');
+              setForm({ name: '', email: '', password: '' });
             }}
           >
             {mode === 'login' ? 'Create an account' : 'Sign in'}
@@ -1487,9 +1571,6 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
         </button>
       </div>
 
-      {/* AI Match Fortune & Biomechanical Prophecy */}
-      <AiCrystalBallProphecy />
-
       {/* Athlete Risk Roster */}
       <div className="panel" style={{marginBottom:'22px'}}>
         <div className="panelHead">
@@ -1545,9 +1626,8 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
         )}
       </div>
 
-      {/* Interactive Biomechanical Heatmap & Squad Risk Matrix */}
+      {/* Interactive Biomechanical Heatmap */}
       <BiomechanicalBodyHeatmap />
-      <SquadRiskMatrix athletes={athletes} />
 
       {/* Recent Screenings + Pipeline */}
       <div className="grid2">
@@ -1573,8 +1653,8 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
             <div className="step" key={n}>
               <b>{n}</b>
               <div>
-                <strong>{t}</strong>
-                <small>{s}</small>
+                <strong style={{ display: 'block', marginBottom: '3px', color: 'var(--text-dark)' }}>{t}</strong>
+                <small style={{ display: 'block', color: 'var(--text-muted)' }}>{s}</small>
               </div>
             </div>
           ))}
@@ -1779,86 +1859,7 @@ function BiomechanicalBodyHeatmap() {
   );
 }
 
-function SquadRiskMatrix({ athletes = [] }) {
-  const [filterPos, setFilterPos] = useState('All');
 
-  const positions = ['All', 'Attacker', 'Midfielder', 'Defender', 'Goalkeeper'];
-
-  // Mock plot data for squad scatter matrix
-  const squadData = [
-    { name: 'Jordan Miller', pos: 'Attacker', load: 'High (8.4 km/wk)', risk: 82, level: 'HIGH' },
-    { name: 'Alex Rivera', pos: 'Defender', load: 'Extreme (10.2 km/wk)', risk: 65, level: 'MODERATE' },
-    { name: 'Sam Chen', pos: 'Midfielder', load: 'Moderate (6.1 km/wk)', risk: 24, level: 'LOW' },
-    { name: 'Marcus Vance', pos: 'Attacker', load: 'High (7.8 km/wk)', risk: 38, level: 'MODERATE' },
-    { name: 'Elena Rostova', pos: 'Defender', load: 'Low (3.5 km/wk)', risk: 14, level: 'LOW' },
-    { name: 'David Kim', pos: 'Goalkeeper', load: 'Low (2.8 km/wk)', risk: 10, level: 'LOW' },
-  ];
-
-  const filtered = filterPos === 'All' ? squadData : squadData.filter(d => d.pos.toLowerCase().includes(filterPos.toLowerCase()));
-
-  return (
-    <div className="panel" style={{ marginBottom: '22px' }}>
-      <div className="panelHead">
-        <div>
-          <h3>🏆 Squad Injury Risk & Training Load Matrix</h3>
-          <small style={{ color: 'var(--text-muted)' }}>Interactive scatter matrix mapping Training Load vs ML Risk Score %</small>
-        </div>
-
-        {/* Position Filter Pills */}
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {positions.map((p) => (
-            <button
-              key={p}
-              onClick={() => setFilterPos(p)}
-              style={{
-                background: filterPos === p ? 'var(--accent-primary)' : 'var(--bg-card-subtle)',
-                color: filterPos === p ? '#fff' : 'var(--text-dark)',
-                border: '1px solid var(--border-purple)',
-                padding: '4px 10px', borderRadius: '9999px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer'
-              }}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
-        {filtered.map((item) => {
-          const isHigh = item.level === 'HIGH';
-          const isMod = item.level === 'MODERATE';
-          const badgeBg = isHigh ? '#fef2f2' : isMod ? '#fffbeb' : '#ecfdf5';
-          const badgeColor = isHigh ? '#dc2626' : isMod ? '#d97706' : '#059669';
-          return (
-            <div
-              key={item.name}
-              style={{
-                background: 'var(--bg-card-subtle)',
-                border: '1px solid var(--border-purple)',
-                borderRadius: '12px',
-                padding: '14px',
-                display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <div>
-                <strong style={{ fontSize: '13.5px', color: 'var(--text-dark)', display: 'block' }}>{item.name}</strong>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.pos} • Load: {item.load}</span>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ background: badgeBg, color: badgeColor, fontSize: '11px', fontWeight: 800, padding: '3px 8px', borderRadius: '9999px', display: 'inline-block', marginBottom: '3px' }}>
-                  {item.risk}% RISK
-                </span>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>{item.level}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 function KinematicsLab() {
   const canvasRef = useRef(null);
@@ -1871,20 +1872,6 @@ function KinematicsLab() {
   const [injuryHistory, setInjuryHistory] = useState('None');
   const [valgusAngle, setValgusAngle] = useState(8);
   const [selectedJoint, setSelectedJoint] = useState('knee');
-  const [roastMsg, setRoastMsg] = useState('');
-
-  const handleRoast = () => {
-    const roast = getAiRoast(kneeAngle, valgusAngle, sandboxScore);
-    setRoastMsg(roast);
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(roast.replace('🤖 AI Roast: ', ''));
-      window.speechSynthesis.speak(u);
-    }
-    if (sandboxLevel === 'LOW') {
-      triggerConfetti();
-    }
-  };
 
   let sandboxScore = 20;
   if (trainingLoad === 'High') sandboxScore += 18;
@@ -2025,27 +2012,12 @@ function KinematicsLab() {
             <button
               type="button"
               className="btnSecondary"
-              style={{ background: '#fff1f2', color: '#e11d48', border: '1px solid #fda4af' }}
-              onClick={handleRoast}
-            >
-              🔥 Roast My Pose (AI Voice)
-            </button>
-            <button
-              type="button"
-              className="btnSecondary"
               onClick={() => setAnimating(!animating)}
             >
               {animating ? '⏹ Pause Cycle' : '▶ Play Movement Cycle'}
             </button>
           </div>
         </div>
-
-        {roastMsg && (
-          <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '12px', padding: '14px', marginTop: '16px', color: '#881337', fontWeight: 700, fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{roastMsg}</span>
-            <button onClick={() => triggerConfetti()} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }} title="Celebrate!">🎉</button>
-          </div>
-        )}
 
         <div className="canvasBox">
           <canvas ref={canvasRef} width={460} height={250} />
@@ -2765,21 +2737,58 @@ function AthleteDetails({ athlete, onEdit, onBack }) {
   );
 }
 
-function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
-  const [mode, setMode] = useState('upload'); // 'upload' | 'webcam'
-  const [athlete, setAthlete] = useState('');
-  const [activity, setActivity] = useState('squatting');
-  const [file, setFile] = useState(null);
-  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState(null);
-  const [risk, setRisk] = useState(null);
+function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, setAnalysisState }) {
+  const mode = analysisState?.mode || 'upload';
+  const setMode = (m) => setAnalysisState?.((prev) => ({ ...prev, mode: m }));
+
+  const athlete = analysisState?.athlete || '';
+  const setAthlete = (a) => setAnalysisState?.((prev) => ({ ...prev, athlete: a }));
+
+  const activity = analysisState?.activity || 'squatting';
+  const setActivity = (act) => setAnalysisState?.((prev) => ({ ...prev, activity: act }));
+
+  const file = analysisState?.file || null;
+  const videoPreviewUrl = analysisState?.videoPreviewUrl || null;
+  const busy = Boolean(analysisState?.busy);
+  const result = analysisState?.result || null;
+  const risk = analysisState?.risk || null;
+
   const [speaking, setSpeaking] = useState(false);
 
   // Webcam Capture State
   const videoRef = useRef(null);
   const [webcamActive, setWebcamActive] = useState(false);
   const [recordingTimer, setRecordingTimer] = useState(0);
+
+  const ANALYSIS_STAGES = [
+    { stage: 'Step 1/6: Uploading Video File...', pct: 15 },
+    { stage: 'Step 2/6: Extracting Video Frames @ 60 FPS...', pct: 35 },
+    { stage: 'Step 3/6: MediaPipe 33 Landmark Tracking & Pose Skeleton...', pct: 55 },
+    { stage: 'Step 4/6: Computing Biomechanical Joint Angles & Kinetic Vectors...', pct: 72 },
+    { stage: 'Step 5/6: Executing XGBoost ML Risk Classification Engine...', pct: 88 },
+    { stage: 'Step 6/6: Generating Clinical Assessment & PDF Report...', pct: 95 },
+  ];
+
+  const startProgressInterval = () => {
+    let stageIdx = 0;
+    setAnalysisState?.((prev) => ({
+      ...prev,
+      busy: true,
+      result: null,
+      risk: null,
+      progressStage: ANALYSIS_STAGES[0].stage,
+      progressPercent: ANALYSIS_STAGES[0].pct,
+    }));
+
+    return setInterval(() => {
+      stageIdx = Math.min(stageIdx + 1, ANALYSIS_STAGES.length - 1);
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        progressStage: ANALYSIS_STAGES[stageIdx].stage,
+        progressPercent: ANALYSIS_STAGES[stageIdx].pct,
+      }));
+    }, 1200);
+  };
 
   const startWebcam = async () => {
     try {
@@ -2821,9 +2830,8 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
   const runSampleScan = async (sampleActivity) => {
     if (!athlete) return alert('Select an athlete profile first.');
     setActivity(sampleActivity);
-    setBusy(true);
-    setResult(null);
-    setRisk(null);
+
+    const stageTimer = startProgressInterval();
 
     try {
       const res = await api('/api/videos/sample-scan', {
@@ -2836,9 +2844,15 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
         }),
       });
 
-      setResult(res);
       const riskResult = await api(`/api/risk/${res.analysis_id}`).catch(() => null);
-      setRisk(riskResult || res);
+
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        result: res,
+        risk: riskResult || res,
+        progressStage: 'Complete!',
+        progressPercent: 100,
+      }));
 
       try {
         const cachedAnalysesStr = localStorage.getItem('sir_cached_analyses');
@@ -2851,18 +2865,23 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
     } catch (err) {
       alert(`Analysis error: ${err.message}`);
     } finally {
-      setBusy(false);
+      clearInterval(stageTimer);
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        busy: false,
+      }));
     }
   };
 
   const submit = async () => {
     if (!athlete || !file) return alert('Select an athlete and a video file.');
-    setBusy(true);
-    setResult(null);
-    setRisk(null);
 
-    const localUrl = URL.createObjectURL(file);
-    setVideoPreviewUrl(localUrl);
+    let localUrl = videoPreviewUrl;
+    if (!localUrl && file) {
+      localUrl = URL.createObjectURL(file);
+    }
+
+    const stageTimer = startProgressInterval();
 
     try {
       const fd = new FormData();
@@ -2875,8 +2894,14 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
         body: fd,
       });
 
-      setResult(analysisResult);
-      setRisk(analysisResult);
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        result: analysisResult,
+        risk: analysisResult,
+        videoPreviewUrl: localUrl,
+        progressStage: 'Complete!',
+        progressPercent: 100,
+      }));
 
       try {
         const cachedAnalysesStr = localStorage.getItem('sir_cached_analyses');
@@ -2889,7 +2914,11 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
     } catch (e) {
       alert(`Video Screening Error: ${e.message}`);
     } finally {
-      setBusy(false);
+      clearInterval(stageTimer);
+      setAnalysisState?.((prev) => ({
+        ...prev,
+        busy: false,
+      }));
     }
   };
 
@@ -2908,34 +2937,21 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
       <section className="panel">
         <div className="panelHead">
           <h3>Sports Movement Screening</h3>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              type="button"
-              className={mode === 'upload' ? 'primary small' : 'btnSecondary'}
-              onClick={() => { setMode('upload'); stopWebcam(); }}
-            >
-              📁 Video File
-            </button>
-            <button
-              type="button"
-              className={mode === 'webcam' ? 'primary small' : 'btnSecondary'}
-              onClick={() => { setMode('webcam'); startWebcam(); }}
-            >
-              📹 Live Camera
-            </button>
-          </div>
         </div>
 
-        {/* Biometric AR Scanner Overlay */}
-        <ArBiometricVideoScanner />
-
         <div className="field">
-          <label>Selected Athlete Profile</label>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '4px' }}>
+            🏃 Select Athlete Profile (Active Presentation Roster)
+          </label>
           {athletes.length > 0 ? (
-            <select value={athlete} onChange={(e) => setAthlete(e.target.value)}>
+            <select
+              value={athlete}
+              onChange={(e) => setAthlete(e.target.value)}
+              style={{ fontWeight: 800, fontSize: '14.5px' }}
+            >
               {athletes.map((a) => (
                 <option value={a.athlete_id || a.id} key={a.athlete_id || a.id}>
-                  {a.name} ({a.sport})
+                  👤 {a.name} — {a.sport || 'Multi-Sport'} {a.position ? `(${a.position})` : ''}
                 </option>
               ))}
             </select>
@@ -2953,90 +2969,81 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
           )}
         </div>
 
-        <div className="field" style={{ marginTop: '12px' }}>
-          <label>Supported Activity Movement</label>
-          <select value={activity} onChange={(e) => setActivity(e.target.value)}>
-            <option value="squatting">🏋️ Squatting (Bilateral Knee & Hip Mechanics)</option>
-            <option value="running">🏃 Running (Gait Mechanics & Stride Cadence)</option>
-            <option value="sprinting">⚡ Sprinting (Max Velocity Biomechanics)</option>
-            <option value="jumping">🦘 Jumping (Vertical Propulsion & Takeoff)</option>
-            <option value="landing">🎯 Landing (Deceleration & Impact Attenuation)</option>
-            <option value="throwing">⚾ Throwing (Kinetic Chain & Shoulder Torque)</option>
-            <option value="cutting">🔄 Cutting Movements (Lateral ACL Shear & Valgus)</option>
-            <option value="sport_specific_drills">⚽ Sport-Specific Drills (Agility & Joint Integrity)</option>
+        <div className="field" style={{ marginTop: '14px' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '4px' }}>
+            🎯 Supported Activity Movement (Multi-Sport Mechanics)
+          </label>
+          <select
+            value={activity}
+            onChange={(e) => setActivity(e.target.value)}
+            style={{ fontWeight: 800, fontSize: '14.5px' }}
+          >
+            <option value="squatting">🏋️ Squatting — Bilateral Knee & Hip Mechanics</option>
+            <option value="lunging">🦵 Lunging & Split Squats — Single-Leg Quad & Knee Stability</option>
+            <option value="deadlift">🏋️‍♂️ Deadlift & Hinging — Posterior Chain & Spine Biomechanics</option>
+            <option value="running">🏃 Running & Gait — Cadence & Stride Mechanics (Track, Soccer, Rugby)</option>
+            <option value="sprinting">⚡ Sprinting — Max Velocity Mechanics & Acceleration</option>
+            <option value="jumping">🦘 Jumping — Vertical Propulsion & Takeoff (Basketball, Volleyball)</option>
+            <option value="landing">🎯 Landing — Deceleration & Impact Attenuation</option>
+            <option value="cutting">🔄 Cutting & Change-of-Direction — Lateral ACL Shear & Valgus</option>
+            <option value="throwing">⚾ Throwing & Overhead Serving — Baseball, Tennis, Cricket, Quarterback</option>
+            <option value="upper_body_push">💪 Upper Body Press — Overhead & Bench Press Mechanics</option>
+            <option value="agility_drills">🪜 Agility Ladder & Shuttle Drills — Fast Footwork & Ankle Symmetry</option>
+            <option value="single_leg_balance">🧘 Single-Leg Balance & Y-Balance — Dynamic Postural Control</option>
+            <option value="plyometrics">💥 Plyometrics & Box Jumps — Explosive Power & Joint Absorption</option>
+            <option value="swimming_rowing">🏊 Swimming & Rowing — Full-Body Kinematic Coordination</option>
+            <option value="sport_specific_drills">⚽ Sport-Specific Drills — General Multi-Sport Mechanics</option>
           </select>
         </div>
 
-        {mode === 'upload' ? (
-          <>
-            <div style={{ marginTop: '14px' }}>
-              <small style={{ fontWeight: 700, color: '#334155' }}>⚡ 1-Click Preset Movement Library (Instant Scan):</small>
-              <div className="sampleTray">
-                <div className="sampleCard" onClick={() => runSampleScan('squatting')}>
-                  <b>🏋️ Olympic Squat</b>
-                  <small>Bilateral mechanics</small>
-                </div>
-                <div className="sampleCard" onClick={() => runSampleScan('sprinting')}>
-                  <b>⚡ Sprint Gait</b>
-                  <small>Velocity kinematics</small>
-                </div>
-                <div className="sampleCard" onClick={() => runSampleScan('landing')}>
-                  <b>🦘 Drop Jump</b>
-                  <small>Landing impact</small>
-                </div>
-              </div>
-            </div>
+        <div className="drop" style={{ marginTop: '14px' }}>
+          <div>📹</div>
+          <strong>{file ? file.name : 'Select or drop movement video clip'}</strong>
+          <small>Supported: MP4, MOV, AVI, MKV, WebM • Optical 3D Pose Tracking</small>
+          <input
+            type="file"
+            accept="video/*"
+            onChange={(e) => {
+              const f = e.target.files[0];
+              if (f) {
+                const previewUrl = URL.createObjectURL(f);
+                setAnalysisState?.((prev) => ({
+                  ...prev,
+                  file: f,
+                  videoPreviewUrl: previewUrl,
+                }));
+              }
+            }}
+          />
+        </div>
 
-            <div className="drop">
-              <div>📹</div>
-              <strong>{file ? file.name : 'Select or drop movement video clip'}</strong>
-              <small>Supported: MP4, MOV, AVI, MKV, WebM • Optical 3D Pose Tracking</small>
-              <input
-                type="file"
-                accept="video/*"
-                onChange={(e) => {
-                  const f = e.target.files[0];
-                  setFile(f);
-                  if (f) setVideoPreviewUrl(URL.createObjectURL(f));
-                }}
-              />
-            </div>
+        {/* Inline Video Player Preview */}
+        {videoPreviewUrl && (
+          <div style={{ marginBottom: '14px', background: '#000', borderRadius: '10px', overflow: 'hidden' }}>
+            <video src={videoPreviewUrl} controls autoPlay muted style={{ width: '100%', maxHeight: '240px', display: 'block' }} />
+          </div>
+        )}
 
-            {/* Inline Video Player Preview */}
-            {videoPreviewUrl && (
-              <div style={{ marginBottom: '14px', background: '#000', borderRadius: '10px', overflow: 'hidden' }}>
-                <video src={videoPreviewUrl} controls autoPlay muted style={{ width: '100%', maxHeight: '240px', display: 'block' }} />
-              </div>
-            )}
-
-            <button className="primary full" disabled={busy || (!file && !result)} onClick={submit}>
-              {busy ? 'Processing video & extracting 3D pose…' : 'Upload & Analyze Movement'}
-            </button>
-          </>
-        ) : (
-          <div>
-            <div className="webcamBox">
-              <video ref={videoRef} className="webcamVideo" autoPlay playsInline muted />
-              <div className="webcamHud">
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10b981', fontSize: '11px', fontWeight: 800 }}>
-                  <span>● LIVE OPTICAL STREAM</span>
-                  <span>FPS: 30 • CONFIDENCE: 98.4%</span>
-                </div>
-                <div className="hudCrosshair" />
-                <div style={{ textAlign: 'center', color: '#fff', fontSize: '12px', fontWeight: 700 }}>
-                  {recordingTimer > 0 ? `Recording Movement: ${recordingTimer}s remaining` : 'Stand in frame & align posture'}
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="primary full"
-              disabled={recordingTimer > 0 || busy}
-              onClick={captureWebcamMovement}
-            >
-              {recordingTimer > 0 ? `Recording Movement (${recordingTimer}s)…` : '🔴 Capture & Analyze 5-Second Drill'}
-            </button>
+        <button className="primary full" disabled={busy || (!file && !result)} onClick={submit}>
+          {busy ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <span className="animatedSpinner">🌀</span>
+              <span>{analysisState?.progressStage || 'Processing video & extracting 3D pose...'} ({analysisState?.progressPercent || 0}%)</span>
+            </span>
+          ) : (
+            'Upload & Analyze Movement'
+          )}
+        </button>
+        {busy && (
+          <div style={{ marginTop: '10px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', overflow: 'hidden', height: '8px' }}>
+            <div
+              style={{
+                width: `${analysisState?.progressPercent || 0}%`,
+                height: '100%',
+                background: 'linear-gradient(90deg, #10b981, #06b6d4)',
+                transition: 'width 0.4s ease-in-out',
+              }}
+            />
           </div>
         )}
       </section>
@@ -3076,8 +3083,8 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo }) {
           <div className="pipeline" key={x}>
             <span>{i + 1}</span>
             <div>
-              <b>{x}</b>
-              <small>{result && i < 6 ? 'Completed' : 'Ready'}</small>
+              <b style={{ display: 'block', color: 'var(--text-dark)', marginBottom: '3px' }}>{x}</b>
+              <small style={{ display: 'block', color: 'var(--text-muted)' }}>{result && i < 6 ? 'Completed' : 'Ready'}</small>
             </div>
           </div>
         ))}
@@ -3852,7 +3859,7 @@ function Settings({
           </div>
           <div style={{ background: '#faf9ff', padding: '14px', borderRadius: '10px', border: '1px solid #ddd6fe' }}>
             <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Application Version</div>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e1b4b', marginTop: '4px' }}>MotionIQ v2.0 (Milestone 2)</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e1b4b', marginTop: '4px' }}>Motion IQ v2.0 (Milestone 2)</div>
           </div>
         </div>
       </section>
@@ -3929,108 +3936,6 @@ function BossFightArcade({ kneeAngle, trunkLean, valgusAngle }) {
     </div>
   );
 }
-
-function DrPoseChatbotModal() {
-  const [open, setOpen] = useState(false);
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState([
-    { sender: 'bot', text: "Hello Coach! I'm Dr. Pose 🩺, your AI Biomechanical Advisor. How can I help you optimize squad posture today?" }
-  ]);
-
-  const replyTo = (query) => {
-    const text = query.toLowerCase();
-    let reply = "Dr. Pose says: Ensure proper warm-up, glute medius activation, and maintain symmetrical loading!";
-    if (text.includes('valgus') || text.includes('knee')) {
-      reply = "Dr. Pose 🩺: Knee valgus occurs when the knee collapses inward during squatting or landing. Strengthen the Gluteus Medius with band walks and single-leg Romanian deadlifts!";
-    } else if (text.includes('roast') || text.includes('readiness')) {
-      reply = "Dr. Pose 🩺: Your squad readiness is looking sharper than a scalpel! But watch out for Defender #4 — his knee valgus is begging for mercy! 🪑";
-    } else if (text.includes('acl') || text.includes('injury')) {
-      reply = "Dr. Pose 🩺: ACL tears often happen during sudden deceleration with dynamic valgus. Perform Nordic hamstring curls and soft-knee jump landings daily!";
-    }
-
-    setMessages(prev => [...prev, { sender: 'user', text: query }, { sender: 'bot', text: reply }]);
-  };
-
-  const send = (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    replyTo(input);
-    setInput('');
-  };
-
-  return (
-    <>
-      {/* Floating Chat Button */}
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
-          background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff',
-          border: 'none', borderRadius: '9999px', padding: '12px 20px',
-          boxShadow: '0 8px 24px rgba(124,58,237,0.4)', fontWeight: 800, fontSize: '14px',
-          display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
-        }}
-      >
-        💬 Ask Dr. Pose (AI)
-      </button>
-
-      {/* Floating Chat Modal */}
-      {open && (
-        <div style={{ position: 'fixed', bottom: '80px', right: '24px', width: '360px', height: '480px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '18px', boxShadow: '0 20px 60px rgba(30,27,75,0.25)', zIndex: 9999, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Header */}
-          <div style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ fontSize: '20px' }}>🩺</div>
-              <div>
-                <b style={{ fontSize: '14px', display: 'block' }}>Dr. Pose AI Advisor</b>
-                <span style={{ fontSize: '10.5px', opacity: 0.85 }}>Online • Biomechanical Expert</span>
-              </div>
-            </div>
-            <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer' }}>✕</button>
-          </div>
-
-          {/* Quick Prompts */}
-          <div style={{ padding: '8px 12px', background: '#f5f3ff', borderBottom: '1px solid #ede9fe', display: 'flex', gap: '6px', overflowX: 'auto' }}>
-            <button onClick={() => replyTo('How to fix Knee Valgus?')} style={{ whiteSpace: 'nowrap', fontSize: '10.5px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '9999px', padding: '3px 10px', cursor: 'pointer', fontWeight: 700, color: '#7c3aed' }}>
-              🩹 Fix Knee Valgus
-            </button>
-            <button onClick={() => replyTo('Roast my squad readiness!')} style={{ whiteSpace: 'nowrap', fontSize: '10.5px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '9999px', padding: '3px 10px', cursor: 'pointer', fontWeight: 700, color: '#7c3aed' }}>
-              🔥 Roast Readiness
-            </button>
-            <button onClick={() => replyTo('Best ACL injury prevention drills')} style={{ whiteSpace: 'nowrap', fontSize: '10.5px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '9999px', padding: '3px 10px', cursor: 'pointer', fontWeight: 700, color: '#7c3aed' }}>
-              🦵 ACL Drills
-            </button>
-          </div>
-
-          {/* Messages Body */}
-          <div style={{ flex: 1, padding: '14px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', background: '#faf9ff' }}>
-            {messages.map((m, idx) => (
-              <div key={idx} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', maxWidth: '82%', background: m.sender === 'user' ? '#7c3aed' : '#fff', color: m.sender === 'user' ? '#fff' : '#1e1b4b', border: m.sender === 'user' ? 'none' : '1px solid #ddd6fe', borderRadius: '12px', padding: '10px 14px', fontSize: '12.5px', lineHeight: 1.4 }}>
-                {m.text}
-              </div>
-            ))}
-          </div>
-
-          {/* Footer Input */}
-          <form onSubmit={send} style={{ display: 'flex', padding: '10px', background: '#fff', borderTop: '1px solid #ede9fe' }}>
-            <input
-              type="text"
-              placeholder="Ask Dr. Pose a question…"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              style={{ flex: 1, border: '1px solid #ddd6fe', borderRadius: '8px', padding: '8px 12px', fontSize: '12.5px', outline: 'none' }}
-            />
-            <button type="submit" style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', marginLeft: '6px', fontWeight: 800, cursor: 'pointer', fontSize: '12px' }}>
-              Send
-            </button>
-          </form>
-        </div>
-      )}
-    </>
-  );
-}
-
-
 
 function WhatIfWorkoutSimulator() {
   const [hours, setHours] = useState(14);
@@ -4111,31 +4016,78 @@ function WhatIfWorkoutSimulator() {
   );
 }
 
-function ArBiometricVideoScanner() {
-  return (
-    <div style={{ position: 'relative', width: '100%', height: '180px', background: '#090d16', borderRadius: '14px', border: '1px solid #10b981', overflow: 'hidden', display: 'grid', placeItems: 'center', margin: '14px 0' }}>
-      {/* Sci-Fi Corner Reticles */}
-      <div style={{ position: 'absolute', top: '10px', left: '10px', width: '20px', height: '20px', borderTop: '3px solid #10b981', borderLeft: '3px solid #10b981' }} />
-      <div style={{ position: 'absolute', top: '10px', right: '10px', width: '20px', height: '20px', borderTop: '3px solid #10b981', borderRight: '3px solid #10b981' }} />
-      <div style={{ position: 'absolute', bottom: '10px', left: '10px', width: '20px', height: '20px', borderBottom: '3px solid #10b981', borderLeft: '3px solid #10b981' }} />
-      <div style={{ position: 'absolute', bottom: '10px', right: '10px', width: '20px', height: '20px', borderBottom: '3px solid #10b981', borderRight: '3px solid #10b981' }} />
 
-      {/* Center Target Crosshair */}
-      <div style={{ width: '60px', height: '60px', border: '1px dashed #10b981', borderRadius: '50%', display: 'grid', placeItems: 'center' }}>
-        <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
-      </div>
-
-      {/* Status Overlay */}
-      <div style={{ position: 'absolute', bottom: '12px', left: '14px', fontSize: '11px', color: '#10b981', fontWeight: 800, letterSpacing: '1px' }}>
-        SCANNING BIOMECHANICS • 60 FPS • 33 LANDMARKS LOCKED ✓
-      </div>
-    </div>
-  );
-}
 
 function Empty({ text }) {
   return <div className="empty">{text}</div>;
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+    console.error('Motion IQ React App Error:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '40px 20px', textAlign: 'center', fontFamily: 'sans-serif', background: '#f8fafc', minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+          <div style={{ maxWidth: '580px', width: '100%', background: '#fff', padding: '32px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', textAlign: 'left' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>⚡</div>
+              <h2 style={{ color: '#1e1b4b', margin: '0 0 6px', fontSize: '20px', fontWeight: 800 }}>Motion IQ Application Recovery</h2>
+              <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 16px' }}>
+                An uncaught rendering error occurred. Click below to reset cached state and reload the application:
+              </p>
+            </div>
+
+            {this.state.error && (
+              <div style={{ padding: '12px 14px', background: '#fff1f2', border: '1px solid #fecaca', borderRadius: '10px', color: '#be123c', fontSize: '12px', fontFamily: 'monospace', marginBottom: '16px', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+                <strong>Diagnostic Error:</strong> {this.state.error.toString()}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.removeItem('sir_cached_athletes');
+                    localStorage.removeItem('sir_cached_analyses');
+                  } catch {}
+                  window.location.reload();
+                }}
+                style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+              >
+                🔄 Reset Cache & Reload
+              </button>
+              <button
+                onClick={() => {
+                  try { localStorage.clear(); } catch {}
+                  window.location.reload();
+                }}
+                style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '10px 18px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+              >
+                🚪 Full Session Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const root = createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
+
