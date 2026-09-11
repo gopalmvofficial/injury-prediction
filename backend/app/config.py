@@ -44,6 +44,7 @@ _LOCAL_DEV_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5174",
+    "*",
 ]
 _extra_origins_env = os.environ.get("ALLOWED_ORIGINS", "")
 _extra_origins = [o.strip() for o in _extra_origins_env.split(",") if o.strip()]
