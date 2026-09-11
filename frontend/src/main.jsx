@@ -520,7 +520,7 @@ function App() {
         <div className="brand">
           <div className="brandIcon">⚡</div>
           <div>
-            <b>Motion<span style={{color:'#c4b5fd'}}>IQ</span></b>
+            <b>Motion <span style={{color:'#c4b5fd'}}>IQ</span></b>
             <span>Sports Risk Intelligence</span>
           </div>
         </div>
@@ -653,8 +653,9 @@ function App() {
             <span>🧬 <b>33 MediaPipe Landmarks</b> Locked</span>
             <span>•</span>
             <span>🛡️ <b>Dual-Sync Resilient Cache</b> Active</span>
+            <span>•</span>
           </div>
-          <span style={{ color: 'var(--accent-primary)', fontWeight: 800, marginLeft: 'auto' }}>LIVE SYSTEM METRICS ✓</span>
+          <span style={{ color: 'var(--accent-primary)', fontWeight: 800, marginLeft: '32px' }}>LIVE SYSTEM METRICS ✓</span>
         </div>
 
         {page === 'Dashboard' && (
