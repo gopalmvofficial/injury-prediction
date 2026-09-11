@@ -49,7 +49,10 @@ async function api(path, options = {}) {
   } catch (err) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
-      throw new Error('Server response timeout. The backend on Render is waking up from sleep or unresponsive—please try again in a few seconds.');
+      throw new Error('Server response timeout. The backend on Render is waking up from sleep—please wait ~30 seconds and try logging in again.');
+    }
+    if (err.message === 'Failed to fetch' || (err.name === 'TypeError' && err.message.toLowerCase().includes('fetch'))) {
+      throw new Error('Connecting to server... The backend on Render is waking up from sleep—please try logging in again in 10-20 seconds.');
     }
     throw err;
   }
