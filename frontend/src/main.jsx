@@ -16,7 +16,7 @@ async function api(path, options = {}) {
   }
 
   const controller = new AbortController();
-  const timeoutMs = options.timeout || 30000;
+  const timeoutMs = options.timeout || 60000;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
@@ -49,7 +49,7 @@ async function api(path, options = {}) {
   } catch (err) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
-      throw new Error('Server response timeout. The backend is waking up or unresponsive—please try again in a few seconds.');
+      throw new Error('Server response timeout. The backend on Render is waking up from sleep or unresponsive—please try again in a few seconds.');
     }
     throw err;
   }
@@ -637,22 +637,24 @@ function App() {
           background: 'var(--bg-card)',
           border: '1px solid var(--border-purple)',
           borderRadius: '12px',
-          padding: '8px 16px',
+          padding: '10px 20px',
           marginBottom: '22px',
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center',
+          gap: '20px',
+          flexWrap: 'wrap',
           fontSize: '12px',
           color: 'var(--text-muted)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <span>⚡ <b>60 FPS</b> Real-Time Pose Stream</span>
             <span>•</span>
             <span>🧬 <b>33 MediaPipe Landmarks</b> Locked</span>
             <span>•</span>
             <span>🛡️ <b>Dual-Sync Resilient Cache</b> Active</span>
           </div>
-          <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>LIVE SYSTEM METRICS ✓</span>
+          <span style={{ color: 'var(--accent-primary)', fontWeight: 800, marginLeft: 'auto' }}>LIVE SYSTEM METRICS ✓</span>
         </div>
 
         {page === 'Dashboard' && (
