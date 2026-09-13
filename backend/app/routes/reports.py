@@ -92,4 +92,5 @@ def get_report(
         output_path,
         media_type="application/pdf",
         filename=f"{analysis_id}_biomechanics_report.pdf",
+        content_disposition_type="inline",
     )

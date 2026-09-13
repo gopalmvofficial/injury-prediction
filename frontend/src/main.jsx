@@ -3166,23 +3166,49 @@ function Results({ summary, onPlayVideo }) {
   const [speaking, setSpeaking] = useState(false);
   const token = localStorage.getItem('sir_token');
 
-  const downloadPdf = async (analysisId) => {
+  const [generatingId, setGeneratingId] = useState(null);
+
+  const handlePdfAction = async (analysisId, action = 'view') => {
     try {
+      setGeneratingId(analysisId);
       const target = `${API_BASE_URL}/api/reports/${analysisId}`;
       const res = await fetch(target, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Failed to generate PDF report.');
+      if (!res.ok) {
+        let msg = 'Failed to generate PDF report.';
+        try {
+          const err = await res.json();
+          if (err.detail) msg = err.detail;
+        } catch (_) {}
+        throw new Error(msg);
+      }
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Sports_Injury_Assessment_${analysisId.slice(0, 8)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(pdfBlob);
+
+      if (action === 'view') {
+        const win = window.open(url, '_blank');
+        if (!win) {
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Sports_Injury_Assessment_${analysisId.slice(0, 8)}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+      } else {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Sports_Injury_Assessment_${analysisId.slice(0, 8)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
     } catch (e) {
-      alert(`PDF Download Error: ${e.message}`);
+      alert(`PDF Report Error: ${e.message}`);
+    } finally {
+      setGeneratingId(null);
     }
   };
 
@@ -3300,12 +3326,28 @@ function Results({ summary, onPlayVideo }) {
                     ) : '—'}
                   </td>
                   <td>
-                    <button 
-                      className="primary small"
-                      onClick={(e) => { e.stopPropagation(); downloadPdf(r.analysis_id || r.id); }}
-                    >
-                      📥 PDF
-                    </button>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button 
+                        type="button"
+                        className="btnSecondary small"
+                        title="View & Print PDF Report"
+                        disabled={generatingId === (r.analysis_id || r.id)}
+                        onClick={(e) => { e.stopPropagation(); handlePdfAction(r.analysis_id || r.id, 'view'); }}
+                        style={{ fontSize: '11px', padding: '3px 8px', fontWeight: 600, color: '#0f766e' }}
+                      >
+                        {generatingId === (r.analysis_id || r.id) ? '⏳' : '👁️ View'}
+                      </button>
+                      <button 
+                        type="button"
+                        className="primary small"
+                        title="Download PDF File"
+                        disabled={generatingId === (r.analysis_id || r.id)}
+                        onClick={(e) => { e.stopPropagation(); handlePdfAction(r.analysis_id || r.id, 'download'); }}
+                        style={{ fontSize: '11px', padding: '3px 8px' }}
+                      >
+                        📥 PDF
+                      </button>
+                    </div>
                   </td>
                 </tr>
 
@@ -3427,27 +3469,54 @@ function Reports({ summary }) {
   const [physicianName, setPhysicianName] = useState('');
   const token = localStorage.getItem('sir_token');
 
-  const downloadPdf = async (analysisId) => {
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+
+  const handlePdfAction = async (analysisId, action = 'view') => {
     try {
+      setGeneratingPdf(true);
       const q = new URLSearchParams();
       if (clinicName && clinicName.trim()) q.append('clinic_name', clinicName.trim());
       if (physicianName && physicianName.trim()) q.append('physician_name', physicianName.trim());
       const queryStr = q.toString() ? `?${q.toString()}` : '';
       const target = `${API_BASE_URL}/api/reports/${analysisId}${queryStr}`;
+
       const res = await fetch(target, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Failed to generate PDF report.');
+      if (!res.ok) {
+        let msg = 'Failed to generate PDF report.';
+        try {
+          const err = await res.json();
+          if (err.detail) msg = err.detail;
+        } catch (_) {}
+        throw new Error(msg);
+      }
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Sports_Injury_Assessment_${analysisId.slice(0, 8)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(pdfBlob);
+
+      if (action === 'view') {
+        const win = window.open(url, '_blank');
+        if (!win) {
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Sports_Injury_Assessment_${analysisId.slice(0, 8)}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+      } else {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Sports_Injury_Assessment_${analysisId.slice(0, 8)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
     } catch (e) {
-      alert(`PDF Download Error: ${e.message}`);
+      alert(`PDF Report Error: ${e.message}`);
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
@@ -3525,9 +3594,26 @@ function Reports({ summary }) {
           <p style={{ margin: '6px 0 16px', color: '#64748b' }}>
             Pose Detection: <b>{latest.pose_detection_rate_pct}%</b> • Assessment Time: <b>{formattedTime}</b>
           </p>
-          <button className="primary" onClick={() => downloadPdf(latest.analysis_id)}>
-            📥 Download Complete Assessment Report (PDF)
-          </button>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button 
+              type="button"
+              className="primary" 
+              disabled={generatingPdf}
+              onClick={() => handlePdfAction(latest.analysis_id, 'view')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              {generatingPdf ? '⏳ Generating PDF...' : '👁️ View & Print Full Report (PDF)'}
+            </button>
+            <button 
+              type="button"
+              className="btnSecondary" 
+              disabled={generatingPdf}
+              onClick={() => handlePdfAction(latest.analysis_id, 'download')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', border: '1px solid #cbd5e1', padding: '10px 18px', borderRadius: '8px', background: '#ffffff', fontWeight: 600, color: '#334155', cursor: 'pointer' }}
+            >
+              📥 Direct Download PDF
+            </button>
+          </div>
         </div>
       ) : (
         <Empty text="No video analyses recorded yet. Run a video analysis to generate reports." />
