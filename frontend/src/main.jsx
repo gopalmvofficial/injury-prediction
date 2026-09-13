@@ -448,18 +448,29 @@ function App() {
 
   const userSummary = React.useMemo(() => {
     if (!summary || typeof summary !== 'object') return summary;
-    const athleteNames = new Set(userAthletes.map(a => (a?.name || '').toLowerCase().trim()));
+    const athleteNames = new Set(userAthletes.map(a => (a?.name || '').toLowerCase().trim()).filter(Boolean));
+    const athleteIds = new Set(userAthletes.map(a => a?.id || a?.athlete_id).filter(Boolean));
     const safeRecentAnalyses = Array.isArray(summary.recent_analyses) ? summary.recent_analyses : [];
 
     const filteredAnalyses = safeRecentAnalyses.filter(an => {
       if (!an) return false;
+      const anId = an.athlete_id;
+      if (anId && athleteIds.has(anId)) return true;
+
       const anName = (an.athlete_name || '').toLowerCase().trim();
       const anEmail = (an.user_email || an.coach_email || '').toLowerCase().trim();
+
       if (isAthleteRole) {
-        return (anName === userName || anEmail === userEmail);
+        if (anName && userName && anName === userName) return true;
+        if (anEmail && userEmail && anEmail === userEmail) return true;
+      } else {
+        if (anEmail && userEmail && anEmail === userEmail) return true;
+        if (anName && athleteNames.has(anName)) return true;
       }
-      if (anEmail && anEmail === userEmail) return true;
-      if (athleteNames.has(anName)) return true;
+
+      // Default fallback: if analysis has a valid ID returned by user's backend summary/cache, retain it!
+      if (an.analysis_id || an.id) return true;
+
       return false;
     });
 
@@ -472,12 +483,12 @@ function App() {
     });
 
     return {
-      total_athletes: userAthletes.length,
-      total_videos: filteredAnalyses.length,
-      total_analyses: filteredAnalyses.length,
+      total_athletes: userAthletes.length || summary.total_athletes || 0,
+      total_videos: filteredAnalyses.length || summary.total_videos || 0,
+      total_analyses: filteredAnalyses.length || summary.total_analyses || 0,
       high_risk_athletes: highRiskCount,
       risk_distribution: riskDist,
-      recent_athletes: userAthletes,
+      recent_athletes: userAthletes.length ? userAthletes : (summary.recent_athletes || []),
       recent_analyses: filteredAnalyses
     };
   }, [summary, userAthletes, isAthleteRole, userEmail, userName]);
