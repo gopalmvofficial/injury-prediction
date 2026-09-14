@@ -13,6 +13,13 @@ from typing import List
 def build_observations(biomechanics: dict, quality: dict, pose_detection_rate_pct: float) -> List[str]:
     obs: List[str] = []
 
+    det_info = biomechanics.get("detected_activity_info")
+    if det_info and isinstance(det_info, dict):
+        if det_info.get("mismatch_detected"):
+            obs.append(det_info.get("message", "⚠️ Activity Mismatch Detected."))
+        else:
+            obs.append(det_info.get("message", "✓ Verified movement activity match."))
+
     if pose_detection_rate_pct < 50:
         obs.append(
             f"Pose was detected in only {pose_detection_rate_pct:.0f}% of frames - "
