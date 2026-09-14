@@ -3403,18 +3403,30 @@ function Results({ summary, onPlayVideo }) {
                         </div>
 
                         <div>
-                          <b style={{ color: '#0f2942', fontSize: '13px' }}>📋 Prescribed Exercise Demonstration Cards:</b>
-                          <div className="exerciseGrid">
-                            <div className="exerciseCard">
-                              <b>🏋️ Eccentric Spanish Squats</b>
-                              <p>Patellar tendon & quad load control</p>
-                              <span className="exerciseBadge">3 sets × 8 reps (3s tempo)</span>
-                            </div>
-                            <div className="exerciseCard">
-                              <b>🦘 Single-Leg Soft Landing</b>
-                              <p>ACL valgus shear reduction</p>
-                              <span className="exerciseBadge">3 sets × 6 reps / leg</span>
-                            </div>
+                          <b style={{ color: '#0f2942', fontSize: '13px' }}>
+                            📋 Prescribed Corrective Program for {r.activity ? r.activity.toUpperCase().replace('_', ' ') : 'Movement'}:
+                          </b>
+                          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {(r.recommendations && r.recommendations.length > 0) ? (
+                              r.recommendations.map((rec, i) => (
+                                <div key={i} style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', color: '#1e293b', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+                                  <b>Phase {i + 1}:</b> {rec}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="exerciseGrid">
+                                <div className="exerciseCard">
+                                  <b>🏋️ Eccentric Spanish Squats</b>
+                                  <p>Patellar tendon & quad load control</p>
+                                  <span className="exerciseBadge">3 sets × 8 reps (3s tempo)</span>
+                                </div>
+                                <div className="exerciseCard">
+                                  <b>🦘 Single-Leg Soft Landing</b>
+                                  <p>ACL valgus shear reduction</p>
+                                  <span className="exerciseBadge">3 sets × 6 reps / leg</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

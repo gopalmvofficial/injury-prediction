@@ -162,7 +162,7 @@ def analyze_video(payload: AnalyzeRequest, db: Session = Depends(get_db),
     risk = risk_prediction.compute_risk(
         bio, quality, athlete.injury_history, activity=payload.activity, athlete_data=athlete_info
     )
-    recs = recommendations_module.generate_recommendations(bio, risk)
+    recs = recommendations_module.generate_recommendations(bio, risk, activity=payload.activity)
 
     if risk.get("recommended_rehabilitation") and risk["recommended_rehabilitation"] not in recs:
         recs.insert(0, f"AI-Prescribed Rehabilitation: {risk['recommended_rehabilitation']} (Est. Recovery: {risk.get('estimated_recovery_weeks', 4)} weeks)")
@@ -239,7 +239,7 @@ def run_sample_or_webcam_scan(payload: AnalyzeRequest, db: Session = Depends(get
         "age": athlete.age, "height_cm": athlete.height_cm, "weight_kg": athlete.weight_kg, "sport": athlete.sport,
     }
     risk = risk_prediction.compute_risk(bio, quality, athlete.injury_history, activity=payload.activity, athlete_data=athlete_info)
-    recs = recommendations_module.generate_recommendations(bio, risk)
+    recs = recommendations_module.generate_recommendations(bio, risk, activity=payload.activity)
 
     risk_record = RiskResultModel(
         athlete_id=athlete.id,

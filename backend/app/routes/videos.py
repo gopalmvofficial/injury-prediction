@@ -177,7 +177,7 @@ async def upload_and_analyze_video(
     risk = risk_prediction.compute_risk(
         bio, quality, athlete.injury_history, activity=activity, athlete_data=athlete_info
     )
-    recs = recommendations_module.generate_recommendations(bio, risk)
+    recs = recommendations_module.generate_recommendations(bio, risk, activity=activity)
 
     if risk.get("recommended_rehabilitation") and risk["recommended_rehabilitation"] not in recs:
         recs.insert(0, f"AI-Prescribed Rehabilitation: {risk['recommended_rehabilitation']} (Est. Recovery: {risk.get('estimated_recovery_weeks', 4)} weeks)")
