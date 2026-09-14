@@ -363,6 +363,10 @@ function App() {
     localStorage.removeItem('sir_token');
     localStorage.removeItem('sir_auth');
     localStorage.removeItem('sir_user');
+    localStorage.removeItem('sir_cached_athletes');
+    localStorage.removeItem('sir_cached_analyses');
+    setSummary(null);
+    setAthletes([]);
     setAuthenticated(false);
     setCurrentUser(null);
     setPage('Dashboard');

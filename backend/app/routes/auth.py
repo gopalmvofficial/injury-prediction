@@ -40,14 +40,15 @@ def get_current_user(authorization: str | None = Header(default=None), db: Sessi
 
 @router.post("/register", response_model=AuthResponse)
 def register(payload: UserRegister, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == payload.email).first()
+    clean_email = str(payload.email).strip().lower()
+    existing = db.query(User).filter(User.email == clean_email).first()
     if existing:
         raise HTTPException(status_code=409, detail="An account with this email already exists.")
 
     password_hash, salt = hash_password(payload.password)
     user = User(
-        name=payload.name,
-        email=payload.email,
+        name=payload.name.strip(),
+        email=clean_email,
         role=payload.role or "coach",
         password_hash=password_hash,
         password_salt=salt,
@@ -71,8 +72,17 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=AuthResponse)
 def login(payload: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == payload.email).first()
-    if not user or not verify_password(payload.password, user.password_hash, user.password_salt):
+    clean_email = str(payload.email).strip().lower()
+    user = db.query(User).filter(User.email == clean_email).first()
+    
+    # Check with exact password first, then with trimmed password fallback
+    valid_pass = False
+    if user:
+        valid_pass = verify_password(payload.password, user.password_hash, user.password_salt)
+        if not valid_pass and payload.password != payload.password.strip():
+            valid_pass = verify_password(payload.password.strip(), user.password_hash, user.password_salt)
+
+    if not user or not valid_pass:
         raise HTTPException(status_code=401, detail="Incorrect email or password.")
 
     token = create_session(db, user.id)
