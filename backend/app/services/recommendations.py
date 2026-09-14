@@ -15,13 +15,31 @@ def generate_recommendations(biomechanics: dict, risk: dict, activity: str | Non
     act = (activity or "").lower().replace("_", " ")
 
     # 1. Activity-Specific Corrective Prescriptions
-    if "jump" in act or "landing" in act:
+    if "swim" in act or "swimming" in act or "stroke" in act:
+        recs.append("🏊 Scapular Y-T-W-L Raises & Serratus Wall Slides (3 sets x 10 reps): Stabilize shoulder girdle and prevent swimmer's shoulder impingement.")
+        recs.append("🌊 Thoracic Spine Extension & Foam Roller Lat Release (2 sets x 60s): Maintain upper spinal extension and overhead stroke mobility.")
+    elif "throw" in act or "pitch" in act or "tennis" in act or "badminton" in act or "overhead" in act:
+        recs.append("🎾 Side-Lying Shoulder External Rotations (3 sets x 12 reps): Strengthen posterior rotator cuff (infraspinatus) for deceleration stability.")
+        recs.append("🔄 Hip-Shoulder Kinetic Chain Rotations (3 sets x 8 reps): Train smooth force transfer from lower body to upper body.")
+    elif "deadlift" in act or "hinge" in act or "powerlift" in act or "weightlift" in act:
+        recs.append("🏋️ Banded Good Mornings & Single-Leg Romanian Deadlifts (3 sets x 10 reps): Strengthen posterior chain while maintaining neutral spine rigidity.")
+        recs.append("🧘 Anti-Rotation Core Pallof Press & Iso-Holds (3 sets x 45s): Reinforce lumbar-pelvic stability under heavy axial load.")
+    elif "cut" in act or "agility" in act or "sidestep" in act or "change of direction" in act:
+        recs.append("⚡ Plant-and-Cut Deceleration Shuffles (3 sets x 6 reps): Train subtalar ankle stability and dynamic hip adductor control.")
+        recs.append("🛡️ Copenhagen Adductor Groin Planks (3 sets x 8 reps/side): Strengthen inner thigh adductors to prevent groin strain.")
+    elif "soccer" in act or "football" in act or "kick" in act:
+        recs.append("⚽ Copenhagen Groin Planks & Nordic Hamstring Drops (3 sets x 8 reps): Prevent groin adductor strains and high-speed hamstring pulls.")
+        recs.append("🦵 Dynamic Hip Flexor & Quad Mobilizations (2 sets x 10 reps/side): Optimize stride length and kicking mechanics.")
+    elif "basketball" in act or "volleyball" in act or "dunk" in act or "rebound" in act:
+        recs.append("🏀 Eccentric Calf & Achilles Tendon Heel Drops (3 sets x 10 reps): Absorb high vertical landing forces and protect Achilles/patellar tendons.")
+        recs.append("🦘 Soft-Landing Box Drops with Valgus Knee Control (3 sets x 6 reps): Prevent inward knee collapse during jump landings.")
+    elif "jump" in act or "landing" in act or "plyometric" in act:
         recs.append("🦘 Soft-Landing Box Drop Drills (3 sets x 6 reps): Focus on quiet ground contact, knees tracking over 2nd toe, and deep knee flexion (>80°).")
         recs.append("⚡ Deceleration & Lateral Brake Drills (3 sets x 5 reps): Train eccentric quadriceps control to absorb impact forces safely.")
     elif "single leg" in act or "unilateral" in act or "lunge" in act:
         recs.append("🦵 Single-Leg Romanian Deadlifts & Banded Clamshells (3 sets x 10 reps): Correct unilateral hip/knee stabilizer imbalance.")
         recs.append("🧘 Pelvic Iso-Hold Alignment Drills (3 sets x 30s): Prevent Trendelenburg pelvic drop during single-leg weight bearing.")
-    elif "running" in act or "gait" in act or "sprint" in act:
+    elif "running" in act or "gait" in act or "sprint" in act or "jogging" in act:
         recs.append("🏃 Nordic Hamstring Eccentric Curls (3 sets x 6 reps): Build high-velocity eccentric force capacity for terminal swing deceleration.")
         recs.append("📏 Forward A-Skips & High Cadence Drills (3 sets x 20m): Optimize upright posture control and ground strike mechanics.")
     else:  # Squat / Overhead Squat / General
