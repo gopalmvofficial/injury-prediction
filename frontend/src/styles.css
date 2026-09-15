@@ -1337,3 +1337,118 @@ button:disabled {
   .kpiGrid { grid-template-columns: 1fr; }
   .authCard { padding: var(--space-5); }
 }
+
+/* ==========================================================================
+   BRAND SPLASH & HIGH-TECH INTRO OVERLAY
+   ========================================================================== */
+.brandSplash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: radial-gradient(circle at 50% 50%, #0d1e2e 0%, #06090e 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.brandSplash.hiding {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.splashBadge {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--accent-teal), var(--accent-indigo));
+  color: #fff;
+  font-size: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px rgba(20, 184, 166, 0.5);
+  animation: cyberPulse 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes cyberPulse {
+  0% { transform: scale(0.96); box-shadow: 0 0 20px rgba(20, 184, 166, 0.3); }
+  100% { transform: scale(1.04); box-shadow: 0 0 48px rgba(20, 184, 166, 0.7); }
+}
+
+.splashTitle {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.splashSub {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent-teal-bright);
+}
+
+.splashBar {
+  width: 180px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+
+.splashBarInner {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--accent-teal), var(--accent-cyan));
+  animation: splashProgress 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes splashProgress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+/* ==========================================================================
+   BENTO GRID & COMMAND CENTER CARDS
+   ========================================================================== */
+.bentoGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.bentoCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bentoCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-medium);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+}
+
+.monoBadge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--accent-teal-bright);
+}
+

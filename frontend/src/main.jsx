@@ -160,6 +160,33 @@ const ICON_SETS = {
   }
 };
 
+function BrandIntroSplash() {
+  const [visible, setVisible] = useState(true);
+  const [hiding, setHiding] = useState(false);
+
+  useEffect(() => {
+    const timer1 = setTimeout(() => setHiding(true), 1200);
+    const timer2 = setTimeout(() => setVisible(false), 1700);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div className={`brandSplash ${hiding ? 'hiding' : ''}`}>
+      <div className="splashBadge">⚡</div>
+      <div className="splashTitle">MotionIQ</div>
+      <div className="splashSub">Sports Motion Intelligence Lab v2.0</div>
+      <div className="splashBar">
+        <div className="splashBarInner" />
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [authenticated, setAuthenticated] = useState(
     Boolean(localStorage.getItem('sir_auth') && localStorage.getItem('sir_token'))
@@ -534,6 +561,7 @@ function App() {
 
   return (
     <div className="app-shell">
+      <BrandIntroSplash />
       <div className="ambient-spotlight" />
 
       {/* Sidebar Presentation */}
@@ -1574,6 +1602,45 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
         <button className="btnSecondary" onClick={() => onNav('Kinematics Lab')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
           🦴 3D Kinematics Lab
         </button>
+      </div>
+
+      {/* Signature 5-Step "How Movement Is Analyzed" Visual Story Pipeline */}
+      <div className="panel" style={{ marginBottom: '24px' }}>
+        <div className="panelHead">
+          <div>
+            <span className="eyebrow" style={{ color: 'var(--accent-teal-bright)', letterSpacing: '1px' }}>DIAGNOSTIC PIPELINE ARCHITECTURE</span>
+            <h3 style={{ fontSize: '17px', fontWeight: 800 }}>How Movement Data Is Analyzed</h3>
+          </div>
+          <span className="monoBadge">COMPUTATIONAL STAGES</span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '12px' }}>
+          {[
+            { step: '01', title: 'Video Stream', desc: 'Optical frame capture @ high frame rate', icon: '📹' },
+            { step: '02', title: 'OpenCV Processing', desc: 'Frame extraction & resolution normalization', icon: '⚙️' },
+            { step: '03', title: 'MediaPipe Pose', desc: '33 3D skeletal landmark tracking', icon: '🦴' },
+            { step: '04', title: 'Biomechanical Math', desc: 'Joint angles, ROM & bilateral symmetry', icon: '📐' },
+            { step: '05', title: 'XGBoost ML Risk', desc: 'Injury vulnerability scoring & PDF report', icon: '🎯' },
+          ].map((st) => (
+            <div
+              key={st.step}
+              style={{
+                background: 'var(--bg-surface-subtle)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-md)',
+                padding: '16px',
+                position: 'relative',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '20px' }}>{st.icon}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--accent-teal-bright)', fontWeight: 800 }}>STEP {st.step}</span>
+              </div>
+              <strong style={{ display: 'block', fontSize: '14px', color: 'var(--text-primary)', marginBottom: '4px' }}>{st.title}</strong>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>{st.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Athlete Risk Roster */}
