@@ -1,12 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 /* ==========================================================================
-   SPORTS INSTRUCTION & INJURY RISK DETECTION — DESIGN SYSTEM V2.0 (STABLE)
+   APEX MOTION — DESIGN SYSTEM V3.0 (EXECUTIVE REDESIGN)
    ========================================================================== */
 
-:root {
+:root, [data-theme="apex-dark"] {
   /* Typography Scale */
-  --font-heading: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', -apple-system, sans-serif;
   --font-body: 'Inter', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
@@ -21,18 +21,18 @@
   --space-8: 64px;
 
   /* Layout Container Bounds */
-  --max-content-width: 1400px;
-  --sidebar-width: 260px;
-  --topbar-height: 72px;
+  --max-content-width: 1440px;
+  --sidebar-width: 240px;
+  --topbar-height: 54px;
 
-  /* Sophisticated Obsidian Cyber Palette */
-  --bg-app: #0a0d14;
-  --bg-sidebar: #0e131f;
-  --bg-topbar: rgba(14, 19, 31, 0.85);
-  --bg-card: #121723;
-  --bg-card-hover: #182030;
-  --bg-surface-subtle: #0f1420;
-  --bg-input: #151c2c;
+  /* APEX Dark Palette */
+  --bg-app: #080b11;
+  --bg-sidebar: #0b0f19;
+  --bg-topbar: rgba(11, 15, 25, 0.95);
+  --bg-card: #0f1422;
+  --bg-card-hover: #151c2e;
+  --bg-surface-subtle: #0c101a;
+  --bg-input: #121827;
 
   /* Accent Colors */
   --accent-teal: #0d9488;

@@ -670,26 +670,62 @@ function App() {
       <CommandPaletteModal onNav={nav} />
       <div className="ambient-spotlight" />
 
+      {/* Top System Bar */}
+      <header className="topSystemBar" style={{
+        height: '44px',
+        background: 'var(--bg-topbar)',
+        borderBottom: '1px solid var(--border-subtle)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        gridColumn: '1 / -1'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span className="monoBadge" style={{ fontSize: '10.5px' }}>⚡ APEX MOTION v3.0</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            TELEMETRY: <strong style={{ color: 'var(--accent-teal-bright)' }}>ENGINE ONLINE</strong>
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <button
+            type="button"
+            onClick={() => {
+              const nextTheme = theme === 'apex-dark' ? 'light' : theme === 'light' ? 'high-contrast' : 'apex-dark';
+              setTheme(nextTheme);
+            }}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
+          >
+            🎨 Theme: {theme.toUpperCase()}
+          </button>
+          <span className="monoBadge">Ctrl + K</span>
+        </div>
+      </header>
+
       {/* Sidebar Presentation */}
       <aside className={`sidebar ${sidebarMobileOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
           <div className="logo-badge">⚡</div>
           <div className="logo-text">
-            <span className="logo-title">MotionIQ</span>
-            <span className="logo-sub">Sports AI Lab v2.0</span>
+            <span className="logo-title">APEX MOTION</span>
+            <span className="logo-sub">Sports AI Lab v3.0</span>
           </div>
         </div>
 
         <nav className="sidebar-nav">
           {[
-            { name: 'Dashboard', icon: '📊' },
-            { name: 'Athletes', icon: '🏃' },
-            { name: 'Video Analysis', icon: '🎥' },
-            { name: 'Kinematics Lab', icon: '🦴' },
-            { name: 'Results', icon: '📈' },
-            { name: 'Reports', icon: '📄' },
-            { name: 'Settings', icon: '⚙️' },
-          ].map(({ name, icon }) => {
+            { num: '01', name: 'Dashboard', icon: '📊' },
+            { num: '02', name: 'Athletes', icon: '🏃' },
+            { num: '03', name: 'Video Analysis', icon: '🎥' },
+            { num: '04', name: 'Kinematics Lab', icon: '🦴' },
+            { num: '05', name: 'Results', icon: '📈' },
+            { num: '06', name: 'Reports', icon: '📄' },
+            { num: '07', name: 'Settings', icon: '⚙️' },
+          ].map(({ num, name, icon }) => {
             const resolvedIcon = (ICON_SETS[iconPack] || ICON_SETS.emoji)[name] || icon;
             return (
               <button
@@ -697,6 +733,7 @@ function App() {
                 className={`nav-item ${page === name ? 'active' : ''}`}
                 onClick={() => nav(name)}
               >
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginRight: '4px' }}>{num}</span>
                 <span className="nav-icon">{resolvedIcon}</span>
                 <span>{name}</span>
               </button>
