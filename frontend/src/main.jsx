@@ -524,223 +524,194 @@ function App() {
     );
   }
 
+  const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
+
   const nav = (p) => {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setPage(p);
+    setSidebarMobileOpen(false);
   };
 
   return (
-    <div className="app">
-      <aside>
-        <div className="brand">
-          <div className="brandIcon">⚡</div>
-          <div>
-            <b>Motion <span style={{color:'#c4b5fd'}}>IQ</span></b>
-            <span>Sports Risk Intelligence</span>
+    <div className="app-shell">
+      <div className="ambient-spotlight" />
+
+      {/* Sidebar Presentation */}
+      <aside className={`sidebar ${sidebarMobileOpen ? 'open' : ''}`}>
+        <div className="sidebar-logo">
+          <div className="logo-badge">⚡</div>
+          <div className="logo-text">
+            <span className="logo-title">MotionIQ</span>
+            <span className="logo-sub">Sports AI Lab v2.0</span>
           </div>
         </div>
 
-        <div className="engineBadge">
-          AI PREDICTIVE ENGINE
-          <strong>MediaPipe · XGBoost · CV</strong>
-        </div>
+        <nav className="sidebar-nav">
+          {[
+            { name: 'Dashboard', icon: '📊' },
+            { name: 'Athletes', icon: '🏃' },
+            { name: 'Video Analysis', icon: '🎥' },
+            { name: 'Kinematics Lab', icon: '🦴' },
+            { name: 'Results', icon: '📈' },
+            { name: 'Reports', icon: '📄' },
+            { name: 'Settings', icon: '⚙️' },
+          ].map(({ name, icon }) => {
+            const resolvedIcon = (ICON_SETS[iconPack] || ICON_SETS.emoji)[name] || icon;
+            return (
+              <button
+                key={name}
+                className={`nav-item ${page === name ? 'active' : ''}`}
+                onClick={() => nav(name)}
+              >
+                <span className="nav-icon">{resolvedIcon}</span>
+                <span>{name}</span>
+              </button>
+            );
+          })}
+        </nav>
 
-        {[
-          { name: 'Dashboard', icon: '📊' },
-          { name: 'Athletes', icon: '🏃' },
-          { name: 'Video Analysis', icon: '🎥' },
-          { name: 'Kinematics Lab', icon: '🦴' },
-          { name: 'Results', icon: '📈' },
-          { name: 'Reports', icon: '📄' },
-          { name: 'Settings', icon: '⚙️' },
-        ].map(({ name, icon }) => {
-          const resolvedIcon = (ICON_SETS[iconPack] || ICON_SETS.emoji)[name] || icon;
-          return (
-            <button
-              className={page === name ? 'nav active' : 'nav'}
-              onClick={() => nav(name)}
-              key={name}
-            >
-              <span>{resolvedIcon}</span>
-              <span>{name}</span>
-            </button>
-          );
-        })}
-
-        <div className="sidefoot">
-          Motion IQ v2.0 · Milestone 2<br />
-          OpenCV · MediaPipe · Supervised ML
+        <div className="sidebar-footer">
+          {currentUser && (
+            <div className="user-profile-pill" onClick={() => {
+              setProfileForm({ name: currentUser.name || '', role: currentUser.role || 'coach' });
+              setProfileModal(true);
+            }} style={{ cursor: 'pointer' }}>
+              <div className="user-avatar">
+                {(currentUser.name || 'U').charAt(0).toUpperCase()}
+              </div>
+              <div className="user-info">
+                <div className="user-name">{currentUser.name || 'User'}</div>
+                <div className="user-role">{currentUser.role || 'coach'}</div>
+              </div>
+            </div>
+          )}
+          <button
+            type="button"
+            className="btn-ghost"
+            style={{ width: '100%', justifyContent: 'flex-start' }}
+            onClick={handleLogout}
+          >
+            🚪 Sign Out
+          </button>
         </div>
       </aside>
 
-      <main>
-        <header>
-          <div>
-            <h1 style={{fontSize:'22px', fontWeight:900, margin:0, color:'#1e1b4b', letterSpacing:'-0.4px'}}>
-              {page === 'Dashboard'
-                ? `Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, ${currentUser?.name?.split(' ')[0] || 'Coach'}! 👋`
-                : page}
-            </h1>
-            <p style={{margin:'3px 0 0', color:'#6b7280', fontSize:'13px'}}>
-              {page === 'Dashboard'
-                ? "Here is today's injury risk overview."
-                : 'Sports Injury Risk Detection and Prevention System'}
-            </p>
-          </div>
-          <div className="headerActions">
-            <div className="online"><i></i> Engine Online</div>
-
-            {/* Dynamic Theme Switcher Dropdown */}
-            <select
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-              title="Switch Website Template / Theme"
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-purple)',
-                color: 'var(--text-dark)',
-                padding: '6px 12px',
-                borderRadius: '9999px',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
+      {/* Main Content Viewport */}
+      <div className="main-viewport">
+        <header className="topbar">
+          <div className="topbar-left">
+            <button
+              type="button"
+              className="mobile-toggle"
+              onClick={() => setSidebarMobileOpen(!sidebarMobileOpen)}
             >
-              <option value="vibrant">🎨 Vibrant Purple</option>
-              <option value="dark-elite">🌙 Dark Elite</option>
-              <option value="clinical-white">🏥 Clinical White</option>
-              <option value="slate-pro">💼 Slate Pro</option>
-              <option value="emerald-sport">🌿 Emerald Sport</option>
-              <option value="rose-gold">🌹 Rose Gold</option>
-            </select>
+              ☰
+            </button>
+            <div className="page-breadcrumb">
+              <span>Platform</span> / <span>{page}</span>
+            </div>
+          </div>
+
+          <div className="topbar-right">
+            <div className="status-indicator">
+              <div className="status-dot" />
+              <span>AI Engine Online</span>
+            </div>
+
+            <button
+              type="button"
+              className="btn-ghost btn-sm"
+              onClick={handleToggleMute}
+              title={isMuted ? 'Unmute Audio Beeps' : 'Mute Audio Beeps'}
+            >
+              {isMuted ? '🔇 Muted' : '🔊 Sound On'}
+            </button>
 
             {currentUser && (
               <button
                 type="button"
+                className="btn-secondary btn-sm"
                 onClick={() => {
                   setProfileForm({ name: currentUser.name || '', role: currentUser.role || 'coach' });
                   setProfileModal(true);
                 }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  background: '#fff', border: '1px solid #ddd6fe',
-                  padding: '6px 14px 6px 8px', borderRadius: '9999px',
-                  cursor: 'pointer', boxShadow: '0 1px 4px rgba(124,58,237,0.1)'
-                }}
               >
-                <div style={{
-                  width: '30px', height: '30px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                  color: '#fff', display: 'grid', placeItems: 'center',
-                  fontSize: '13px', fontWeight: 800
-                }}>
-                  {(currentUser.name || 'U').charAt(0).toUpperCase()}
-                </div>
-                <div style={{textAlign:'left'}}>
-                  <div style={{fontSize:'12px', fontWeight:700, color:'#1e1b4b', lineHeight:1.2}}>{currentUser.name}</div>
-                  <div style={{fontSize:'10px', color:'#7c3aed', fontWeight:600, textTransform:'capitalize'}}>{currentUser.role || 'coach'} ✏️</div>
-                </div>
+                👤 Profile ({currentUser.role || 'coach'})
               </button>
             )}
-            <button className="logout" onClick={handleLogout}>Sign out</button>
           </div>
         </header>
 
-        {/* Live System Telemetry Bar */}
-        <div style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-purple)',
-          borderRadius: '12px',
-          padding: '10px 20px',
-          marginBottom: '22px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '20px',
-          flexWrap: 'wrap',
-          fontSize: '12px',
-          color: 'var(--text-muted)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <span>⚡ <b>60 FPS</b> Real-Time Pose Stream</span>
-            <span>•</span>
-            <span>🧬 <b>33 MediaPipe Landmarks</b> Locked</span>
-            <span>•</span>
-            <span>🛡️ <b>Dual-Sync Resilient Cache</b> Active</span>
-            <span>•</span>
-          </div>
-          <span style={{ color: 'var(--accent-primary)', fontWeight: 800, marginLeft: '32px' }}>LIVE SYSTEM METRICS ✓</span>
-        </div>
-
-        {page === 'Dashboard' && (
-          <Dashboard summary={userSummary} athletes={userAthletes} onNav={nav} userRole={currentUser?.role} layoutMode={dashboardLayout} />
-        )}
-        {page === 'Athletes' && (
-          <Athletes
-            athletes={userAthletes}
-            onRefresh={loadData}
-            onSelect={(a) => {
-              setSelectedAthlete(a);
-              setPage('Athlete Details');
-            }}
-            onEditAthlete={(a) => setEditingAthlete(a)}
-            userRole={currentUser?.role}
-            currentUser={currentUser}
-          />
-        )}
-        {page === 'Athlete Details' && selectedAthlete && (
-          <AthleteDetails
-            athlete={selectedAthlete}
-            onEdit={() => setEditingAthlete(selectedAthlete)}
-            onBack={() => setPage('Athletes')}
-          />
-        )}
-        {page === 'Video Analysis' && (
-          <VideoAnalysis
-            athletes={userAthletes}
-            onDone={loadData}
-            onNav={nav}
-            onPlayVideo={(url) => setVideoModalUrl(url)}
-            analysisState={analysisState}
-            setAnalysisState={setAnalysisState}
-          />
-        )}
-        {page === 'Kinematics Lab' && (
-          <KinematicsLab />
-        )}
-        {page === 'Results' && (
-          <Results
-            summary={userSummary}
-            onPlayVideo={(url) => setVideoModalUrl(url)}
-          />
-        )}
-        {page === 'Reports' && <Reports summary={userSummary} />}
-        {page === 'Settings' && (
-          <Settings
-            currentUser={currentUser}
-            theme={theme}
-            onSelectTheme={setTheme}
-            iconPack={iconPack}
-            onSelectIconPack={setIconPack}
-            cardStyle={cardStyle}
-            onSelectCardStyle={setCardStyle}
-            fontStyle={fontStyle}
-            onSelectFontStyle={setFontStyle}
-            dashboardLayout={dashboardLayout}
-            onSelectDashboardLayout={setDashboardLayout}
-            onOpenProfile={() => {
-              setProfileForm({ name: currentUser?.name || '', role: currentUser?.role || 'coach' });
-              setProfileModal(true);
-            }}
-            onLogout={handleLogout}
-          />
-        )}
-
-        <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #ede9fe', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '11.5px', flexWrap: 'wrap', gap: '10px' }}>
-          <span>Motion IQ Sports Risk Intelligence • MediaPipe + XGBoost</span>
-          <span>© 2025 Motion IQ Inc. • Secure Encrypted Workspace</span>
-        </footer>
+        <main className="content-container">
+          {page === 'Dashboard' && (
+            <Dashboard summary={userSummary} athletes={userAthletes} onNav={nav} userRole={currentUser?.role} layoutMode={dashboardLayout} />
+          )}
+          {page === 'Athletes' && (
+            <Athletes
+              athletes={userAthletes}
+              onRefresh={loadData}
+              onSelect={(a) => {
+                setSelectedAthlete(a);
+                setPage('Athlete Details');
+              }}
+              onEditAthlete={(a) => setEditingAthlete(a)}
+              userRole={currentUser?.role}
+              currentUser={currentUser}
+            />
+          )}
+          {page === 'Athlete Details' && selectedAthlete && (
+            <AthleteDetails
+              athlete={selectedAthlete}
+              onEdit={() => setEditingAthlete(selectedAthlete)}
+              onBack={() => setPage('Athletes')}
+            />
+          )}
+          {page === 'Video Analysis' && (
+            <VideoAnalysis
+              athletes={userAthletes}
+              onDone={loadData}
+              onNav={nav}
+              onPlayVideo={(url) => setVideoModalUrl(url)}
+              analysisState={analysisState}
+              setAnalysisState={setAnalysisState}
+            />
+          )}
+          {page === 'Kinematics Lab' && (
+            <KinematicsLab />
+          )}
+          {page === 'Results' && (
+            <Results
+              summary={userSummary}
+              onPlayVideo={(url) => setVideoModalUrl(url)}
+            />
+          )}
+          {page === 'Reports' && <Reports summary={userSummary} />}
+          {page === 'Settings' && (
+            <Settings
+              currentUser={currentUser}
+              theme={theme}
+              onSelectTheme={setTheme}
+              iconPack={iconPack}
+              onSelectIconPack={setIconPack}
+              cardStyle={cardStyle}
+              onSelectCardStyle={setCardStyle}
+              fontStyle={fontStyle}
+              onSelectFontStyle={setFontStyle}
+              dashboardLayout={dashboardLayout}
+              onSelectDashboardLayout={setDashboardLayout}
+              onOpenProfile={() => {
+                setProfileForm({ name: currentUser?.name || '', role: currentUser?.role || 'coach' });
+                setProfileModal(true);
+              }}
+              onLogout={handleLogout}
+            />
+          )}
+          <footer style={{ marginTop: 'auto', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-muted)', fontSize: '12px', flexWrap: 'wrap', gap: '12px' }}>
+            <span>MotionIQ Sports Risk Intelligence • MediaPipe Pose + XGBoost ML</span>
+            <span>© 2026 MotionIQ • Enterprise Biomechanics System</span>
+          </footer>
+        </main>
+      </div>
 
         {toast && <div className="toast">{toast}</div>}
 
@@ -861,7 +832,6 @@ function App() {
             </div>
           </div>
         )}
-      </main>
     </div>
   );
 }
