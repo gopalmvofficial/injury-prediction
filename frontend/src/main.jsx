@@ -1790,9 +1790,9 @@ function BiomechanicalBodyHeatmap() {
     knee: {
       name: 'Right ACL & Patellar Knee Complex',
       status: 'HIGH RISK (CRITICAL)',
-      color: '#dc2626',
-      bg: '#fef2f2',
-      border: '#fecaca',
+      color: '#ef4444',
+      bg: 'rgba(239, 68, 68, 0.12)',
+      border: 'rgba(239, 68, 68, 0.3)',
       angle: '128° Flexion (Dynamic Valgus: 14°)',
       asymmetry: '18.4% Left/Right Asymmetry',
       concern: 'Increased Anterior Cruciate Ligament (ACL) Strain during deceleration',
@@ -1801,9 +1801,9 @@ function BiomechanicalBodyHeatmap() {
     ankle: {
       name: 'Ankle Mortise & Achilles Complex',
       status: 'MODERATE RISK',
-      color: '#d97706',
-      bg: '#fffbeb',
-      border: '#fde68a',
+      color: '#f59e0b',
+      bg: 'rgba(245, 158, 11, 0.12)',
+      border: 'rgba(245, 158, 11, 0.3)',
       angle: '8° Dorsiflexion Limitation',
       asymmetry: '12.1% Left/Right Asymmetry',
       concern: 'Restricted ankle dorsiflexion compensating upward into knee strain',
@@ -1812,9 +1812,9 @@ function BiomechanicalBodyHeatmap() {
     spine: {
       name: 'Lumbar Spine & Core Posture',
       status: 'LOW RISK (OPTIMAL)',
-      color: '#059669',
-      bg: '#ecfdf5',
-      border: '#a7f3d0',
+      color: '#10b981',
+      bg: 'rgba(16, 185, 129, 0.12)',
+      border: 'rgba(16, 185, 129, 0.3)',
       angle: '12° Anterior Trunk Lean',
       asymmetry: '4.2% Left/Right Asymmetry',
       concern: 'Optimal neutral spinal alignment with adequate core stiffness',
@@ -1823,9 +1823,9 @@ function BiomechanicalBodyHeatmap() {
     shoulder: {
       name: 'Glenohumeral & Rotator Cuff Complex',
       status: 'LOW RISK (OPTIMAL)',
-      color: '#059669',
-      bg: '#ecfdf5',
-      border: '#a7f3d0',
+      color: '#10b981',
+      bg: 'rgba(16, 185, 129, 0.12)',
+      border: 'rgba(16, 185, 129, 0.3)',
       angle: '85° Abduction / 45° External Rotation',
       asymmetry: '3.8% Left/Right Asymmetry',
       concern: 'Symmetrical shoulder mobility with stable scapular rhythm',
@@ -1834,9 +1834,9 @@ function BiomechanicalBodyHeatmap() {
     hip: {
       name: 'Coxofemoral Hip Flexor & Glute Complex',
       status: 'MODERATE RISK',
-      color: '#d97706',
-      bg: '#fffbeb',
-      border: '#fde68a',
+      color: '#f59e0b',
+      bg: 'rgba(245, 158, 11, 0.12)',
+      border: 'rgba(245, 158, 11, 0.3)',
       angle: '65° Flexion (Tight Hip Flexor)',
       asymmetry: '9.6% Left/Right Asymmetry',
       concern: 'Slight inhibition of Gluteus Maximus during terminal hip extension',
@@ -1853,108 +1853,113 @@ function BiomechanicalBodyHeatmap() {
           <h3>📊 Interactive Biomechanical Body Heatmap</h3>
           <small style={{ color: 'var(--text-muted)' }}>Click joint hot-spots to inspect 3D angles, asymmetry %, and clinical exercise protocols.</small>
         </div>
-        <span className="count" style={{ background: current.bg, color: current.color, border: `1px solid ${current.border}` }}>
+        <span className="count" style={{ background: current.bg, color: current.color, border: `1px solid ${current.border}`, padding: '4px 12px', borderRadius: 'var(--radius-full)', fontWeight: 700, fontSize: '11px' }}>
           {current.status}
         </span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '22px', alignItems: 'center' }}>
         {/* Anatomical Mannequin Hotspots Container */}
-        <div style={{ position: 'relative', width: '200px', height: '320px', background: 'var(--bg-card-subtle)', borderRadius: '16px', border: '1px solid var(--border-purple)', display: 'grid', placeItems: 'center', margin: '0 auto' }}>
+        <div style={{ position: 'relative', width: '200px', height: '320px', background: 'var(--bg-surface-subtle)', borderRadius: '16px', border: '1px solid var(--border-medium)', display: 'grid', placeItems: 'center', margin: '0 auto' }}>
           {/* Mannequin Silhouette SVG */}
           <svg width="120" height="280" viewBox="0 0 100 240" fill="none">
             {/* Head */}
-            <circle cx="50" cy="22" r="14" fill="var(--border-purple)" />
+            <circle cx="50" cy="22" r="14" fill="var(--border-medium)" />
             {/* Torso */}
-            <path d="M32 40 C32 38, 68 38, 68 40 L62 110 L38 110 Z" fill="var(--border-purple)" />
+            <path d="M32 40 C32 38, 68 38, 68 40 L62 110 L38 110 Z" fill="var(--border-medium)" />
             {/* Arms */}
-            <path d="M30 42 L16 110 M70 42 L84 110" stroke="var(--border-purple)" strokeWidth="8" strokeLinecap="round" />
+            <path d="M30 42 L16 110 M70 42 L84 110" stroke="var(--border-medium)" strokeWidth="8" strokeLinecap="round" />
             {/* Legs */}
-            <path d="M42 110 L38 220 M58 110 L62 220" stroke="var(--border-purple)" strokeWidth="10" strokeLinecap="round" />
+            <path d="M42 110 L38 220 M58 110 L62 220" stroke="var(--border-medium)" strokeWidth="10" strokeLinecap="round" />
           </svg>
 
           {/* Hotspot 1: Shoulder */}
           <button
+            type="button"
             onClick={() => setSelectedJoint('shoulder')}
             title="Shoulder Complex"
             style={{
-              position: 'absolute', top: '55px', left: '42px', width: '20px', height: '20px', borderRadius: '50%',
-              background: '#059669', border: selectedJoint === 'shoulder' ? '3px solid #fff' : '2px solid #fff',
-              boxShadow: selectedJoint === 'shoulder' ? '0 0 12px #059669' : 'none', cursor: 'pointer'
+              position: 'absolute', top: '55px', left: '60px', width: '20px', height: '20px', borderRadius: '50%',
+              background: '#10b981', border: selectedJoint === 'shoulder' ? '3px solid #fff' : '2px solid #fff',
+              boxShadow: selectedJoint === 'shoulder' ? '0 0 12px #10b981' : 'none', cursor: 'pointer'
             }}
           />
 
           {/* Hotspot 2: Spine / Core */}
           <button
+            type="button"
             onClick={() => setSelectedJoint('spine')}
             title="Lumbar Spine"
             style={{
-              position: 'absolute', top: '100px', left: '90px', width: '20px', height: '20px', borderRadius: '50%',
-              background: '#059669', border: selectedJoint === 'spine' ? '3px solid #fff' : '2px solid #fff',
-              boxShadow: selectedJoint === 'spine' ? '0 0 12px #059669' : 'none', cursor: 'pointer'
+              position: 'absolute', top: '105px', left: '90px', width: '20px', height: '20px', borderRadius: '50%',
+              background: '#10b981', border: selectedJoint === 'spine' ? '3px solid #fff' : '2px solid #fff',
+              boxShadow: selectedJoint === 'spine' ? '0 0 12px #10b981' : 'none', cursor: 'pointer'
             }}
           />
 
           {/* Hotspot 3: Hip */}
           <button
+            type="button"
             onClick={() => setSelectedJoint('hip')}
             title="Hip Complex"
             style={{
-              position: 'absolute', top: '135px', left: '72px', width: '20px', height: '20px', borderRadius: '50%',
-              background: '#d97706', border: selectedJoint === 'hip' ? '3px solid #fff' : '2px solid #fff',
-              boxShadow: selectedJoint === 'hip' ? '0 0 12px #d97706' : 'none', cursor: 'pointer'
+              position: 'absolute', top: '145px', left: '75px', width: '20px', height: '20px', borderRadius: '50%',
+              background: '#f59e0b', border: selectedJoint === 'hip' ? '3px solid #fff' : '2px solid #fff',
+              boxShadow: selectedJoint === 'hip' ? '0 0 12px #f59e0b' : 'none', cursor: 'pointer'
             }}
           />
 
           {/* Hotspot 4: Knee (High Risk) */}
           <button
+            type="button"
             onClick={() => setSelectedJoint('knee')}
             title="ACL Knee Joint"
             style={{
-              position: 'absolute', top: '190px', left: '115px', width: '24px', height: '24px', borderRadius: '50%',
-              background: '#dc2626', border: selectedJoint === 'knee' ? '3px solid #fff' : '2px solid #fff',
-              boxShadow: '0 0 14px #dc2626', cursor: 'pointer', animation: 'pulseDot 2s infinite'
+              position: 'absolute', top: '205px', left: '70px', width: '22px', height: '22px', borderRadius: '50%',
+              background: '#ef4444', border: selectedJoint === 'knee' ? '3px solid #fff' : '2px solid #fff',
+              boxShadow: '0 0 14px #ef4444', cursor: 'pointer', animation: 'cyberPulse 1.8s infinite alternate'
             }}
           />
 
           {/* Hotspot 5: Ankle */}
           <button
+            type="button"
             onClick={() => setSelectedJoint('ankle')}
             title="Ankle Complex"
             style={{
-              position: 'absolute', top: '255px', left: '118px', width: '20px', height: '20px', borderRadius: '50%',
-              background: '#d97706', border: selectedJoint === 'ankle' ? '3px solid #fff' : '2px solid #fff',
-              boxShadow: selectedJoint === 'ankle' ? '0 0 12px #d97706' : 'none', cursor: 'pointer'
+              position: 'absolute', top: '265px', left: '68px', width: '20px', height: '20px', borderRadius: '50%',
+              background: '#f59e0b', border: selectedJoint === 'ankle' ? '3px solid #fff' : '2px solid #fff',
+              boxShadow: selectedJoint === 'ankle' ? '0 0 12px #f59e0b' : 'none', cursor: 'pointer'
             }}
           />
         </div>
 
         {/* Selected Joint Telemetry Card */}
-        <div style={{ background: 'var(--bg-card-subtle)', borderRadius: '14px', border: `1px solid ${current.border}`, padding: '20px' }}>
-          <h4 style={{ margin: '0 0 4px', fontSize: '17px', color: 'var(--text-dark)', fontWeight: 800 }}>{current.name}</h4>
+        <div style={{ background: 'var(--bg-card)', borderRadius: '14px', border: `1px solid ${current.border}`, padding: '20px' }}>
+          <h4 style={{ margin: '0 0 4px', fontSize: '17px', color: 'var(--text-primary)', fontWeight: 800 }}>{current.name}</h4>
           <div style={{ fontSize: '12.5px', color: current.color, fontWeight: 700, marginBottom: '14px' }}>Status: {current.status}</div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
-            <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-purple)' }}>
+            <div style={{ background: 'var(--bg-surface-subtle)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Measured Flexion Angle</span>
-              <strong style={{ display: 'block', fontSize: '13.5px', color: 'var(--text-dark)', marginTop: '4px' }}>{current.angle}</strong>
+              <strong style={{ display: 'block', fontSize: '13.5px', color: 'var(--text-primary)', marginTop: '4px' }}>{current.angle}</strong>
             </div>
-            <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-purple)' }}>
+            <div style={{ background: 'var(--bg-surface-subtle)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Bilateral Asymmetry</span>
               <strong style={{ display: 'block', fontSize: '13.5px', color: current.color, marginTop: '4px' }}>{current.asymmetry}</strong>
             </div>
           </div>
 
           <div style={{ marginBottom: '14px' }}>
-            <strong style={{ fontSize: '12px', color: 'var(--text-dark)', display: 'block', marginBottom: '4px' }}>Biomechanical Finding:</strong>
-            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-muted)', lineHeight: 1.4 }}>{current.concern}</p>
+            <strong style={{ fontSize: '12px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>Biomechanical Finding:</strong>
+            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{current.concern}</p>
           </div>
 
           <div>
-            <strong style={{ fontSize: '12px', color: 'var(--text-dark)', display: 'block', marginBottom: '6px' }}>Targeted Prevention Exercises:</strong>
+            <strong style={{ fontSize: '12px', color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>Targeted Prevention Exercises:</strong>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {current.exercises.map((ex, i) => (
-                <span key={i} style={{ background: 'var(--accent-primary-light)', color: 'var(--accent-primary)', fontSize: '11.5px', fontWeight: 700, padding: '4px 10px', borderRadius: '6px' }}>
+                <span key={i} style={{ background: 'rgba(20, 184, 166, 0.15)', color: 'var(--accent-teal-bright)', border: '1px solid rgba(20, 184, 166, 0.3)', fontSize: '11.5px', fontWeight: 700, padding: '4px 10px', borderRadius: '6px' }}>
                   ✓ {ex}
                 </span>
               ))}
