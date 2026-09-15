@@ -3257,7 +3257,7 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
 
             {mode === 'upload' ? (
               <>
-                <div className="upload-zone" style={{ marginBottom: '16px' }}>
+                <div className="upload-zone" style={{ position: 'relative', overflow: 'hidden', marginBottom: '16px' }}>
                   <div className="upload-icon">📹</div>
                   <strong style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
                     {file ? file.name : 'Select or drop movement video file'}

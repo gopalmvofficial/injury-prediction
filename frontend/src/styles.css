@@ -964,6 +964,8 @@ button:disabled {
    ========================================================================== */
 
 .upload-zone {
+  position: relative;
+  overflow: hidden;
   min-height: 280px;
   border: 2px dashed var(--border-medium);
   border-radius: var(--radius-xl);
