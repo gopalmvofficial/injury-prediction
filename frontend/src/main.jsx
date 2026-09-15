@@ -741,43 +741,43 @@ function App() {
 
         {/* Edit User Profile Modal */}
         {profileModal && (
-          <div className="oauthModalOverlay" onClick={() => setProfileModal(false)}>
-            <div className="oauthModalCard" onClick={(e) => e.stopPropagation()} style={{ border: '1px solid #ddd6fe', borderRadius: '16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '22px', fontWeight: 800, marginBottom: '10px' }}>
-                  {(currentUser?.name || 'U').charAt(0).toUpperCase()}
+          <div className="modal-backdrop" onClick={() => setProfileModal(false)}>
+            <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--text-primary)' }}>Edit Profile</h3>
+                  <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '12px' }}>Update your account details and operational role</p>
                 </div>
-                <h3 style={{ margin: 0, fontSize: '18px', color: '#1e1b4b' }}>Edit Profile</h3>
-                <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '12.5px' }}>Update your account details and operational role</p>
+                <button type="button" className="btn-ghost btn-sm" onClick={() => setProfileModal(false)}>✕</button>
               </div>
-              <form onSubmit={handleUpdateProfile} style={{ textAlign: 'left' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
-                  Full Name
-                </label>
-                <input
-                  required
-                  type="text"
-                  value={profileForm.name}
-                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                  style={{ width: '100%', height: '44px', border: '1px solid #ddd6fe', borderRadius: '10px', padding: '0 14px', fontSize: '13.5px', marginBottom: '16px', boxSizing: 'border-box', outline: 'none' }}
-                />
-
-                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
-                  Account Role
-                </label>
-                <div style={{ background: '#faf9ff', border: '1px solid #ddd6fe', borderRadius: '10px', padding: '12px 14px', fontSize: '13px', marginBottom: '24px', color: '#4c1d95', fontWeight: 700 }}>
-                  {profileForm.role === 'athlete' ? '🏃 Athlete (Personal Movement Screening Profile)' : '👨‍🏫 Coach (Team Roster & Squad Risk Management)'}
+              <form onSubmit={handleUpdateProfile} className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Full Name</label>
+                  <input
+                    required
+                    type="text"
+                    className="form-input"
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  />
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="form-group">
+                  <label className="form-label">Account Role</label>
+                  <div style={{ background: 'rgba(20, 184, 166, 0.12)', border: '1px solid var(--border-accent)', borderRadius: 'var(--radius-md)', padding: '12px 14px', fontSize: '13px', color: 'var(--accent-teal-bright)', fontWeight: 600 }}>
+                    {profileForm.role === 'athlete' ? '🏃 Athlete (Personal Movement Screening Profile)' : '👨‍🏫 Coach (Team Roster & Squad Risk Management)'}
+                  </div>
+                </div>
+
+                <div className="modal-footer" style={{ borderTop: 'none', padding: 0 }}>
                   <button
                     type="button"
+                    className="btn-ghost"
                     onClick={() => setProfileModal(false)}
-                    style={{ border: 'none', background: 'transparent', color: '#64748b', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="primary" style={{ borderRadius: '10px', padding: '10px 22px' }}>
+                  <button type="submit" className="btn-primary">
                     Save Changes
                   </button>
                 </div>
@@ -876,68 +876,84 @@ function EditAthleteModal({ athlete, onClose, onSaved }) {
   };
 
   return (
-    <div className="oauthModalOverlay" onClick={onClose}>
-      <div className="oauthModalCard" style={{ width: 'min(520px, 95vw)', textAlign: 'left' }} onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ margin: '0 0 4px', textAlign: 'center' }}>Edit Athlete Profile</h3>
-        <p style={{ margin: '0 0 18px', textAlign: 'center' }}>Update athlete metrics, sport position, and injury history</p>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-container" style={{ maxWidth: '560px' }} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--text-primary)' }}>Edit Athlete Profile</h3>
+            <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '12px' }}>Update athlete metrics, sport position, and injury history</p>
+          </div>
+          <button type="button" className="btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
 
-        <form onSubmit={submit} className="form" style={{ marginTop: '10px' }}>
-          <label>
-            Full Name
+        <form onSubmit={submit} className="modal-body">
+          <div className="form-group">
+            <label className="form-label">Full Name</label>
             <input
               required
               type="text"
+              className="form-input"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
-          </label>
-          <label>
-            Sport Type
-            <input
-              required
-              type="text"
-              value={form.sport}
-              onChange={(e) => setForm({ ...form, sport: e.target.value })}
-            />
-          </label>
-          <label>
-            Sport Position
-            <input
-              type="text"
-              value={form.position}
-              onChange={(e) => setForm({ ...form, position: e.target.value })}
-            />
-          </label>
-          <label>
-            Age (years)
-            <input
-              required
-              type="number"
-              min="5"
-              max="80"
-              value={form.age}
-              onChange={(e) => setForm({ ...form, age: e.target.value })}
-            />
-          </label>
-          <label>
-            Height (cm)
-            <input
-              type="number"
-              value={form.height_cm}
-              onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
-            />
-          </label>
-          <label>
-            Weight (kg)
-            <input
-              type="number"
-              value={form.weight_kg}
-              onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
-            />
-          </label>
-          <label>
-            Training Load
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="form-group">
+              <label className="form-label">Sport Type</label>
+              <input
+                required
+                type="text"
+                className="form-input"
+                value={form.sport}
+                onChange={(e) => setForm({ ...form, sport: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Sport Position</label>
+              <input
+                type="text"
+                className="form-input"
+                value={form.position}
+                onChange={(e) => setForm({ ...form, position: e.target.value })}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            <div className="form-group">
+              <label className="form-label">Age (years)</label>
+              <input
+                required
+                type="number"
+                min="5"
+                max="80"
+                className="form-input"
+                value={form.age}
+                onChange={(e) => setForm({ ...form, age: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Height (cm)</label>
+              <input
+                type="number"
+                className="form-input"
+                value={form.height_cm}
+                onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Weight (kg)</label>
+              <input
+                type="number"
+                className="form-input"
+                value={form.weight_kg}
+                onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Training Load</label>
             <select
+              className="form-select"
               value={form.training_load}
               onChange={(e) => setForm({ ...form, training_load: e.target.value })}
             >
@@ -946,20 +962,22 @@ function EditAthleteModal({ athlete, onClose, onSaved }) {
               <option value="High">High (6–8 sessions/week)</option>
               <option value="Extreme">Extreme (Two-a-day Pro Training)</option>
             </select>
-          </label>
-          <label>
-            Injury History & Prior Conditions
+          </div>
+          <div className="form-group">
+            <label className="form-label">Injury History & Prior Conditions</label>
             <textarea
+              className="form-input"
+              style={{ height: '80px', paddingTop: '10px' }}
               value={form.injury_history}
               onChange={(e) => setForm({ ...form, injury_history: e.target.value })}
             />
-          </label>
+          </div>
 
-          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-            <button type="button" onClick={onClose} style={{ border: 'none', background: 'transparent', color: '#64748b', fontWeight: 700 }}>
+          <div className="modal-footer" style={{ borderTop: 'none', padding: 0 }}>
+            <button type="button" className="btn-ghost" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="primary" disabled={busy}>
+            <button type="submit" className="btn-primary" disabled={busy}>
               {busy ? 'Saving…' : 'Save Changes'}
             </button>
           </div>
@@ -2358,6 +2376,7 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete, userRole, curr
   const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
   const [filterRisk, setFilterRisk] = useState('ALL');
+  const [showAddModal, setShowAddModal] = useState(false);
   const [form, setForm] = useState({
     name: '',
     sport: '',
@@ -2437,6 +2456,7 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete, userRole, curr
         injury_history: '',
         training_load: 'Moderate',
       });
+      setShowAddModal(false);
       onRefresh();
     } catch (e) {
       alert(`Error creating athlete: ${e.message}`);
@@ -2445,38 +2465,40 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete, userRole, curr
 
   return (
     <>
-      {/* Athletes Top Tab Bar */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-title-group">
+          <span className="eyebrow">ATHLETE ROSTER & REHABILITATION DIRECTORY</span>
+          <h1>Squad Athlete Directory</h1>
+          <p className="page-desc">Manage registered athlete profiles, physical metrics, position load factors, and dynamic injury rehabilitation tracking.</p>
+        </div>
+        <div className="page-actions">
+          <button type="button" className="btn-secondary" onClick={exportCSV}>
+            📥 Export CSV
+          </button>
+          <button type="button" className="btn-primary" onClick={() => setShowAddModal(true)}>
+            ➕ Add Athlete
+          </button>
+        </div>
+      </div>
+
+      {/* Athletes Navigation Sub-Tabs */}
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
         <button
+          className={subTab === 'roster' ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}
           onClick={() => setSubTab('roster')}
-          style={{
-            background: subTab === 'roster' ? 'var(--accent-primary)' : 'var(--bg-card)',
-            color: subTab === 'roster' ? '#fff' : 'var(--text-dark)',
-            border: '1px solid var(--border-purple)',
-            padding: '10px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 800, cursor: 'pointer'
-          }}
         >
           🏃 Squad Roster & Profiles
         </button>
         <button
+          className={subTab === 'rehab' ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}
           onClick={() => setSubTab('rehab')}
-          style={{
-            background: subTab === 'rehab' ? 'var(--accent-primary)' : 'var(--bg-card)',
-            color: subTab === 'rehab' ? '#fff' : 'var(--text-dark)',
-            border: '1px solid var(--border-purple)',
-            padding: '10px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 800, cursor: 'pointer'
-          }}
         >
           🏥 Clinical Rehab Tracker
         </button>
         <button
+          className={subTab === 'compare' ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}
           onClick={() => setSubTab('compare')}
-          style={{
-            background: subTab === 'compare' ? 'var(--accent-primary)' : 'var(--bg-card)',
-            color: subTab === 'compare' ? '#fff' : 'var(--text-dark)',
-            border: '1px solid var(--border-purple)',
-            padding: '10px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 800, cursor: 'pointer'
-          }}
         >
           ⚔️ Biomechanical Head-to-Head
         </button>
@@ -2486,204 +2508,233 @@ function Athletes({ athletes, onRefresh, onSelect, onEditAthlete, userRole, curr
       {subTab === 'compare' && <AthleteHeadToHead athletes={athletes} />}
 
       {subTab === 'roster' && (
-        <div className="grid2">
-      <section className="panel">
-        <div className="panelHead">
-          <h3>Create Athlete Profile</h3>
-        </div>
-        <form onSubmit={submit} className="form">
-          <label>
-            Full Name
-            <input
-              required
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="e.g. Jordan Miller"
-            />
-          </label>
-          <label>
-            Sport Type
-            <input
-              required
-              type="text"
-              value={form.sport}
-              onChange={(e) => setForm({ ...form, sport: e.target.value })}
-              placeholder="e.g. Football, Basketball, Athletics"
-            />
-          </label>
-          <label>
-            Sport Position
-            <input
-              type="text"
-              value={form.position}
-              onChange={(e) => setForm({ ...form, position: e.target.value })}
-              placeholder="e.g. Striker, Point Guard, Sprinter"
-            />
-          </label>
-          <label>
-            Age (years)
-            <input
-              required
-              type="number"
-              min="5"
-              max="80"
-              value={form.age}
-              onChange={(e) => setForm({ ...form, age: e.target.value })}
-              placeholder="e.g. 24"
-            />
-          </label>
-          <label>
-            Height (cm)
-            <input
-              type="number"
-              value={form.height_cm}
-              onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
-              placeholder="e.g. 182"
-            />
-          </label>
-          <label>
-            Weight (kg)
-            <input
-              type="number"
-              value={form.weight_kg}
-              onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
-              placeholder="e.g. 78"
-            />
-          </label>
-          <label>
-            Training Load
-            <select
-              value={form.training_load}
-              onChange={(e) => setForm({ ...form, training_load: e.target.value })}
-            >
-              <option value="Low">Low (1–3 sessions/week)</option>
-              <option value="Moderate">Moderate (4–5 sessions/week)</option>
-              <option value="High">High (6–8 sessions/week)</option>
-              <option value="Extreme">Extreme (Two-a-day Pro Training)</option>
-            </select>
-          </label>
-          <label>
-            Injury History & Prior Conditions
-            <textarea
-              value={form.injury_history}
-              onChange={(e) => setForm({ ...form, injury_history: e.target.value })}
-              placeholder="e.g. Previous left ACL tear, chronic ankle sprain, or None"
-            />
-          </label>
-          <button className="primary">Save Athlete Profile</button>
-        </form>
-      </section>
-
-      <section className="panel">
-        <div className="panelHead">
-          <div>
-            <h3>Registered Athlete Roster</h3>
-            <span className="count" style={{ marginLeft: '6px' }}>{filteredAthletes.length} athletes</span>
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              <span>Registered Athletes</span>
+              <span className="badge badge-neutral">{filteredAthletes.length} total</span>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="🔍 Search name, sport, or position…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ width: '260px', height: '38px' }}
+              />
+              <button
+                type="button"
+                className="btn-secondary btn-sm"
+                onClick={() => setFilterRisk(filterRisk === 'HIGH' ? 'ALL' : 'HIGH')}
+              >
+                {filterRisk === 'HIGH' ? '🔴 High Risk Only' : 'Filter: All Loads'}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary btn-sm"
+                onClick={() => setViewMode(viewMode === 'list' ? 'matrix' : 'list')}
+              >
+                {viewMode === 'list' ? '👥 Matrix Grid' : '📋 List View'}
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              type="button"
-              className="btnSecondary"
-              onClick={() => setViewMode(viewMode === 'list' ? 'matrix' : 'list')}
-            >
-              {viewMode === 'list' ? '👥 Squad Matrix' : '📋 List View'}
-            </button>
-            <button type="button" onClick={exportCSV} style={{ color: '#059669', fontWeight: 700 }}>
-              📥 CSV
-            </button>
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
-          <input
-            type="text"
-            placeholder="🔍 Search athlete by name or sport…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px' }}
-          />
-          <button
-            type="button"
-            className="btnSecondary"
-            style={{ background: filterRisk === 'HIGH' ? '#fef2f2' : '#fff', color: filterRisk === 'HIGH' ? '#dc2626' : '#334155' }}
-            onClick={() => setFilterRisk(filterRisk === 'HIGH' ? 'ALL' : 'HIGH')}
-          >
-            {filterRisk === 'HIGH' ? '🔴 High Risk Only' : 'Filter: All'}
-          </button>
-        </div>
-
-        {viewMode === 'list' ? (
-          <table>
-            <thead>
-              <tr>
-                <th>Athlete</th>
-                <th>Sport / Pos</th>
-                <th>Age</th>
-                <th>Load</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAthletes.map((a) => (
-                <tr key={a.athlete_id || a.id} onClick={() => onSelect(a)} className="click">
-                  <td><b>{a.name}</b></td>
-                  <td>{a.sport} {a.position ? `(${a.position})` : ''}</td>
-                  <td>{a.age} yrs</td>
-                  <td>
-                    <span className={`badge ${a.training_load === 'Extreme' ? 'high' : a.training_load === 'High' ? 'medium' : 'low'}`}>
-                      {a.training_load || 'Moderate'}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="primary small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditAthlete(a);
-                      }}
-                      style={{ padding: '4px 10px', fontSize: '11px' }}
-                    >
-                      ✏️ Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            {filteredAthletes.map((a) => {
-              const isAlert = a.training_load === 'Extreme' || (a.injury_history && a.injury_history !== 'None');
-              return (
-                <div
-                  key={a.athlete_id || a.id}
-                  onClick={() => onSelect(a)}
-                  style={{
-                    background: isAlert ? '#fff1f2' : '#f0fdf4',
-                    border: `1px solid ${isAlert ? '#fecaca' : '#bbf7d0'}`,
-                    borderRadius: '10px',
-                    padding: '12px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <b style={{ fontSize: '13px', color: '#0f172a', display: 'block' }}>{a.name}</b>
-                  <span style={{ fontSize: '11.5px', color: '#64748b' }}>{a.sport} • {a.position || 'Field'}</span>
-                  <div style={{ marginTop: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10.5px', fontWeight: 800, color: isAlert ? '#dc2626' : '#16a34a' }}>
-                      {isAlert ? '⚠ Medical Review Flag' : '✓ Cleared for Play'}
-                    </span>
-                    <span className="badge low" style={{ fontSize: '10px' }}>{a.training_load || 'Moderate'}</span>
+          {viewMode === 'list' ? (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Athlete Name</th>
+                    <th>Sport / Position</th>
+                    <th>Age</th>
+                    <th>Physical Specs</th>
+                    <th>Training Load</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAthletes.map((a) => (
+                    <tr key={a.athlete_id || a.id} onClick={() => onSelect(a)} style={{ cursor: 'pointer' }}>
+                      <td><b style={{ color: 'var(--text-primary)' }}>{a.name}</b></td>
+                      <td>{a.sport} {a.position ? `(${a.position})` : ''}</td>
+                      <td>{a.age} yrs</td>
+                      <td>{a.height_cm ? `${a.height_cm} cm` : '—'} / {a.weight_kg ? `${a.weight_kg} kg` : '—'}</td>
+                      <td>
+                        <span className={`badge ${a.training_load === 'Extreme' ? 'badge-high' : a.training_load === 'High' ? 'badge-med' : 'badge-low'}`}>
+                          {a.training_load || 'Moderate'}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn-secondary btn-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditAthlete(a);
+                          }}
+                        >
+                          ✏️ Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="grid-12">
+              {filteredAthletes.map((a) => {
+                const isAlert = a.training_load === 'Extreme' || (a.injury_history && a.injury_history !== 'None');
+                return (
+                  <div
+                    key={a.athlete_id || a.id}
+                    className="col-4"
+                    onClick={() => onSelect(a)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="card" style={{ height: '100%' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                        <div className="user-avatar" style={{ width: '42px', height: '42px', fontSize: '16px' }}>
+                          {(a.name || 'A').charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>{a.name}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{a.sport} • {a.position || 'Athlete'}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)' }}>
+                        <span className={`badge ${isAlert ? 'badge-high' : 'badge-low'}`}>
+                          {isAlert ? '⚠ High Load Flag' : '✓ Cleared'}
+                        </span>
+                        <span className="badge badge-neutral">{a.training_load || 'Moderate'}</span>
+                      </div>
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          )}
+          {!filteredAthletes.length && <Empty text="No athletes match your search or filter." />}
+        </div>
+      )}
+
+      {/* Add Athlete Overlay Modal */}
+      {showAddModal && (
+        <div className="modal-backdrop" onClick={() => setShowAddModal(false)}>
+          <div className="modal-container" style={{ maxWidth: '560px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--text-primary)' }}>Create Athlete Profile</h3>
+                <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '12px' }}>Register a new athlete to monitor joint biomechanics</p>
+              </div>
+              <button type="button" className="btn-ghost btn-sm" onClick={() => setShowAddModal(false)}>✕</button>
+            </div>
+            <form onSubmit={submit} className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input
+                  required
+                  type="text"
+                  className="form-input"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="e.g. Jordan Miller"
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Sport Type</label>
+                  <input
+                    required
+                    type="text"
+                    className="form-input"
+                    value={form.sport}
+                    onChange={(e) => setForm({ ...form, sport: e.target.value })}
+                    placeholder="e.g. Football, Basketball"
+                  />
                 </div>
-              );
-            })}
+                <div className="form-group">
+                  <label className="form-label">Sport Position</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={form.position}
+                    onChange={(e) => setForm({ ...form, position: e.target.value })}
+                    placeholder="e.g. Striker, Point Guard"
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Age (years)</label>
+                  <input
+                    required
+                    type="number"
+                    min="5"
+                    max="80"
+                    className="form-input"
+                    value={form.age}
+                    onChange={(e) => setForm({ ...form, age: e.target.value })}
+                    placeholder="24"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Height (cm)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={form.height_cm}
+                    onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
+                    placeholder="182"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Weight (kg)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={form.weight_kg}
+                    onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
+                    placeholder="78"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Training Load</label>
+                <select
+                  className="form-select"
+                  value={form.training_load}
+                  onChange={(e) => setForm({ ...form, training_load: e.target.value })}
+                >
+                  <option value="Low">Low (1–3 sessions/week)</option>
+                  <option value="Moderate">Moderate (4–5 sessions/week)</option>
+                  <option value="High">High (6–8 sessions/week)</option>
+                  <option value="Extreme">Extreme (Two-a-day Pro Training)</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Injury History & Prior Conditions</label>
+                <textarea
+                  className="form-input"
+                  style={{ height: '80px', paddingTop: '10px' }}
+                  value={form.injury_history}
+                  onChange={(e) => setForm({ ...form, injury_history: e.target.value })}
+                  placeholder="e.g. Previous left ACL tear or None"
+                />
+              </div>
+
+              <div className="modal-footer" style={{ borderTop: 'none', padding: 0 }}>
+                <button type="button" className="btn-ghost" onClick={() => setShowAddModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Save Athlete Profile
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-        {!filteredAthletes.length && <Empty text="No athletes match your search or filter." />}
-      </section>
-    </div>
+        </div>
       )}
     </>
   );
@@ -2916,127 +2967,209 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
     : '';
 
   return (
-    <div className="grid2">
-      <section className="panel">
-        <div className="panelHead">
-          <h3>Sports Movement Screening</h3>
+    <>
+      <div className="page-header">
+        <div className="page-title-group">
+          <span className="eyebrow">STUDIO WORKSPACE & MOVEMENT PROCESSING</span>
+          <h1>Video Movement Screening Workspace</h1>
+          <p className="page-desc">Upload high-speed movement video recordings or stream real-time webcam video to execute 3D pose landmark detection and XGBoost ML risk scoring.</p>
         </div>
-
-        <div className="field">
-          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '4px' }}>
-            🏃 Select Athlete Profile (Active Presentation Roster)
-          </label>
-          {athletes.length > 0 ? (
-            <select
-              value={athlete}
-              onChange={(e) => setAthlete(e.target.value)}
-              style={{ fontWeight: 800, fontSize: '14.5px' }}
-            >
-              {athletes.map((a) => (
-                <option value={a.athlete_id || a.id} key={a.athlete_id || a.id}>
-                  👤 {a.name} — {a.sport || 'Multi-Sport'} {a.position ? `(${a.position})` : ''}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <div style={{ padding: '10px 14px', background: '#fff1f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#be123c', fontSize: '12px', marginTop: '6px' }}>
-              ⚠ No athlete profile registered yet.{' '}
-              <button
-                type="button"
-                onClick={() => onNav('Athletes')}
-                style={{ background: 'none', border: 'none', color: '#059669', fontWeight: 800, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
-              >
-                Create an Athlete first →
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="field" style={{ marginTop: '14px' }}>
-          <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '4px' }}>
-            🎯 Supported Activity Movement (Multi-Sport Mechanics)
-          </label>
-          <select
-            value={activity}
-            onChange={(e) => setActivity(e.target.value)}
-            style={{ fontWeight: 800, fontSize: '14.5px' }}
+        <div className="page-actions">
+          <button
+            type="button"
+            className={mode === 'upload' ? 'btn-primary' : 'btn-secondary'}
+            onClick={() => setMode('upload')}
           >
-            <option value="squatting">🏋️ Squatting — Bilateral Knee & Hip Mechanics</option>
-            <option value="lunging">🦵 Lunging & Split Squats — Single-Leg Quad & Knee Stability</option>
-            <option value="deadlift">🏋️‍♂️ Deadlift & Hinging — Posterior Chain & Spine Biomechanics</option>
-            <option value="running">🏃 Running & Gait — Cadence & Stride Mechanics (Track, Soccer, Rugby)</option>
-            <option value="sprinting">⚡ Sprinting — Max Velocity Mechanics & Acceleration</option>
-            <option value="jumping">🦘 Jumping — Vertical Propulsion & Takeoff (Basketball, Volleyball)</option>
-            <option value="landing">🎯 Landing — Deceleration & Impact Attenuation</option>
-            <option value="cutting">🔄 Cutting & Change-of-Direction — Lateral ACL Shear & Valgus</option>
-            <option value="throwing">⚾ Throwing & Overhead Serving — Baseball, Tennis, Cricket, Quarterback</option>
-            <option value="upper_body_push">💪 Upper Body Press — Overhead & Bench Press Mechanics</option>
-            <option value="agility_drills">🪜 Agility Ladder & Shuttle Drills — Fast Footwork & Ankle Symmetry</option>
-            <option value="single_leg_balance">🧘 Single-Leg Balance & Y-Balance — Dynamic Postural Control</option>
-            <option value="plyometrics">💥 Plyometrics & Box Jumps — Explosive Power & Joint Absorption</option>
-            <option value="swimming_rowing">🏊 Swimming & Rowing — Full-Body Kinematic Coordination</option>
-            <option value="sport_specific_drills">⚽ Sport-Specific Drills — General Multi-Sport Mechanics</option>
-          </select>
-        </div>
-
-        <div className="drop" style={{ marginTop: '14px' }}>
-          <div>📹</div>
-          <strong>{file ? file.name : 'Select or drop movement video clip'}</strong>
-          <small>Supported: MP4, MOV, AVI, MKV, WebM • Optical 3D Pose Tracking</small>
-          <input
-            type="file"
-            accept="video/*"
-            onChange={(e) => {
-              const f = e.target.files[0];
-              if (f) {
-                const previewUrl = URL.createObjectURL(f);
-                setAnalysisState?.((prev) => ({
-                  ...prev,
-                  file: f,
-                  videoPreviewUrl: previewUrl,
-                }));
-              }
+            📹 Optical Video File
+          </button>
+          <button
+            type="button"
+            className={mode === 'webcam' ? 'btn-primary' : 'btn-secondary'}
+            onClick={() => {
+              setMode('webcam');
+              if (!webcamActive) startWebcam();
             }}
-          />
+          >
+            🎥 Real-Time Webcam
+          </button>
+        </div>
+      </div>
+
+      <div className="grid-12">
+        <div className="col-6">
+          <div className="card">
+            <div className="card-header">
+              <div className="card-title">
+                <span>Movement Screening Input</span>
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label className="form-label">🏃 Select Athlete Profile</label>
+              {athletes.length > 0 ? (
+                <select
+                  className="form-select"
+                  value={athlete}
+                  onChange={(e) => setAthlete(e.target.value)}
+                >
+                  {athletes.map((a) => (
+                    <option value={a.athlete_id || a.id} key={a.athlete_id || a.id}>
+                      👤 {a.name} — {a.sport || 'Multi-Sport'} {a.position ? `(${a.position})` : ''}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-md)', color: 'var(--risk-high)', fontSize: '13px' }}>
+                  ⚠ No athlete profile registered yet.{' '}
+                  <button
+                    type="button"
+                    onClick={() => onNav('Athletes')}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-teal-bright)', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+                  >
+                    Create an Athlete profile first →
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label className="form-label">🎯 Activity Mechanics Type</label>
+              <select
+                className="form-select"
+                value={activity}
+                onChange={(e) => setActivity(e.target.value)}
+              >
+                <option value="squatting">🏋️ Squatting — Bilateral Knee & Hip Mechanics</option>
+                <option value="lunging">🦵 Lunging & Split Squats — Single-Leg Quad & Knee Stability</option>
+                <option value="deadlift">🏋️‍♂️ Deadlift & Hinging — Posterior Chain & Spine Biomechanics</option>
+                <option value="running">🏃 Running & Gait — Cadence & Stride Mechanics</option>
+                <option value="sprinting">⚡ Sprinting — Max Velocity Mechanics & Acceleration</option>
+                <option value="jumping">🦘 Jumping — Vertical Propulsion & Takeoff</option>
+                <option value="landing">🎯 Landing — Deceleration & Impact Attenuation</option>
+                <option value="cutting">🔄 Cutting & Change-of-Direction — Lateral ACL Shear & Valgus</option>
+                <option value="throwing">⚾ Throwing & Overhead Serving — Shoulder & Elbow Kinematics</option>
+                <option value="upper_body_push">💪 Upper Body Press — Overhead & Bench Press Mechanics</option>
+                <option value="agility_drills">🪜 Agility Ladder & Shuttle Drills — Fast Footwork & Ankle Symmetry</option>
+                <option value="single_leg_balance">🧘 Single-Leg Balance & Y-Balance — Dynamic Postural Control</option>
+                <option value="plyometrics">💥 Plyometrics & Box Jumps — Explosive Power & Joint Absorption</option>
+                <option value="swimming_rowing">🏊 Swimming & Rowing — Full-Body Kinematic Coordination</option>
+                <option value="sport_specific_drills">⚽ Sport-Specific Drills — General Multi-Sport Mechanics</option>
+              </select>
+            </div>
+
+            {mode === 'upload' ? (
+              <>
+                <div className="upload-zone" style={{ marginBottom: '16px' }}>
+                  <div className="upload-icon">📹</div>
+                  <strong style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
+                    {file ? file.name : 'Select or drop movement video file'}
+                  </strong>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+                    Supported: MP4, MOV, AVI, WebM • Optical 3D Pose Extraction
+                  </p>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+                    onChange={(e) => {
+                      const f = e.target.files[0];
+                      if (f) {
+                        const previewUrl = URL.createObjectURL(f);
+                        setAnalysisState?.((prev) => ({
+                          ...prev,
+                          file: f,
+                          videoPreviewUrl: previewUrl,
+                        }));
+                      }
+                    }}
+                  />
+                </div>
+
+                {videoPreviewUrl && (
+                  <div style={{ marginBottom: '16px', background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                    <video src={videoPreviewUrl} controls autoPlay muted style={{ width: '100%', maxHeight: '240px', display: 'block' }} />
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ width: '100%', height: '46px', fontSize: '14px' }}
+                  disabled={busy || (!file && !result)}
+                  onClick={submit}
+                >
+                  {busy ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="animatedSpinner">🌀</span>
+                      <span>{analysisState?.progressStage || 'Processing...'} ({analysisState?.progressPercent || 0}%)</span>
+                    </span>
+                  ) : (
+                    '⚡ Execute Video Movement Analysis'
+                  )}
+                </button>
+              </>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-medium)' }}>
+                  <video ref={videoRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline />
+                  {!webcamActive && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyCenter: 'center', background: 'rgba(10, 13, 20, 0.85)', gap: '12px' }}>
+                      <div style={{ fontSize: '36px' }}>📷</div>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>Camera Stream Offline</div>
+                      <button type="button" className="btn-primary btn-sm" onClick={startWebcam}>Start Camera Stream</button>
+                    </div>
+                  )}
+                  {recordingTimer > 0 && (
+                    <div style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(239, 68, 68, 0.9)', color: '#fff', padding: '6px 14px', borderRadius: 'var(--radius-full)', fontWeight: 800, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />
+                      <span>Recording: {recordingTimer}s</span>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    style={{ flex: 1 }}
+                    disabled={!webcamActive || recordingTimer > 0}
+                    onClick={captureWebcamMovement}
+                  >
+                    {recordingTimer > 0 ? 'Recording Movement...' : '🔴 Record 5s Drill & Analyze'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={webcamActive ? stopWebcam : startWebcam}
+                  >
+                    {webcamActive ? 'Stop Stream' : 'Start Stream'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {busy && (
+              <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.1)', borderRadius: 'var(--radius-full)', overflow: 'hidden', height: '8px' }}>
+                <div
+                  style={{
+                    width: `${analysisState?.progressPercent || 0}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, var(--accent-teal), #06b6d4)',
+                    transition: 'width 0.4s ease-in-out',
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Inline Video Player Preview */}
-        {videoPreviewUrl && (
-          <div style={{ marginBottom: '14px', background: '#000', borderRadius: '10px', overflow: 'hidden' }}>
-            <video src={videoPreviewUrl} controls autoPlay muted style={{ width: '100%', maxHeight: '240px', display: 'block' }} />
-          </div>
-        )}
-
-        <button className="primary full" disabled={busy || (!file && !result)} onClick={submit}>
-          {busy ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              <span className="animatedSpinner">🌀</span>
-              <span>{analysisState?.progressStage || 'Processing video & extracting 3D pose...'} ({analysisState?.progressPercent || 0}%)</span>
-            </span>
-          ) : (
-            'Upload & Analyze Movement'
-          )}
-        </button>
-        {busy && (
-          <div style={{ marginTop: '10px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', overflow: 'hidden', height: '8px' }}>
-            <div
-              style={{
-                width: `${analysisState?.progressPercent || 0}%`,
-                height: '100%',
-                background: 'linear-gradient(90deg, #10b981, #06b6d4)',
-                transition: 'width 0.4s ease-in-out',
-              }}
-            />
-          </div>
-        )}
-      </section>
-
-      <section className="panel">
-        <div className="panelHead">
-          <div>
-            <h3>Diagnostic Kinematics Pipeline</h3>
-          </div>
-        </div>
+        <div className="col-6">
+          <section className="panel">
+            <div className="panelHead">
+              <div>
+                <h3>Diagnostic Kinematics Pipeline</h3>
+              </div>
+            </div>
 
         {[
           'Video Upload & Resolution Validation',
@@ -3122,6 +3255,8 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
         )}
       </section>
     </div>
+  </div>
+  </>
   );
 }
 
