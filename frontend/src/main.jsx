@@ -160,28 +160,63 @@ const ICON_SETS = {
   }
 };
 
-function BrandIntroSplash() {
+function CinematicIntroSequence() {
   const [visible, setVisible] = useState(true);
-  const [hiding, setHiding] = useState(false);
+  const [fading, setFading] = useState(false);
+  const [frame, setFrame] = useState(1);
 
   useEffect(() => {
-    const timer1 = setTimeout(() => setHiding(true), 1200);
-    const timer2 = setTimeout(() => setVisible(false), 1700);
+    const frameInterval = setInterval(() => {
+      setFrame((prev) => (prev < 8 ? prev + 1 : prev));
+    }, 300);
+
+    const timer1 = setTimeout(() => setFading(true), 2400);
+    const timer2 = setTimeout(() => setVisible(false), 3000);
+
     return () => {
+      clearInterval(frameInterval);
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
   }, []);
 
+  const handleSkip = () => {
+    setFading(true);
+    setTimeout(() => setVisible(false), 200);
+  };
+
   if (!visible) return null;
 
   return (
-    <div className={`brandSplash ${hiding ? 'hiding' : ''}`}>
-      <div className="splashBadge">⚡</div>
-      <div className="splashTitle">MotionIQ</div>
-      <div className="splashSub">Sports Motion Intelligence Lab v2.0</div>
-      <div className="splashBar">
-        <div className="splashBarInner" />
+    <div className={`cinematicOverlay ${fading ? 'fadingOut' : ''}`} onClick={handleSkip}>
+      <div className="gridBackgroundPattern" />
+      <div className="scanlineSweep" />
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        <span className="hudChip">POSE</span>
+        <span className="hudChip">MOTION</span>
+        <span className="hudChip">VISION</span>
+        <span className="hudChip">ANALYSIS</span>
+      </div>
+
+      <div className="splashBadge" style={{ fontSize: '42px', width: '80px', height: '80px', borderRadius: '24px' }}>
+        ⚡
+      </div>
+
+      <div className="splashTitle" style={{ fontSize: '36px', marginTop: '16px' }}>
+        MotionIQ
+      </div>
+
+      <div className="splashSub" style={{ letterSpacing: '3px', fontSize: '12px', marginTop: '6px' }}>
+        AI-POWERED MOVEMENT INTELLIGENCE • v2.0
+      </div>
+
+      <div className="splashBar" style={{ width: '220px', marginTop: '24px', height: '4px' }}>
+        <div className="splashBarInner" style={{ width: `${(frame / 8) * 100}%`, transition: 'width 0.3s ease' }} />
+      </div>
+
+      <div style={{ position: 'absolute', bottom: '24px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+        CLICK ANYWHERE TO SKIP INTRO →
       </div>
     </div>
   );
@@ -561,7 +596,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <BrandIntroSplash />
+      <CinematicIntroSequence />
       <div className="ambient-spotlight" />
 
       {/* Sidebar Presentation */}
