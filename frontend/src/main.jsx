@@ -510,6 +510,8 @@ function App() {
     }
   }, [authenticated, currentUser, isAthleteRole, userAthletes.length, userSummary]);
 
+  const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
+
   if (!authenticated) {
     return (
       <AuthScreen
@@ -523,8 +525,6 @@ function App() {
       />
     );
   }
-
-  const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
 
   const nav = (p) => {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -1077,7 +1077,8 @@ function AuthScreen({ onSuccess }) {
 
   return (
     <div className="authShell">
-      <div className="authVisual">
+      <div className="authContainer">
+        <div className="authVisual">
         <div className="authLogo">⚡</div>
         <div className="eyebrow">SPORTS MOTION INTELLIGENCE</div>
         <h1>
@@ -1238,6 +1239,7 @@ function AuthScreen({ onSuccess }) {
           </button>
         </p>
       </div>
+    </div>
 
       {oauthModal && (
         <div className="oauthModalOverlay" onClick={() => setOauthModal(null)}>
