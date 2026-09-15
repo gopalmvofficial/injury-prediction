@@ -1090,8 +1090,8 @@ function AuthScreen({ onSuccess }) {
 
         {/* Role Selector Tabs */}
         {mode === 'register' && (
-          <div style={{ marginBottom: '18px' }}>
-            <label style={{ fontSize: '11.5px', fontWeight: 800, color: '#334155', display: 'block', marginBottom: '6px' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
               Select Account Role:
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
@@ -1104,14 +1104,17 @@ function AuthScreen({ onSuccess }) {
                   type="button"
                   onClick={() => setRole(rKey)}
                   style={{
-                    padding: '8px 4px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    borderRadius: '6px',
-                    border: role === rKey ? '2px solid #10b981' : '1px solid #cbd5e1',
-                    background: role === rKey ? '#ecfdf5' : '#fff',
-                    color: role === rKey ? '#059669' : '#475569',
+                    height: '38px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    border: role === rKey ? '1px solid var(--accent-teal-bright)' : '1px solid var(--border-medium)',
+                    background: role === rKey ? 'rgba(20, 184, 166, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                    color: role === rKey ? 'var(--accent-teal-bright)' : 'var(--text-secondary)',
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   {rLabel}
