@@ -161,11 +161,22 @@ const ICON_SETS = {
 };
 
 function CinematicIntroSequence() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(() => {
+    try {
+      return !sessionStorage.getItem('motioniq_intro_shown');
+    } catch {
+      return false;
+    }
+  });
   const [fading, setFading] = useState(false);
   const [frame, setFrame] = useState(1);
 
   useEffect(() => {
+    if (!visible) return;
+    try {
+      sessionStorage.setItem('motioniq_intro_shown', 'true');
+    } catch {}
+
     const frameInterval = setInterval(() => {
       setFrame((prev) => (prev < 8 ? prev + 1 : prev));
     }, 300);
@@ -178,7 +189,7 @@ function CinematicIntroSequence() {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, []);
+  }, [visible]);
 
   const handleSkip = () => {
     setFading(true);
