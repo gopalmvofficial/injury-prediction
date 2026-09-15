@@ -222,6 +222,76 @@ function CinematicIntroSequence() {
   );
 }
 
+function CommandPaletteModal({ onNav }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setOpen((prev) => !prev);
+      }
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  if (!open) return null;
+
+  const options = [
+    { name: 'Dashboard', icon: '📊', category: 'Main Workspace' },
+    { name: 'Athletes', icon: '🏃', category: 'Squad Roster' },
+    { name: 'Video Analysis', icon: '🎥', category: 'Diagnostic Studio' },
+    { name: 'Kinematics Lab', icon: '🦴', category: '3D Telemetry' },
+    { name: 'Results', icon: '📈', category: 'Assessment Records' },
+    { name: 'Reports', icon: '📄', category: 'Clinical Documentation' },
+    { name: 'Settings', icon: '⚙️', category: 'System Preferences' },
+  ].filter(o => o.name.toLowerCase().includes(query.toLowerCase()) || o.category.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div className="commandPaletteOverlay" onClick={() => setOpen(false)}>
+      <div className="commandPaletteCard" onClick={(e) => e.stopPropagation()}>
+        <div className="commandInputWrapper">
+          <span style={{ fontSize: '18px' }}>🔍</span>
+          <input
+            autoFocus
+            placeholder="Type a command or search workspace (e.g., Athletes, Analysis)..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <span className="monoBadge">ESC to close</span>
+        </div>
+        <div className="commandOptionList">
+          {options.map((opt) => (
+            <button
+              key={opt.name}
+              type="button"
+              className="commandOption"
+              onClick={() => {
+                onNav(opt.name);
+                setOpen(false);
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '18px' }}>{opt.icon}</span>
+                <span>{opt.name}</span>
+              </div>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{opt.category}</span>
+            </button>
+          ))}
+          {options.length === 0 && (
+            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+              No matching workspace command found.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [authenticated, setAuthenticated] = useState(
     Boolean(localStorage.getItem('sir_auth') && localStorage.getItem('sir_token'))
@@ -597,6 +667,7 @@ function App() {
   return (
     <div className="app-shell">
       <CinematicIntroSequence />
+      <CommandPaletteModal onNav={nav} />
       <div className="ambient-spotlight" />
 
       {/* Sidebar Presentation */}
