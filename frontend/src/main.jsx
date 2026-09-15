@@ -89,20 +89,7 @@ function playVictoryFanfare() {
   });
 }
 
-function speakBriefing(text, setSpeaking) {
-  if (!('speechSynthesis' in window)) {
-    return alert('Text-to-speech is not supported in this browser.');
-  }
-  window.speechSynthesis.cancel();
-  if (!text) return;
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 1.0;
-  utterance.pitch = 1.0;
-  utterance.onstart = () => setSpeaking && setSpeaking(true);
-  utterance.onend = () => setSpeaking && setSpeaking(false);
-  utterance.onerror = () => setSpeaking && setSpeaking(false);
-  window.speechSynthesis.speak(utterance);
-}
+// AI Voice Coach removed per Version 2.0 UI specifications
 
 function triggerConfetti() {
   const container = document.createElement('div');
@@ -232,6 +219,16 @@ function App() {
     localStorage.setItem('motioniq_font_style', fontStyle);
     localStorage.setItem('motioniq_dashboard_layout', dashboardLayout);
   }, [theme, iconPack, cardStyle, fontStyle, dashboardLayout]);
+
+  // Ambient Spotlight Cursor Effect
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Edit User Profile Modal State
   const [profileModal, setProfileModal] = useState(false);
@@ -1541,10 +1538,10 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
     <>
       <section className="hero">
         <div>
-          <span className="eyebrow">PREDICTIVE SPORTS INTELLIGENCE</span>
+          <span className="eyebrow">⚡ AI BIOMECHANICAL RISK LAB v2.0</span>
           <h2>
-            AI Biomechanics &<br />
-            <em>Injury Risk Intelligence</em>
+            Sports Injury Risk Detection &<br />
+            <em>Biomechanical Pose Intelligence</em>
           </h2>
           <p>
             Transforms standard optical video into 3D skeletal kinematics. Quantifies joint flexion angles, bilateral symmetry balance, and spinal posture with automated Machine Learning injury risk prediction.
@@ -1552,7 +1549,7 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
         </div>
         <div className="heroGraphic">
           3D
-          <div>POSE AI</div>
+          <div>POSE KINEMATICS</div>
         </div>
       </section>
 
@@ -1575,13 +1572,13 @@ function Dashboard({ summary, athletes, onNav, userRole, layoutMode = 'grid_card
         <button className="primary" onClick={() => onNav('Athletes')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
           ➕ Add Athlete
         </button>
-        <button className="btnSecondary" onClick={() => onNav('Video Analysis')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '10px', color: '#4c1d95', fontWeight: 600, cursor: 'pointer' }}>
+        <button className="btnSecondary" onClick={() => onNav('Video Analysis')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
           🎥 New Video Analysis
         </button>
-        <button className="btnSecondary" onClick={() => onNav('Reports')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '10px', color: '#4c1d95', fontWeight: 600, cursor: 'pointer' }}>
+        <button className="btnSecondary" onClick={() => onNav('Reports')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
           📄 Clinical Reports
         </button>
-        <button className="btnSecondary" onClick={() => onNav('Kinematics Lab')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', background: '#fff', border: '1px solid #ddd6fe', borderRadius: '10px', color: '#4c1d95', fontWeight: 600, cursor: 'pointer' }}>
+        <button className="btnSecondary" onClick={() => onNav('Kinematics Lab')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
           🦴 3D Kinematics Lab
         </button>
       </div>
@@ -2766,9 +2763,7 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
   const videoPreviewUrl = analysisState?.videoPreviewUrl || null;
   const busy = Boolean(analysisState?.busy);
   const result = analysisState?.result || null;
-  const risk = analysisState?.risk || null;
 
-  const [speaking, setSpeaking] = useState(false);
 
   // Webcam Capture State
   const videoRef = useRef(null);
@@ -3068,22 +3063,6 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
           <div>
             <h3>Diagnostic Kinematics Pipeline</h3>
           </div>
-          {result && (
-            <button
-              type="button"
-              className={`voiceBtn ${speaking ? 'speaking' : ''}`}
-              onClick={() => {
-                if (speaking) {
-                  window.speechSynthesis.cancel();
-                  setSpeaking(false);
-                } else {
-                  speakBriefing(speechText, setSpeaking);
-                }
-              }}
-            >
-              {speaking ? '⏹ Stop Audio' : '🔊 AI Voice Coach'}
-            </button>
-          )}
         </div>
 
         {[
@@ -3178,7 +3157,6 @@ function Results({ summary, onPlayVideo }) {
   const [selected, setSelected] = useState(null);
   const [compareA, setCompareA] = useState(null);
   const [compareB, setCompareB] = useState(null);
-  const [speaking, setSpeaking] = useState(false);
   const token = localStorage.getItem('sir_token');
 
   const [generatingId, setGeneratingId] = useState(null);
@@ -3390,18 +3368,7 @@ function Results({ summary, onPlayVideo }) {
                       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <b style={{ color: '#0f2942', fontSize: '13px' }}>🤖 Plain-English Injury Risk Assessment:</b>
-                            <button
-                              type="button"
-                              className="voiceBtn"
-                              style={{ padding: '4px 10px', fontSize: '11px' }}
-                              onClick={() => {
-                                const t = `Assessment for activity ${r.activity}. Overall injury risk is ${riskScore} percent, classified as ${riskLevel}. Prescribed program: ${r.recommendations?.[0] || 'Targeted Physiotherapy'}.`;
-                                speakBriefing(t, setSpeaking);
-                              }}
-                            >
-                              🔊 Listen
-                            </button>
+                            <b style={{ color: 'var(--text-dark)', fontSize: '13px' }}>🤖 AI Injury Risk Assessment:</b>
                           </div>
 
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px', fontSize: '12px' }}>
@@ -3509,7 +3476,6 @@ function AnalysisTable({ rows }) {
 
 function Reports({ summary }) {
   const latest = summary?.recent_analyses?.[0];
-  const [speaking, setSpeaking] = useState(false);
   const [clinicName, setClinicName] = useState('');
   const [physicianName, setPhysicianName] = useState('');
   const token = localStorage.getItem('sir_token');
@@ -3621,20 +3587,6 @@ function Reports({ summary }) {
         <div style={{ marginTop: '20px', background: '#f8fafc', padding: '22px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>Latest Assessment: #{latest.analysis_id.slice(0, 8)} ({latest.activity.toUpperCase()})</h3>
-            <button
-              type="button"
-              className={`voiceBtn ${speaking ? 'speaking' : ''}`}
-              onClick={() => {
-                if (speaking) {
-                  window.speechSynthesis.cancel();
-                  setSpeaking(false);
-                } else {
-                  speakBriefing(voiceBriefing, setSpeaking);
-                }
-              }}
-            >
-              {speaking ? '⏹ Stop Audio' : '🔊 Listen to Audio Briefing'}
-            </button>
           </div>
           <p style={{ margin: '6px 0 16px', color: '#64748b' }}>
             Pose Detection: <b>{latest.pose_detection_rate_pct}%</b> • Assessment Time: <b>{formattedTime}</b>
