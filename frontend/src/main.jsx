@@ -670,42 +670,6 @@ function App() {
       <CommandPaletteModal onNav={nav} />
       <div className="ambient-spotlight" />
 
-      {/* Top System Bar */}
-      <header className="topSystemBar" style={{
-        height: '44px',
-        background: 'var(--bg-topbar)',
-        borderBottom: '1px solid var(--border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 20px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        gridColumn: '1 / -1'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span className="monoBadge" style={{ fontSize: '10.5px' }}>⚡ APEX MOTION v3.0</span>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            TELEMETRY: <strong style={{ color: 'var(--accent-teal-bright)' }}>ENGINE ONLINE</strong>
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <button
-            type="button"
-            onClick={() => {
-              const nextTheme = theme === 'apex-dark' ? 'light' : theme === 'light' ? 'high-contrast' : 'apex-dark';
-              setTheme(nextTheme);
-            }}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
-          >
-            🎨 Theme: {theme.toUpperCase()}
-          </button>
-          <span className="monoBadge">Ctrl + K</span>
-        </div>
-      </header>
-
       {/* Sidebar Presentation */}
       <aside className={`sidebar ${sidebarMobileOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
@@ -778,7 +742,8 @@ function App() {
             >
               ☰
             </button>
-            <div className="page-breadcrumb">
+            <div className="page-breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="monoBadge" style={{ fontSize: '10px' }}>⚡ APEX v3.0</span>
               <span>Platform</span> / <span>{page}</span>
             </div>
           </div>
@@ -788,6 +753,22 @@ function App() {
               <div className="status-dot" />
               <span>AI Engine Online</span>
             </div>
+
+            <button
+              type="button"
+              className="btn-ghost btn-sm"
+              onClick={() => {
+                const nextTheme = theme === 'apex-dark' ? 'light' : theme === 'light' ? 'high-contrast' : 'apex-dark';
+                setTheme(nextTheme);
+              }}
+              title="Toggle Theme Mode"
+            >
+              🎨 {theme.toUpperCase()}
+            </button>
+
+            <span className="monoBadge" style={{ cursor: 'pointer' }} title="Command Palette Shortcut">
+              Ctrl + K
+            </span>
 
             <button
               type="button"
