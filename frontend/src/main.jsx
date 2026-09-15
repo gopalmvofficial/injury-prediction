@@ -3358,101 +3358,140 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
                 />
               </div>
             )}
+
+            {/* Diagnostic Kinematics Pipeline (Moved below upload section) */}
+            <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--border-medium)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <b style={{ fontSize: '13px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>⚙️</span> Diagnostic Kinematics Pipeline
+                </b>
+                <span style={{ fontSize: '11px', color: 'var(--accent-teal-bright)', fontWeight: 600 }}>7 Stage AI Pipeline</span>
+              </div>
+
+              {[
+                'Video Upload & Resolution Validation',
+                'OpenCV Optical Frame Extraction',
+                'MediaPipe 33-Keypoint Pose Tracking',
+                'Joint Flexion/Extension Angle Geometry',
+                'Bilateral Symmetry & Range of Motion',
+                'Supervised Machine Learning Risk Classification',
+                'Database Persistence & Clinical PDF Generation',
+              ].map((x, i) => (
+                <div className="pipeline" key={x} style={{ padding: '8px 12px', marginBottom: '6px' }}>
+                  <span>{i + 1}</span>
+                  <div>
+                    <b style={{ display: 'block', color: 'var(--text-dark)', fontSize: '12px', marginBottom: '2px' }}>{x}</b>
+                    <small style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px' }}>
+                      {result && i < 6 ? '✓ Completed' : busy && i <= (analysisState?.progressPercent || 0) / 15 ? '⏳ Processing...' : 'Ready'}
+                    </small>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="col-6">
-          <section className="panel">
+          <section className="panel" style={{ height: '100%' }}>
             <div className="panelHead">
               <div>
-                <h3>Diagnostic Kinematics Pipeline</h3>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>📹</span> Pose Tracking Video & ML Results
+                </h3>
               </div>
+              {result && (
+                <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '4px 10px', borderRadius: 'var(--radius-full)', fontWeight: 700 }}>
+                  ANALYSIS COMPLETE
+                </span>
+              )}
             </div>
 
-        {[
-          'Video Upload & Resolution Validation',
-          'OpenCV Optical Frame Extraction',
-          'MediaPipe 33-Keypoint Pose Tracking',
-          'Joint Flexion/Extension Angle Geometry',
-          'Bilateral Symmetry & Range of Motion',
-          'Supervised Machine Learning Risk Classification',
-          'Database Persistence & Clinical PDF Generation',
-        ].map((x, i) => (
-          <div className="pipeline" key={x}>
-            <span>{i + 1}</span>
-            <div>
-              <b style={{ display: 'block', color: 'var(--text-dark)', marginBottom: '3px' }}>{x}</b>
-              <small style={{ display: 'block', color: 'var(--text-muted)' }}>{result && i < 6 ? 'Completed' : 'Ready'}</small>
-            </div>
-          </div>
-        ))}
-
-        {result && (
-          <div style={{ marginTop: '16px' }}>
-            <div className={`result ${(risk?.risk_level || result.risk_level || 'LOW').toLowerCase()}`}>
-              <span>Predicted ML Injury Risk</span>
-              <strong>{risk?.risk_level || result.risk_level || 'LOW'} RISK</strong>
-              <b>{risk?.risk_score ?? result.risk_score ?? 25}%</b>
-              <small>
-                Movement Quality: {result.movement_quality?.score ? `${result.movement_quality.score}/100 (${result.movement_quality?.classification || 'Good'})` : 'Good'} • Tracking: {result.pose_detection_rate_pct}%
-              </small>
-            </div>
-
-            {/* In-App Processed Video Playback Card */}
-            {(result.processed_video_path || videoPreviewUrl) && (
-              <div style={{ marginTop: '12px', background: '#0f172a', padding: '12px', borderRadius: '10px', color: '#fff' }}>
+            {/* Tiny Video Preview / Playback Box (Located where pipeline text was) */}
+            {(result?.processed_video_path || videoPreviewUrl) ? (
+              <div style={{ marginBottom: '14px', background: '#000', padding: '10px', borderRadius: '10px', border: '1px solid var(--border-medium)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <b style={{ fontSize: '12.5px', color: '#34d399' }}>📹 Pose Tracking Video Playback</b>
+                  <b style={{ fontSize: '12.5px', color: '#34d399', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>🎬</span> Movement Video Stream
+                  </b>
                   <button
                     type="button"
                     className="primary small"
-                    onClick={() => onPlayVideo(videoPreviewUrl || `${API_BASE_URL}${result.processed_video_path}`)}
-                    style={{ padding: '4px 10px', fontSize: '11px' }}
+                    onClick={() => onPlayVideo(videoPreviewUrl || `${API_BASE_URL}${result?.processed_video_path}`)}
+                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--accent-teal)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
                   >
                     ⛶ Fullscreen Player
                   </button>
                 </div>
                 <video
-                  src={videoPreviewUrl || `${API_BASE_URL}${result.processed_video_path}`}
+                  src={videoPreviewUrl || `${API_BASE_URL}${result?.processed_video_path}`}
                   controls
-                  style={{ width: '100%', maxHeight: '180px', borderRadius: '8px', background: '#000' }}
+                  autoPlay
+                  muted
+                  playsInline
+                  style={{ width: '100%', maxHeight: '200px', borderRadius: '8px', background: '#000', display: 'block', objectFit: 'contain' }}
                 />
+              </div>
+            ) : (
+              <div style={{ marginBottom: '14px', background: 'rgba(15, 23, 42, 0.6)', padding: '24px 16px', borderRadius: '10px', border: '1px dashed var(--border-medium)', textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📹</div>
+                <b style={{ display: 'block', fontSize: '14px', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                  Kinematic Video Preview Ready
+                </b>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+                  Select a video file or start webcam stream on the left to preview movement playback & pose landmarks here.
+                </p>
               </div>
             )}
 
-            {/* Specific Injury Vulnerability Breakdown */}
-            <div style={{ marginTop: '14px', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <b style={{ fontSize: '13px', color: '#0f2942' }}>🤖 Specific Injury Vulnerability Breakdown</b>
-                <span style={{ fontSize: '11px', background: '#10b981', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>Trained ML Model</span>
-              </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12.5px' }}>
-                <div>• <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.1)))}%</div>
-                <div>• <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.9)))}%</div>
-                <div>• <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.05)))}%</div>
-                <div>• <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.85)))}%</div>
-              </div>
-
-              {(risk?.recommendations || result.recommendations) && (risk?.recommendations?.length > 0 || result.recommendations?.length > 0) && (
-                <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #cbd5e1', fontSize: '12px', color: '#059669' }}>
-                  <b>📋 Prescribed Corrective Exercise:</b> {(risk?.recommendations || result.recommendations)[0]}
+            {/* Tiny Result & ML Injury Assessment (Located where pipeline text was) */}
+            {result ? (
+              <div>
+                <div className={`result ${(risk?.risk_level || result.risk_level || 'LOW').toLowerCase()}`}>
+                  <span>Predicted ML Injury Risk</span>
+                  <strong>{risk?.risk_level || result.risk_level || 'LOW'} RISK</strong>
+                  <b>{risk?.risk_score ?? result.risk_score ?? 25}%</b>
+                  <small>
+                    Movement Quality: {result.movement_quality?.score ? `${result.movement_quality.score}/100 (${result.movement_quality?.classification || 'Good'})` : 'Good'} • Tracking: {result.pose_detection_rate_pct}%
+                  </small>
                 </div>
-              )}
 
-              <button
-                type="button"
-                className="btnSecondary"
-                style={{ width: '100%', marginTop: '12px', background: '#fff', color: '#059669', borderColor: '#10b981' }}
-                onClick={() => onNav('Results')}
-              >
-                📊 View Full Roster History in Results Tab →
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-    </div>
+                {/* Specific Injury Vulnerability Breakdown */}
+                <div style={{ marginTop: '14px', background: 'rgba(15, 23, 42, 0.5)', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-medium)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <b style={{ fontSize: '13px', color: 'var(--text-primary)' }}>🤖 Specific Injury Vulnerability Breakdown</b>
+                    <span style={{ fontSize: '11px', background: '#10b981', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>Trained ML Model</span>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                    <div>• <b>ACL Tear Risk:</b> {Math.min(95, Math.max(10, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.1)))}%</div>
+                    <div>• <b>Hamstring Strain:</b> {Math.min(90, Math.max(8, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.9)))}%</div>
+                    <div>• <b>Ankle Sprain Risk:</b> {Math.min(92, Math.max(12, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 1.05)))}%</div>
+                    <div>• <b>Lower Back Strain:</b> {Math.min(85, Math.max(7, Math.round((risk?.risk_score ?? result.risk_score ?? 25) * 0.85)))}%</div>
+                  </div>
+
+                  {(risk?.recommendations || result.recommendations) && (risk?.recommendations?.length > 0 || result.recommendations?.length > 0) && (
+                    <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed var(--border-medium)', fontSize: '12px', color: '#34d399' }}>
+                      <b>📋 Prescribed Corrective Exercise:</b> {(risk?.recommendations || result.recommendations)[0]}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: '100%', marginTop: '12px', background: 'rgba(255,255,255,0.05)', color: 'var(--accent-teal-bright)', borderColor: 'var(--accent-teal)' }}
+                    onClick={() => onNav('Results')}
+                  >
+                    📊 View Full Roster History in Results Tab →
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ marginTop: '12px', background: 'rgba(15, 23, 42, 0.3)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border-medium)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px' }}>
+                ⚡ Click <b>"Execute Video Movement Analysis"</b> on the left to generate XGBoost risk scores & 3D keypoint landmark metrics.
+              </div>
+            )}
+          </section>
+        </div>
   </div>
   </>
   );
