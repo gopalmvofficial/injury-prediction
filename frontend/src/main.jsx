@@ -2985,6 +2985,7 @@ function VideoAnalysis({ athletes, onDone, onNav, onPlayVideo, analysisState, se
   const videoPreviewUrl = analysisState?.videoPreviewUrl || null;
   const busy = Boolean(analysisState?.busy);
   const result = analysisState?.result || null;
+  const risk = analysisState?.risk || result;
 
 
   // Webcam Capture State
